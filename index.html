@@ -275,7 +275,7 @@ button{font-family:inherit;color:inherit}
   <button class="btn" data-time="1260"><b>🌙</b><span data-en="Night 21">夜晚 21</span></button>
   <span class="sep"></span>
   <button class="btn" data-tog="names" aria-pressed="true"><b>🏷</b><span data-en="Tags">名牌</span></button>
-  <button class="btn" data-tog="carry" aria-pressed="true"><b>🎒</b><span data-en="Carry">搬運</span></button>
+  <button class="btn" data-tog="carry" aria-pressed="true"><b>🎒</b><span data-en="Items">物品</span></button>
   <button class="btn" data-tog="flows" aria-pressed="false"><b>〰</b><span data-en="Links">交流線</span></button>
   <button class="btn" data-tog="pause" aria-pressed="false"><b>⏸</b><span data-en="Pause">暫停</span></button>
   <button class="btn" data-tog="bird" aria-pressed="false"><b>🛰</b><span data-en="Bird">鳥瞰</span></button>
@@ -440,8 +440,11 @@ const DATA = {
     { id:'f8', from:'g',  to:'h',  name:'產學實作競賽', en:'Industry contest',          carry:'chip',   role:'grad', evidence:'official', count:5 },
     { id:'f9', from:'j5', to:'b4', name:'校外實習出發', en:'Off to internships',        carry:'paper',  role:'intern',evidence:'official', count:6 }
   ],
-  carries: { book:'筆記', paper:'書面資料', laptop:'筆電', robot:'專題機器人', cert:'證照', trophy:'獎盃', chip:'晶片' },
-  carriesEn: { book:'notes', paper:'documents', laptop:'a laptop', robot:'a project robot', cert:'a certificate', trophy:'a trophy', chip:'a chip' },
+  carries: { book:'筆記', paper:'書面資料', laptop:'筆電', robot:'專題機器人', cert:'證照', trophy:'參賽作品', chip:'晶片' },
+  carriesEn: { book:'notes', paper:'documents', laptop:'a laptop', robot:'a project robot', cert:'a certificate', trophy:'a contest entry', chip:'a chip' },
+  // 島民對手上物品的動詞：筆電是操作、專題是製作…
+  carryVerbs: { book:'翻閱', paper:'整理', laptop:'操作', robot:'製作', cert:'準備', trophy:'展示', chip:'設計' },
+  carryVerbsEn: { book:'reading', paper:'sorting', laptop:'using', robot:'building', cert:'preparing', trophy:'showing', chip:'designing' },
   // 一天時段：哪些細項亮起
   dayCycle: [
     { min:60,   label:'01:00 宿舍熄燈',   en:'01:00 Lights out',      items:['b1d'] },
@@ -1754,7 +1757,7 @@ function flowCard(id) {
   let h = `<h2>${esc(tr(f.name, f.en))}</h2>`;
   h += `<div class="flowHead"><button class="chip" data-isl="${a.id}">${a.icon} ${esc(tr(a.name, a.en))}</button> → <button class="chip" data-isl="${b.id}">${b.icon} ${esc(tr(b.name, b.en))}</button></div>`;
   h += `<div class="tiles"><div class="tile"><span class="big">${f.count}</span><small>${tr('位島民往返', 'walkers')}</small></div><div class="tile"><span class="big" style="font-size:20px">${BADGE_EMOJI[f.carry] || '📦'}</span><small>${esc(carry)}</small></div><div class="tile"><span class="big" style="font-size:16px">${tr(...EVID[f.evidence])}</span><small>${tr('證據等級', 'evidence')}</small></div></div>`;
-  h += `<p>${tr(`島民帶著${carry}，從${a.full}走到${b.full}，到站後停下交接再折返。`, `Islanders carry ${carry} from ${a.fullEn} to ${b.fullEn}, hand it over and walk back.`)}</p>`;
+  h += `<p>${tr(`島民邊${DATA.carryVerbs[f.carry]}${carry}，邊從${a.full}走到${b.full}，到站後和大家分享再折返。`, `Islanders keep ${DATA.carryVerbsEn[f.carry]} ${carry} on the way from ${a.fullEn} to ${b.fullEn}, share it, then walk back.`)}</p>`;
   h += `<p style="font-size:13px;color:var(--muted)">${tr('線條樣式：實線＝正式制度、虛線＝社群交流、點線＝籌備進行中。', 'Line style: solid = official, dashed = community, dotted = in preparation.')}</p>`;
   return h;
 }
@@ -1783,7 +1786,7 @@ function walkerCard(w) {
   let h = `<div class="icon">${ROLE_ICON[w.role] || '🧑‍🎓'}</div><h2>${esc(tr(s.full, s.fullEn))} ${tr('島民', 'islander')}</h2>`;
   if (f) {
     const a = ISL[f.from].d, b = ISL[f.to].d;
-    h += `<p>${tr(`正在搬${carry}，往返${a.name}與${b.name}之間。`, `Carrying ${carry} between ${a.en} and ${b.en}.`)}</p>`;
+    h += `<p>${tr(`正在${DATA.carryVerbs[f.carry]}${carry}，往返${a.name}與${b.name}之間。`, `${DATA.carryVerbsEn[f.carry][0].toUpperCase() + DATA.carryVerbsEn[f.carry].slice(1)} ${carry} between ${a.en} and ${b.en}.`)}</p>`;
     h += `<div class="chips"><button class="chip" data-flow="${f.id}">〰 ${esc(tr(f.name, f.en))}</button><button class="chip cream" data-isl="${a.id}">${a.icon} ${esc(tr(a.name, a.en))}</button><button class="chip cream" data-isl="${b.id}">${b.icon} ${esc(tr(b.name, b.en))}</button></div>`;
   } else {
     h += `<p>${esc(w.activity ? tr(`正在${w.activity.zh}`, `Currently ${w.activity.en}`) : tr('在島上散步', 'Strolling around'))}</p>`;
@@ -2121,7 +2124,9 @@ let walkerN = 0;
 const SHIRTS = { jc: ['#3e7c8c', '#58a6a6', '#6f7fb5'], fresh: ['#58a6a6', '#9cc27a'], ug: ['#db6a41', '#f2b5c6', '#6f7fb5', '#9cc27a', '#fcea8b', '#ffffff'], bike: ['#db6a41', '#6f7fb5', '#fcea8b'], grad: ['#ffffff'], cap: ['#211d1d'], maker: ['#3e7c8c', '#db6a41'], intern: ['#f4ebdd', '#c5b5a7'], teacher: ['#f4ebdd', '#c9d8e6', '#e9e2d8'] };
 const PANTS = ['#3a3f55', '#2b2b33', '#5a5f75', '#6b5a4a'];
 const ROLE_OF_KIND = { jc: 'jc', ug: 'ug', grad: 'grad', staff: 'ug', award: 'ug' };
-const ACT_VERB = { study: ['在「{n}」上課', 'studying {n}'], project: ['趕「{n}」', 'working on {n}'], leisure: ['{n}', 'enjoying {n}'], award: ['準備「{n}」', 'preparing for {n}'] };
+const ACT_VERB = { study: ['修習「{n}」', 'taking {n}'], project: ['製作「{n}」', 'working on {n}'], leisure: ['參加「{n}」', 'enjoying {n}'], award: ['挑戰「{n}」', 'competing in {n}'] };
+// 交流線上的島民在做什麼：「正在操作 筆電」「正在製作 專題機器人」
+const carryText = f => tr(`正在${DATA.carryVerbs[f.carry]} ${DATA.carries[f.carry]}`, `${DATA.carryVerbsEn[f.carry][0].toUpperCase() + DATA.carryVerbsEn[f.carry].slice(1)} ${DATA.carriesEn[f.carry]}`);
 
 function makeWalker(o) {
   const r = mulberry32(1000 + WALKERS.length * 7);
@@ -2249,6 +2254,7 @@ function updateWalkers(dt) {
   for (const w of WALKERS) {
     let walking = true;
     if (w.frozen) walking = false;
+    else if (w.pause > 0) { w.pause -= dt; walking = false; if (w.pause <= 0) { w.say = null; w.partner = null; } }
     else if (w.wait > 0) { w.wait -= dt; walking = false; if (w.wait <= 0) onWaitEnd(w); }
     else {
       const prev = w.s;
@@ -2268,22 +2274,24 @@ function updateWalkers(dt) {
     }
     if (dt > 0 || !w.posInit) { const h = samplePath(w, w.s, w.pos); w.posInit = true; if (walking) w.heading = h + (w.dir < 0 ? Math.PI : 0); }
     if (!walking && w.activity && w.mode === 'loop') { const it = ITEM[w.activity.item]; w.heading = Math.atan2(it.x - w.pos.x, it.z - w.pos.z); }
+    if (w.pause > 0 && w.partner) w.heading = Math.atan2(w.partner.pos.x - w.pos.x, w.partner.pos.z - w.pos.z);
     w.walking = walking;
     poseWalker(w, sc);
   }
+  if (dt > 0) meetings(dt);
   for (const k in WM) WM[k].instanceMatrix.needsUpdate = true;
   updateTagsAndBadges();
 }
 function onWaitEnd(w) {
   if (w.mode === 'loop') { w.activity = null; return; }
   w.dir = w.atEnd ? -1 : 1;
-  if (w.logEvents && w.flow) logEvent(w.flow.id, tr(`${roleName(w)}帶著${DATA.carries[w.flow.carry]}從${ISL[w.atEnd ? w.flow.to : w.flow.from].d.name}出發`, `A ${roleNameEn(w)} departs ${ISL[w.atEnd ? w.flow.to : w.flow.from].d.en} with ${DATA.carriesEn[w.flow.carry]}`), 'depart');
+  if (w.logEvents && w.flow) logEvent(w.flow.id, tr(`${roleName(w)}帶著${DATA.carries[w.flow.carry]}從${ISL[w.atEnd ? w.flow.to : w.flow.from].d.name}出發，邊走邊${DATA.carryVerbs[w.flow.carry]}`, `A ${roleNameEn(w)} departs ${ISL[w.atEnd ? w.flow.to : w.flow.from].d.en} with ${DATA.carriesEn[w.flow.carry]}`), 'depart');
 }
 function onArrive(w, atEnd) {
   if (!w.logEvents) return;
   if (w.flow) {
     const isl = ISL[atEnd ? w.flow.to : w.flow.from].d;
-    logEvent(w.flow.id, tr(`${roleName(w)}抵達${isl.name}，交接${DATA.carries[w.flow.carry]}`, `${roleNameEn(w)} reaches ${isl.en} and hands over ${DATA.carriesEn[w.flow.carry]}`), atEnd ? 'handoff' : 'arrive');
+    logEvent(w.flow.id, tr(`${roleName(w)}抵達${isl.name}，和大家分享${DATA.carries[w.flow.carry]}`, `${roleNameEn(w)} reaches ${isl.en} and shares ${DATA.carriesEn[w.flow.carry]}`), atEnd ? 'handoff' : 'arrive');
   } else if (w.teacher != null) {
     const t = DATA.teachers[w.teacher], isl = ISL[atEnd ? t.visit : 't'].d;
     logEvent('teacher', tr(atEnd ? `${t.name}老師抵達${isl.name}，和同學交流` : `${t.name}老師回到綜三館研究室`, atEnd ? `${t.en} arrives at ${isl.en}` : `${t.en} is back at Building 3`), 'arrive');
@@ -2316,7 +2324,8 @@ function poseWalker(w, sc) {
   setPart('legL', i, local(-.024, .09 + lift, bike ? .02 : 0, .032, .09, .036, (bike ? -1.1 : 0) + legSw, 0, 0, .045));
   setPart('legR', i, local(.024, .09 + lift, bike ? .02 : 0, .032, .09, .036, (bike ? -1.1 : 0) - legSw, 0, 0, .045));
   setPart('armL', i, local(-.058, .18 + lift, 0, .026, .08, .026, -armSw, 0, .12, .04));
-  setPart('armR', i, local(.058, .18 + lift, 0, .026, .08, .026, w.role === 'intern' ? .15 : armSw, 0, -.12, .04));
+  const wave = w.pause > 0 && w.greet && !bike ? -2.7 : null;
+  setPart('armR', i, local(.058, .18 + lift, 0, .026, .08, .026, wave != null ? wave : w.role === 'intern' ? .15 : armSw, 0, wave != null ? -.35 + Math.sin(t * 14) * .3 : -.12, .04));
   setPart('body', i, local(0, .14 + lift, 0, 1, 1, 1));
   setPart('head', i, local(0, .28 + lift, 0, 1, 1, 1));
   setPart('hair', i, local(0, .284 + lift, -.006, 1, 1, 1, -.25));
@@ -2374,7 +2383,8 @@ function buildBadgesAndTags() {
       el.addEventListener('click', e => { e.stopPropagation(); selectTeacher(w.teacher); });
       const o = new CSS2DObject(el); scene.add(o); w.tag = o;
       w.tagLab = { obj: o, el, prio: 4, kind: 'teacher' }; LABELS.push(w.tagLab);
-    } else {
+    }
+    {
       const el = document.createElement('div'); el.className = 'bubble';
       const o = new CSS2DObject(el); o.visible = false; scene.add(o); w.bubble = o; w.bubbleText = '';
       w.bubbleLab = { obj: o, el, prio: 1, kind: 'bubble' }; LABELS.push(w.bubbleLab);
@@ -2409,14 +2419,45 @@ function updateTagsAndBadges() {
     if (w === sayWalker) sayObj.position.set(w.pos.x, headY + .35, w.pos.z);
     if (w.bubble) {
       let txt = '';
-      if (state.toggles.names && d < 14) {
-        if (w.flow) txt = tr(`正在搬 ${DATA.carries[w.flow.carry]}`, `Carrying ${DATA.carriesEn[w.flow.carry]}`);
+      if (w.say && w.pause > 0 && d < 22) txt = w.say;
+      else if (state.toggles.names && d < 14) {
+        if (w.flow) txt = carryText(w.flow);
         else if (w.activity && w.wait > 0) txt = tr(w.activity.zh, w.activity.en);
       }
       const on = !!txt;
       if (on !== w.bubble.visible) w.bubble.visible = on;
       if (on && txt !== w.bubbleText) { w.bubble.element.textContent = txt; w.bubbleText = txt; w.bubbleLab.dirtySize = true; }
-      if (on) w.bubble.position.set(w.pos.x, headY + (w.badge && w.badge.visible ? .2 : .06), w.pos.z);
+      if (on) w.bubble.position.set(w.pos.x, headY + (w.tag ? .34 : w.badge && w.badge.visible ? .2 : .06), w.pos.z);
+    }
+  }
+}
+// ── 師生在路上相遇：互相打招呼，有時停下來討論 ─────────────────────────────
+const GREET_T = ['同學好～', '早安！', '加油喔！', '最近好嗎？'], GREET_S = ['老師好！', '老師早！', '老師好～', '嗨，老師！'];
+const GREET_T_EN = ['Hi there!', 'Morning!', 'Keep it up!', 'How are you?'], GREET_S_EN = ['Hello, professor!', 'Morning, prof!', 'Hi, professor!'];
+const ASK_S = ['老師，想請教專題', '這題作業卡住了…', '老師，實驗結果出來了！', '想跟老師討論論文'], ASK_S_EN = ['Can I ask about my project?', 'I’m stuck on homework…', 'The results are in!', 'About my thesis…'];
+let meetT = 0;
+function meetings(dt) {
+  meetT += dt; if (meetT < .25) return; meetT = 0;
+  const now = state.time;
+  for (const t of WALKERS) {
+    if (t.teacher == null || t.frozen || t.pause > 0 || t.wait > 0 || (t.meetCD || 0) > now) continue;
+    for (const s of WALKERS) {
+      if (s.teacher != null || s.frozen || s.pause > 0 || s.wait > 0 || (s.meetCD || 0) > now) continue;
+      const dx = s.pos.x - t.pos.x, dz = s.pos.z - t.pos.z;
+      if (dx * dx + dz * dz > .36 * .36) continue;
+      const r = rand(), discuss = r < .3;
+      const T = DATA.teachers[t.teacher], skill = T.skills[Math.floor(rand() * T.skills.length)];
+      const dur = discuss ? 4.5 + rand() * 2 : 1.6;
+      t.pause = s.pause = dur; t.partner = s; s.partner = t; t.greet = s.greet = !discuss;
+      t.meetCD = s.meetCD = now + dur + 10 + rand() * 8;
+      if (discuss) {
+        s.say = tr(pick(ASK_S), pick(ASK_S_EN));
+        t.say = tr(`來聊聊${skill[0]}吧`, `Let’s talk ${skill[1].toLowerCase()}`);
+        logEvent('teacher', tr(`${T.name}老師在路上和${roleName(s)}討論${skill[0]}`, `${T.en} stops to discuss ${skill[1].toLowerCase()} with a ${roleNameEn(s)}`), 'talk');
+      } else {
+        s.say = tr(pick(GREET_S), pick(GREET_S_EN)); t.say = tr(pick(GREET_T), pick(GREET_T_EN));
+      }
+      break;
     }
   }
 }
@@ -2493,7 +2534,7 @@ function logEvent(flowId, text, type = 'info') {
 }
 function renderJournal() {
   const f = $('#journalFilter').value;
-  const icon = { depart: '🚶', arrive: '📍', handoff: '🤝', info: '•', slot: '⏰' };
+  const icon = { talk: '💬', depart: '🚶', arrive: '📍', handoff: '🤝', info: '•', slot: '⏰' };
   $('#journalList').innerHTML = JOURNAL.filter(e => !f || e.flowId === f).slice(0, 40).map(e => `<div><time>${e.t}</time>${icon[e.type] || '•'} ${esc(e.text)}</div>`).join('') || `<div style="color:var(--muted)">${tr('尚無事件', 'No events yet')}</div>`;
 }
 
