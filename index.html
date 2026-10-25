@@ -3967,7 +3967,7 @@ MODELS.gallery = c => {
 MODEL_TOP.gallery = .6;
 
 const fxRand = mulberry32(4242);
-const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, get RIDER() { return RIDERS[0]; }, get RIDERS() { return RIDERS; }, riderMode: (m, i = 0) => riderMode(RIDERS[i], m), groundAt: (x, z) => groundAt(x, z) };
+const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, get RIDER() { return RIDERS[0]; }, get RIDERS() { return RIDERS; }, get CAR() { return CAR; }, carPlan: () => carPlan(), riderMode: (m, i = 0) => riderMode(RIDERS[i], m), groundAt: (x, z) => groundAt(x, z) };
 function toast(msg, ms = 2600) {
   const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), ms);
@@ -4015,6 +4015,7 @@ function initFeatures() {
   initBottles();
   initWalk();
   initRiders();
+  initCar();
   $('#btnTour').onclick = () => TOUR.on ? stopTour() : startTour();
   $('#btnPath').onclick = openPath;
   $('#btnQuest').onclick = openQuests;
@@ -4025,7 +4026,7 @@ function initFeatures() {
 }
 function updateFeatures(dt, animating) {
   let moved = false;
-  if (animating) { moved = updateSeasonFX(dt) || moved; moved = updateWeatherFX(dt) || moved; moved = updateEventFX(dt) || moved; moved = updateMascots(dt) || moved; moved = updateBottles(dt) || moved; moved = updateRiders(dt) || moved; }
+  if (animating) { moved = updateSeasonFX(dt) || moved; moved = updateWeatherFX(dt) || moved; moved = updateEventFX(dt) || moved; moved = updateMascots(dt) || moved; moved = updateBottles(dt) || moved; moved = updateRiders(dt) || moved; moved = updateCar(dt) || moved; }
   if (PATHFX.mat) PATHFX.mat.uniforms.uTime.value += animating ? dt : 0;
   if (FP.on) { updateWalk(dt); hideNearWalkers(); moved = true; }
   if (moved) markDirty();
@@ -5193,6 +5194,118 @@ function selectRider(R) {
   const pal = RIDERS.find(x => x !== R);
   h += `<p>${tr(`${R.look[0]}，在${co.d.name}外島繞島巡航。騎一騎還會翹孤輪，騎累了就停車下來飛遙控飛機，或跳進海裡玩動力滑板，有時和${pal.name}學長一起玩，有時各玩各的。學弟妹搭${DOCK[co.d.dock].d.ferry}來參訪時，他總是熱情歡迎大家。`, `${R.look[1]} around the ${co.d.en} island, popping the odd wheelie. Now and then he parks to fly an RC plane or jumps into the sea on a jet board, sometimes together with ${pal.en}, sometimes on his own. He always gives juniors arriving on the ${DOCK[co.d.dock].d.ferryEn} a warm welcome.`)}</p>`;
   openCard(h, tr('外島 · 特別人物', 'OUTER ISLAND · SPECIAL GUEST'));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  資工飛天車：老師或同學不定期搭乘，從一座島起飛、飛到另一座島降落，途中滾轉耍帥
+// ═══════════════════════════════════════════════════════════════════════════
+const CAR = { g: null, at: 'b1', wait: 9, leg: null, pos: null, heading: 0, roll: 0, spin: 0, rider: null, text: '', textT: 0, trips: 0 };
+const CAR_UP = 1.7, CAR_DOWN = 1.9, CAR_SPIN = 1;
+function carPad(id) {
+  // 每座島挑一個步道轉角當停機點（偶數節點是六角形轉角，不接橋）
+  const s = ISL[id], n = NET.nodes[s.nodes[(s.d.no.charCodeAt(1) % 6) * 2]];
+  return new THREE.Vector3(n.x + (s.x - n.x) * .12, TOP, n.z + (s.z - n.z) * .12);
+}
+function carGeos() {
+  const o = [], white = '#f2f4f7', dark = '#1f2329', teal = '#2bb3b1';
+  o.push(paintGeo(new THREE.CapsuleGeometry(.075, .26, 6, 16).rotateZ(Math.PI / 2).scale(1, .55, 1).translate(0, .07, 0), white)); // 流線車身（車頭朝 +x）
+  o.push(paintGeo(new THREE.SphereGeometry(.07, 16, 10, 0, Math.PI * 2, 0, Math.PI * .5).scale(1.5, .75, .95).translate(.02, .1, 0), '#8fd3f4')); // 玻璃座艙
+  o.push(paintGeo(new THREE.BoxGeometry(.4, .012, .012).translate(0, .06, .078), teal));
+  o.push(paintGeo(new THREE.BoxGeometry(.4, .012, .012).translate(0, .06, -.078), teal));
+  o.push(paintGeo(new THREE.BoxGeometry(.02, .02, .1).translate(.205, .07, 0), '#fff3c4'));      // 頭燈條
+  o.push(paintGeo(new THREE.BoxGeometry(.015, .02, .12).translate(-.205, .075, 0), '#e8443a'));  // 尾燈條
+  for (const x of [-.13, .13]) for (const z of [-.13, .13]) {                                    // 四個涵道風扇
+    o.push(paintGeo(new THREE.TorusGeometry(.055, .012, 6, 18).rotateX(Math.PI / 2).translate(x, .07, z), dark));
+    o.push(paintGeo(new THREE.BoxGeometry(Math.abs(x) * .55, .012, .016).translate(x * .62, .07, z * .78), dark));
+  }
+  // 乘客頭（座艙裡）
+  o.push(paintGeo(new THREE.SphereGeometry(.03, 10, 8).translate(.02, .125, 0), SKIN[1]));
+  o.push(paintGeo(new THREE.SphereGeometry(.032, 10, 6, 0, Math.PI * 2, 0, Math.PI * .5).translate(.017, .13, 0), HAIR[0]));
+  return o;
+}
+function initCar() {
+  CAR.pos = carPad(CAR.at); CAR.g = new THREE.Group(); scene.add(CAR.g);
+  CAR.body = mergedMesh(carGeos()); CAR.g.add(CAR.body);
+  const fanMat = new THREE.MeshBasicMaterial({ color: '#7ff7ef', transparent: true, opacity: .55, depthWrite: false });
+  CAR.fans = [];
+  for (const x of [-.13, .13]) for (const z of [-.13, .13]) {
+    const f = new THREE.Mesh(new THREE.CircleGeometry(.046, 16).rotateX(-Math.PI / 2), fanMat); f.position.set(x, .068, z); CAR.g.add(f); CAR.fans.push(f);
+  }
+  CAR.fanMat = fanMat;
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(.5, .25, .4).translate(0, .08, 0), new THREE.MeshBasicMaterial({ visible: false })); CAR.g.add(hit);
+  hit.userData.pick = () => { selectCar(); return true; }; PICKABLE.push(hit);
+  CAR.bubble = bubbleLabel(4);
+  placeCar(0);
+}
+function carPlan() {
+  const ids = Object.keys(ISL).filter(id => id !== CAR.at);
+  const to = ids[Math.floor(fxRand() * ids.length)], from = carPad(CAR.at), dest = carPad(to);
+  const teacher = fxRand() < .4 ? DATA.teachers[Math.floor(fxRand() * DATA.teachers.length)] : null;
+  const s = ISL[CAR.at].d, d = ISL[to].d;
+  CAR.rider = teacher ? { zh: teacher.name + '老師', en: teacher.en } : { zh: s.name + '同學', en: 'a ' + s.en + ' student' };
+  const dist = Math.hypot(dest.x - from.x, dest.z - from.z);
+  CAR.leg = { from, to: dest, toId: to, t: 0, cruise: Math.max(2.6, dist / 2.4), y: TOP + 2.2 + dist * .06, rolls: dist > 6 ? 2 : 1 };
+  carSay(tr(`${CAR.rider.zh}：搭飛天車去${d.name}囉！`, `${CAR.rider.en}: Off to ${d.en} by flying car!`));
+  logEvent('harbor', tr(`🚗 ${CAR.rider.zh}搭資工飛天車從${s.name}起飛，前往${d.name}`, `🚗 ${CAR.rider.en} takes the CSIE flying car from ${s.en} to ${d.en}`), 'heli');
+}
+function carSay(t) { CAR.text = t; CAR.textT = 4.5; }
+function updateCar(dt) {
+  if (!CAR.g) return false;
+  const C = CAR;
+  if (!C.leg) {
+    C.spin = Math.max(0, C.spin - dt * .8);
+    if (!WX.stopHarbor) { C.wait -= dt; if (C.wait <= 0) carPlan(); }
+  } else {
+    const L = C.leg; L.t += dt;
+    const t1 = CAR_SPIN, t2 = t1 + CAR_UP, t3 = t2 + L.cruise, t4 = t3 + CAR_DOWN;
+    C.spin = Math.min(1, C.spin + dt * 1.5);
+    const yaw = Math.atan2(-(L.to.z - L.from.z), L.to.x - L.from.x);
+    C.roll = 0;
+    if (L.t < t1) C.pos.copy(L.from);
+    else if (L.t < t2) { const u = easeInOutCubic((L.t - t1) / CAR_UP); C.pos.set(L.from.x, lerp(L.from.y, L.y, u), L.from.z); }
+    else if (L.t < t3) {
+      const u = (L.t - t2) / L.cruise, e = easeInOutCubic(u);
+      C.pos.set(lerp(L.from.x, L.to.x, e), L.y + Math.sin(u * Math.PI) * .5, lerp(L.from.z, L.to.z, e));
+      // 中段耍帥滾轉：沿機身前後軸轉一（或兩）整圈
+      const r0 = .3, r1 = .7;
+      if (u > r0 && u < r1) { const k = (u - r0) / (r1 - r0); C.roll = easeInOutCubic(k) * Math.PI * 2 * L.rolls; if (!L.said) { L.said = true; carSay(tr(`${C.rider.zh}：耍帥滾轉～！`, `${C.rider.en}: Barrel roll!`)); } }
+    }
+    else if (L.t < t4) { const u = easeInOutCubic((L.t - t3) / CAR_DOWN); C.pos.set(L.to.x, lerp(L.y, L.to.y, u), L.to.z); }
+    else {
+      C.pos.copy(L.to); C.at = L.toId; C.leg = null; C.wait = 22 + fxRand() * 20; C.trips++;
+      const d = ISL[C.at].d;
+      carSay(tr(`${C.rider.zh}：平安降落${d.name}，帥吧！`, `${C.rider.en}: Landed on ${d.en}. Smooth, right?`));
+      logEvent('harbor', tr(`🚗 飛天車滾轉後平安降落${d.name}，${C.rider.zh}帥氣下車`, `🚗 After a barrel roll, the flying car lands on ${d.en} and ${C.rider.en} hops out`), 'heli');
+    }
+    if (L.t > t1 * .5) { let d = yaw - C.heading; d = Math.atan2(Math.sin(d), Math.cos(d)); C.heading += d * Math.min(1, dt * 2.2); }
+  }
+  placeCar(dt);
+  return true;
+}
+function placeCar(dt) {
+  const C = CAR, t = state.time, flying = C.leg && C.leg.t > CAR_SPIN;
+  C.g.position.set(C.pos.x, C.pos.y + (flying ? .05 + Math.sin(t * 2.6) * .02 : .02), C.pos.z);
+  const L = C.leg, cruising = L && L.t > CAR_SPIN + CAR_UP && L.t < CAR_SPIN + CAR_UP + L.cruise;
+  C.g.rotation.set(C.roll, C.heading, cruising ? -.1 : 0, 'YXZ');
+  C.g.scale.setScalar(1.4);
+  C.fanMat.opacity = .25 + C.spin * .5;
+  for (const f of C.fans) f.scale.setScalar(.7 + C.spin * .3 + Math.sin(t * 40) * .05 * C.spin);
+  C.g.visible = !WX.indoor;
+  C.textT -= dt;
+  const near = camera.position.distanceTo(C.pos) < 40;
+  setBubble(C.bubble, C.textT > 0 && near && !WX.indoor ? '🚗 ' + C.text : '', C.pos.x, C.pos.y + .65, C.pos.z);
+}
+function selectCar() {
+  const C = CAR; state.sel = { kind: 'heli', id: 'car' };
+  afterSelect();
+  flyTo(poseFor(C.pos.clone(), new THREE.Vector3(2.2, 3.6, 4.6)));
+  const at = ISL[C.at].d, to = C.leg ? ISL[C.leg.toId].d : null;
+  let h = `<div class="icon">🚗</div><h2>${tr('資工飛天車', 'CSIE flying car')}</h2>`;
+  h += `<p>${tr('資工系的未來感飛天車，有四個涵道風扇，可以垂直起降。老師和同學會不定期搭乘，從一座島起飛、飛到另一座島降落，飛到一半還會滾轉耍帥。', 'The department’s futuristic flying car, with four ducted fans for vertical take-off and landing. Teachers and students hop in now and then, fly from one island to another, and pull a barrel roll on the way.')}</p>`;
+  h += `<p style="font-size:13px;color:var(--muted)">${tr('現在：', 'Now: ')}${esc(to ? tr(`${C.rider.zh}正從${at.name}飛往${to.name}`, `${C.rider.en} is flying from ${at.en} to ${to.en}`) : tr(`停在${at.name}，等下一位乘客`, `Parked on ${at.en}, waiting for the next rider`))}</p>`;
+  h += `<div class="chips"><button class="chip cream" data-isl="${at.id}">${at.icon} ${esc(tr(at.name, at.en))}</button>${to ? `<button class="chip cream" data-isl="${to.id}">${to.icon} ${esc(tr(to.name, to.en))}</button>` : ''}<span class="chip">${tr(`已飛 ${C.trips} 趟`, `${C.trips} trips so far`)}</span></div>`;
+  h += `<div class="src">${tr('飛天車為示意的未來交通工具，非任何廠牌產品。', 'An illustrative concept vehicle, not any real brand’s product.')}</div>`;
+  openCard(h, tr('飛天車', 'FLYING CAR'));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
