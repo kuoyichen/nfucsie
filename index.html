@@ -2110,6 +2110,391 @@ function afterBoot() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  島民（學生、研究生）與老師：大頭 chibi，零件各一個 InstancedMesh
+// ═══════════════════════════════════════════════════════════════════════════
+const WALKERS = [];
+const WM = {};        // part name -> InstancedMesh
+let walkerN = 0;
+const SHIRTS = { jc: ['#3e7c8c', '#58a6a6', '#6f7fb5'], fresh: ['#58a6a6', '#9cc27a'], ug: ['#db6a41', '#f2b5c6', '#6f7fb5', '#9cc27a', '#fcea8b', '#ffffff'], bike: ['#db6a41', '#6f7fb5', '#fcea8b'], grad: ['#ffffff'], cap: ['#211d1d'], maker: ['#3e7c8c', '#db6a41'], intern: ['#f4ebdd', '#c5b5a7'], teacher: ['#f4ebdd', '#c9d8e6', '#e9e2d8'] };
+const PANTS = ['#3a3f55', '#2b2b33', '#5a5f75', '#6b5a4a'];
+const ROLE_OF_KIND = { jc: 'jc', ug: 'ug', grad: 'grad', staff: 'ug', award: 'ug' };
+const ACT_VERB = { study: ['在「{n}」上課', 'studying {n}'], project: ['趕「{n}」', 'working on {n}'], leisure: ['{n}', 'enjoying {n}'], award: ['準備「{n}」', 'preparing for {n}'] };
+
+function makeWalker(o) {
+  const r = mulberry32(1000 + WALKERS.length * 7);
+  const role = o.role;
+  const w = {
+    id: 'w' + WALKERS.length, i: WALKERS.length, role, home: o.home, flow: o.flow || null, teacher: o.teacher ?? null,
+    path: o.path, mode: o.mode || 'ping', speed: o.speed || (.32 + r() * .08), s: 0, dir: r() < .5 ? 1 : -1, wait: r() * 1.5,
+    phase: r(), pos: new THREE.Vector3(), heading: 0, stops: o.stops || [], stopIdx: -1, activity: null, nextStop: 0,
+    shirt: col(o.shirt || SHIRTS[role][Math.floor(r() * SHIRTS[role].length)]), pants: col(PANTS[Math.floor(r() * PANTS.length)]),
+    skin: col(SKIN[Math.floor(r() * SKIN.length)]), hair: col(HAIR[Math.floor(r() * HAIR.length)]), frozen: false, endWait: o.endWait || [1.4, 1.4],
+    logEvents: !!o.logEvents
+  };
+  if (role === 'bike') w.speed = .62 + r() * .08;
+  w.cum = [0]; for (let k = 1; k < w.path.length; k++) w.cum.push(w.cum[k - 1] + w.path[k].distanceTo(w.path[k - 1]));
+  w.len = w.cum[w.cum.length - 1];
+  w.s = r() * w.len;
+  WALKERS.push(w);
+  return w;
+}
+function samplePath(w, s, out) {
+  const c = w.cum; let k = 1;
+  while (k < c.length - 1 && c[k] < s) k++;
+  const a = w.path[k - 1], b = w.path[k], t = clamp((s - c[k - 1]) / Math.max(1e-6, c[k] - c[k - 1]), 0, 1);
+  out.lerpVectors(a, b, t);
+  return Math.atan2(b.x - a.x, b.z - a.z);
+}
+function initWalkers() {
+  // 交流線上的搬運者
+  for (const f of DATA.flows) {
+    const path = routeBetween(f.from, f.to);
+    f.path = path;
+    for (let k = 0; k < f.count; k++) makeWalker({ role: f.role, home: f.from, flow: f, path, logEvents: k === 0 });
+  }
+  // 老師：綜三館 ↔ 常去的島
+  DATA.teachers.forEach((t, i) => {
+    const path = routeBetween('t', t.visit);
+    const w = makeWalker({ role: 'teacher', home: 't', teacher: i, path, speed: .3 + (i % 5) * .012, endWait: [2.2, 4.5], logEvents: true });
+    w.s = (i * 0.37 % 1) * w.len;
+  });
+  // 各島居民：沿步道環繞行，停在細項旁做事
+  for (const id in ISL) {
+    const s = ISL[id], kind = s.d.kind, n = kind === 'staff' || kind === 'award' ? 2 : 4;
+    const ring = s.nodes.map(k => { const N = NET.nodes[k]; return new THREE.Vector3(N.x, N.y, N.z); }); ring.push(ring[0].clone());
+    const tmp = { path: ring, cum: [0] }; for (let k = 1; k < ring.length; k++) tmp.cum.push(tmp.cum[k - 1] + ring[k].distanceTo(ring[k - 1]));
+    const stops = s.items.map(itemId => {
+      const it = ITEM[itemId]; let best = 0, bd = 1e9;
+      for (let k = 0; k < 12; k++) { const d = ring[k].distanceTo(new THREE.Vector3(it.x, TOP, it.z)); if (d < bd) { bd = d; best = k; } }
+      const v = ACT_VERB[it.d.activity || 'study'];
+      return { s: tmp.cum[best], item: itemId, zh: v[0].replace('{n}', it.d.name), en: v[1].replace('{n}', it.d.en) };
+    }).sort((a, b) => a.s - b.s);
+    for (let k = 0; k < n; k++) {
+      const w = makeWalker({ role: kind === 'jc' && s.d.id === 'j1' ? 'fresh' : (ROLE_OF_KIND[kind] || 'ug'), home: id, path: ring, mode: 'loop', stops, speed: .22 + k * .02 });
+      w.dir = 1; w.s = (k / n) * w.len + .3; w.nextStop = Math.max(0, stops.findIndex(x => x.s > w.s));
+    }
+  }
+  walkerN = WALKERS.length;
+  buildWalkerMeshes();
+  buildBadgesAndTags();
+  for (const w of WALKERS) { w.heading = samplePath(w, w.s, w.pos); }
+  updateWalkers(0);
+}
+function buildWalkerMeshes() {
+  const N = walkerN;
+  ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+  const std = (c) => new THREE.MeshStandardMaterial({ roughness: .7, color: c || '#ffffff' });
+  const geo = {
+    limb: new THREE.CylinderGeometry(.5, .5, 1, 8),
+    body: new THREE.CapsuleGeometry(.045, .06, 4, 10),
+    head: new THREE.SphereGeometry(.07, 18, 14),
+    hair: new THREE.SphereGeometry(.076, 16, 10, 0, Math.PI * 2, 0, Math.PI * .52),
+    eye: new THREE.SphereGeometry(.5, 8, 6),
+    shadow: new THREE.CircleGeometry(.1, 20).rotateX(-Math.PI / 2),
+    vest: new THREE.CylinderGeometry(.05, .052, .085, 12, 1, true),
+    coat: new THREE.CylinderGeometry(.049, .062, .13, 12, 1, true),
+    capTop: new THREE.SphereGeometry(.074, 14, 8, 0, Math.PI * 2, 0, Math.PI * .5),
+    board: new THREE.BoxGeometry(.15, .012, .15),
+    pack: new RoundedBoxGeometry(.07, .08, .04, 2, .012),
+    case: new RoundedBoxGeometry(.06, .07, .035, 2, .01),
+    wheel: new THREE.TorusGeometry(.055, .009, 6, 16),
+    frame: new THREE.BoxGeometry(.016, .016, .2),
+    badge: new THREE.BoxGeometry(.022, .028, .006),
+    hit: new THREE.BoxGeometry(.16, .4, .16).translate(0, .2, 0)
+  };
+  const mk = (name, g, mat, count = N, cast = true) => {
+    const m = new THREE.InstancedMesh(g, mat, count);
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    m.castShadow = cast; m.receiveShadow = false; m.frustumCulled = false;
+    m.userData.walkerPart = name;
+    if (mat.vertexColors === false && name !== 'shadow') for (let i = 0; i < count; i++) m.setColorAt(i, col('#ffffff'));
+    scene.add(m); WM[name] = m; return m;
+  };
+  mk('legL', geo.limb, std()); mk('legR', geo.limb, std()); mk('armL', geo.limb, std()); mk('armR', geo.limb, std());
+  mk('body', geo.body, std()); mk('head', geo.head, std()); mk('hair', geo.hair, std());
+  mk('eyes', geo.eye, std('#211d1d'), N * 2, false);
+  mk('shadow', geo.shadow, new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: .22, depthWrite: false }), N, false);
+  mk('vest', geo.vest, std(PAL.coral)); mk('badge', geo.badge, std('#ffffff'), N, false);
+  mk('coat', geo.coat, std('#fbfbf8'));
+  mk('capTop', geo.capTop, std()); mk('board', geo.board, std(PAL.ink));
+  mk('pack', geo.pack, std()); mk('case', geo.case, std());
+  mk('wheelF', geo.wheel, std(PAL.ink)); mk('wheelB', geo.wheel, std(PAL.ink)); mk('frame', geo.frame, std());
+  const hit = mk('hit', geo.hit, new THREE.MeshBasicMaterial({ visible: false }), N, false);
+  WM.shadow.renderOrder = 1;
+  for (const w of WALKERS) {
+    const i = w.i;
+    WM.legL.setColorAt(i, w.pants); WM.legR.setColorAt(i, w.pants);
+    const sleeve = w.role === 'grad' ? col('#fbfbf8') : w.shirt;
+    WM.armL.setColorAt(i, sleeve); WM.armR.setColorAt(i, sleeve);
+    WM.body.setColorAt(i, w.shirt); WM.head.setColorAt(i, w.skin); WM.hair.setColorAt(i, w.hair);
+    WM.capTop.setColorAt(i, col(w.role === 'maker' ? '#f2c230' : PAL.yellow));
+    WM.pack.setColorAt(i, col(['#db6a41', '#3e7c8c', '#6f7fb5', '#211d1d'][i % 4]));
+    WM.case.setColorAt(i, col(['#6f7fb5', '#db6a41', '#58a6a6'][i % 3]));
+    WM.frame.setColorAt(i, col([PAL.coral, PAL.teal, PAL.yellow][i % 3]));
+  }
+  for (const k in WM) if (WM[k].instanceColor) WM[k].instanceColor.needsUpdate = true;
+  PICKABLE.push(hit);
+}
+let ZERO;
+const _W = { M: null, L: null, v: null, q: null, s: null, e: null, up: null };
+function walkerByInstance(mesh, id) { const n = mesh.userData.walkerPart === 'eyes' ? id >> 1 : id; return WALKERS[n] || null; }
+
+// ── 移動與動畫 ───────────────────────────────────────────────────────────
+function updateWalkers(dt) {
+  if (!_W.M) { _W.M = new THREE.Matrix4(); _W.L = new THREE.Matrix4(); _W.v = new THREE.Vector3(); _W.q = new THREE.Quaternion(); _W.s = new THREE.Vector3(); _W.e = new THREE.Euler(); _W.up = new THREE.Vector3(0, 1, 0); }
+  const sc = clamp(state.camDist / 20, 1, 1.45);
+  for (const w of WALKERS) {
+    let walking = true;
+    if (w.frozen) walking = false;
+    else if (w.wait > 0) { w.wait -= dt; walking = false; if (w.wait <= 0) onWaitEnd(w); }
+    else {
+      const prev = w.s;
+      w.s += w.speed * dt * w.dir;
+      if (w.mode === 'loop') {
+        let wrapped = false; if (w.s >= w.len) { w.s -= w.len; wrapped = true; }
+        const st = w.stops[w.nextStop];
+        if (st) {
+          const crossed = wrapped ? (st.s > prev || st.s <= w.s) : (prev < st.s && w.s >= st.s);
+          if (crossed) { w.nextStop = (w.nextStop + 1) % w.stops.length; if (rand() < .7) { w.s = st.s; w.wait = 2.2 + rand() * 2.5; w.activity = st; walking = false; } }
+        }
+      } else if (w.s >= w.len || w.s <= 0) {
+        const atEnd = w.s >= w.len; w.s = clamp(w.s, 0, w.len);
+        w.wait = w.endWait[atEnd ? 1 : 0]; w.atEnd = atEnd; walking = false;
+        onArrive(w, atEnd);
+      }
+    }
+    if (dt > 0 || !w.posInit) { const h = samplePath(w, w.s, w.pos); w.posInit = true; if (walking) w.heading = h + (w.dir < 0 ? Math.PI : 0); }
+    if (!walking && w.activity && w.mode === 'loop') { const it = ITEM[w.activity.item]; w.heading = Math.atan2(it.x - w.pos.x, it.z - w.pos.z); }
+    w.walking = walking;
+    poseWalker(w, sc);
+  }
+  for (const k in WM) WM[k].instanceMatrix.needsUpdate = true;
+  updateTagsAndBadges();
+}
+function onWaitEnd(w) {
+  if (w.mode === 'loop') { w.activity = null; return; }
+  w.dir = w.atEnd ? -1 : 1;
+  if (w.logEvents && w.flow) logEvent(w.flow.id, tr(`${roleName(w)}帶著${DATA.carries[w.flow.carry]}從${ISL[w.atEnd ? w.flow.to : w.flow.from].d.name}出發`, `A ${roleNameEn(w)} departs ${ISL[w.atEnd ? w.flow.to : w.flow.from].d.en} with ${DATA.carriesEn[w.flow.carry]}`), 'depart');
+}
+function onArrive(w, atEnd) {
+  if (!w.logEvents) return;
+  if (w.flow) {
+    const isl = ISL[atEnd ? w.flow.to : w.flow.from].d;
+    logEvent(w.flow.id, tr(`${roleName(w)}抵達${isl.name}，交接${DATA.carries[w.flow.carry]}`, `${roleNameEn(w)} reaches ${isl.en} and hands over ${DATA.carriesEn[w.flow.carry]}`), atEnd ? 'handoff' : 'arrive');
+  } else if (w.teacher != null) {
+    const t = DATA.teachers[w.teacher], isl = ISL[atEnd ? t.visit : 't'].d;
+    logEvent('teacher', tr(atEnd ? `${t.name}老師抵達${isl.name}，和同學交流` : `${t.name}老師回到綜三館研究室`, atEnd ? `${t.en} arrives at ${isl.en}` : `${t.en} is back at Building 3`), 'arrive');
+  }
+}
+function roleName(w) { return ({ jc: '五專生', fresh: '專一新生', ug: '大學生', bike: '騎車的大學生', grad: '研究生', cap: '大四生', maker: '專題組員', intern: '實習生', teacher: '老師' })[w.role] || '島民'; }
+function roleNameEn(w) { return ({ jc: 'JC student', fresh: 'JC freshman', ug: 'student', bike: 'cyclist', grad: 'grad student', cap: 'senior', maker: 'capstone maker', intern: 'intern', teacher: 'teacher' })[w.role] || 'islander'; }
+function setPart(name, i, local) { _W.L.multiplyMatrices(_W.M, local); WM[name].setMatrixAt(i, _W.L); }
+function local(x, y, z, sx, sy, sz, rx = 0, ry = 0, rz = 0, pivotY = 0) {
+  const m = new THREE.Matrix4();
+  _W.e.set(rx, ry, rz); _W.q.setFromEuler(_W.e);
+  if (pivotY) { // 以 (x,y,z) 為樞紐旋轉，零件中心再往下 pivotY
+    const a = new THREE.Matrix4().compose(_W.v.set(x, y, z), _W.q, _W.s.set(1, 1, 1));
+    const b = new THREE.Matrix4().compose(_W.v.set(0, -pivotY, 0), new THREE.Quaternion(), _W.s.set(sx, sy, sz));
+    return m.multiplyMatrices(a, b);
+  }
+  return m.compose(_W.v.set(x, y, z), _W.q, _W.s.set(sx, sy, sz));
+}
+const _L = {};
+function poseWalker(w, sc) {
+  const i = w.i, t = state.time, ph = t * 9 + w.phase * 20;
+  const amp = w.walking ? 1 : 0;
+  const bike = w.role === 'bike';
+  const lift = bike ? .055 : 0;
+  const bob = w.walking && !bike ? Math.abs(Math.sin(ph)) * .012 : 0;
+  const s = sc * (w.teacher != null ? 1.12 : 1);
+  _W.q.setFromAxisAngle(_W.up, w.heading);
+  _W.M.compose(_W.v.set(w.pos.x, w.pos.y + bob, w.pos.z), _W.q, _W.s.set(s, s, s));
+  const legSw = bike ? Math.sin(ph * .8) * .6 : Math.sin(ph) * .55 * amp, armSw = bike ? -.9 : Math.sin(ph) * .45 * amp;
+  setPart('legL', i, local(-.024, .09 + lift, bike ? .02 : 0, .032, .09, .036, (bike ? -1.1 : 0) + legSw, 0, 0, .045));
+  setPart('legR', i, local(.024, .09 + lift, bike ? .02 : 0, .032, .09, .036, (bike ? -1.1 : 0) - legSw, 0, 0, .045));
+  setPart('armL', i, local(-.058, .18 + lift, 0, .026, .08, .026, -armSw, 0, .12, .04));
+  setPart('armR', i, local(.058, .18 + lift, 0, .026, .08, .026, w.role === 'intern' ? .15 : armSw, 0, -.12, .04));
+  setPart('body', i, local(0, .14 + lift, 0, 1, 1, 1));
+  setPart('head', i, local(0, .28 + lift, 0, 1, 1, 1));
+  setPart('hair', i, local(0, .284 + lift, -.006, 1, 1, 1, -.25));
+  setPart('eyes', i * 2, local(-.024, .285 + lift, .062, .02, .024, .02));
+  setPart('eyes', i * 2 + 1, local(.024, .285 + lift, .062, .02, .024, .02));
+  _L.sh = _L.sh || new THREE.Matrix4();
+  WM.shadow.setMatrixAt(i, _W.L.compose(_W.v.set(w.pos.x, w.pos.y + .004, w.pos.z), new THREE.Quaternion(), _W.s.set(s, s, s)));
+  setPart('hit', i, local(0, 0, 0, 1, 1, 1));
+  const r = w.role;
+  if (r === 'teacher') { setPart('vest', i, local(0, .16, 0, 1, 1, 1)); setPart('badge', i, local(.025, .17, .053, 1, 1, 1)); } else { WM.vest.setMatrixAt(i, ZERO); WM.badge.setMatrixAt(i, ZERO); }
+  if (r === 'grad') setPart('coat', i, local(0, .125, 0, 1, 1, 1)); else WM.coat.setMatrixAt(i, ZERO);
+  if (r === 'fresh' || r === 'maker') setPart('capTop', i, local(0, .29 + lift, 0, 1, 1, 1, -.12)); else WM.capTop.setMatrixAt(i, ZERO);
+  if (r === 'cap') setPart('board', i, local(0, .355, 0, 1, 1, 1, -.1, Math.PI / 4)); else WM.board.setMatrixAt(i, ZERO);
+  if (r === 'jc' || r === 'fresh' || r === 'ug') setPart('pack', i, local(0, .16, -.06, 1, 1, 1)); else WM.pack.setMatrixAt(i, ZERO);
+  if (r === 'intern') setPart('case', i, local(.08, .04, -.02, 1, 1, 1, .3)); else WM.case.setMatrixAt(i, ZERO);
+  if (bike) {
+    setPart('wheelF', i, local(0, .055, .11, 1, 1, 1, 0, Math.PI / 2, ph * 0));
+    setPart('wheelB', i, local(0, .055, -.11, 1, 1, 1, 0, Math.PI / 2));
+    setPart('frame', i, local(0, .1, 0, 1, 1, 1, .1));
+  } else { WM.wheelF.setMatrixAt(i, ZERO); WM.wheelB.setMatrixAt(i, ZERO); WM.frame.setMatrixAt(i, ZERO); }
+}
+
+// ── 頭上 badge（搬運物圖示）、老師名牌、名牌氣泡 ─────────────────────────────
+const badgeTex = {};
+function badgeTexture(kind) {
+  if (badgeTex[kind]) return badgeTex[kind];
+  const t = canvasTex(128, 128, (g) => {
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(64, 64, 56, 0, 7); g.fill();
+    g.lineWidth = 9; g.strokeStyle = PAL.coral; g.stroke();
+    g.strokeStyle = PAL.ink; g.fillStyle = PAL.ink; g.lineWidth = 6; g.lineJoin = g.lineCap = 'round';
+    const L = (pts, close) => { g.beginPath(); pts.forEach(([x, y], k) => k ? g.lineTo(x, y) : g.moveTo(x, y)); if (close) g.closePath(); g.stroke(); };
+    switch (kind) {
+      case 'book': L([[38, 44], [64, 52], [90, 44], [90, 86], [64, 94], [38, 86]], true); L([[64, 52], [64, 94]]); break;
+      case 'paper': L([[44, 34], [76, 34], [86, 46], [86, 94], [44, 94]], true); L([[54, 58], [76, 58]]); L([[54, 72], [76, 72]]); break;
+      case 'laptop': L([[42, 40], [86, 40], [86, 74], [42, 74]], true); L([[32, 88], [96, 88]]); break;
+      case 'robot': L([[44, 50], [84, 50], [84, 86], [44, 86]], true); L([[64, 50], [64, 36]]); g.beginPath(); g.arc(55, 66, 4, 0, 7); g.arc(73, 66, 4, 0, 7); g.fill(); break;
+      case 'cert': L([[40, 40], [88, 40], [88, 78], [40, 78]], true); g.beginPath(); g.arc(78, 82, 9, 0, 7); g.stroke(); L([[50, 54], [74, 54]]); break;
+      case 'trophy': L([[46, 38], [82, 38], [78, 62], [64, 70], [50, 62]], true); L([[64, 70], [64, 84]]); L([[50, 90], [78, 90]]); L([[46, 44], [36, 48], [46, 58]]); L([[82, 44], [92, 48], [82, 58]]); break;
+      case 'chip': L([[46, 46], [82, 46], [82, 82], [46, 82]], true); for (const k of [54, 64, 74]) { L([[k, 36], [k, 46]]); L([[k, 82], [k, 92]]); L([[36, k], [46, k]]); L([[82, k], [92, k]]); } break;
+    }
+  }, false);
+  return (badgeTex[kind] = t);
+}
+function buildBadgesAndTags() {
+  for (const w of WALKERS) {
+    if (w.flow) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: badgeTexture(w.flow.carry), depthWrite: false, transparent: true }));
+      sp.scale.set(.16, .16, .16); sp.renderOrder = 5; sp.visible = false; scene.add(sp); w.badge = sp;
+    }
+    if (w.teacher != null) {
+      const t = DATA.teachers[w.teacher];
+      const el = document.createElement('div'); el.className = 'tag';
+      el.innerHTML = LANG === 'en' ? esc(t.en) : `${esc(t.name)}<small>老師</small>`;
+      el.title = tr(t.title, t.titleEn);
+      el.addEventListener('click', e => { e.stopPropagation(); selectTeacher(w.teacher); });
+      const o = new CSS2DObject(el); scene.add(o); w.tag = o;
+      w.tagLab = { obj: o, el, prio: 4, kind: 'teacher' }; LABELS.push(w.tagLab);
+    } else {
+      const el = document.createElement('div'); el.className = 'bubble';
+      const o = new CSS2DObject(el); o.visible = false; scene.add(o); w.bubble = o; w.bubbleText = '';
+      w.bubbleLab = { obj: o, el, prio: 1, kind: 'bubble' }; LABELS.push(w.bubbleLab);
+    }
+  }
+  const el = document.createElement('div'); el.className = 'say'; el.style.display = 'none';
+  sayObj = new CSS2DObject(el); sayObj.visible = false; scene.add(sayObj);
+  sayLab = { obj: sayObj, el, prio: 10, kind: 'say' }; LABELS.push(sayLab);
+}
+let sayObj, sayLab, sayWalker = null, sayTimer = null;
+function showTeacherSay(w, text) {
+  if (sayWalker) sayWalker.frozen = false;
+  clearTimeout(sayTimer);
+  sayWalker = w || null;
+  for (const x of WALKERS) if (x.tag) x.tag.element.classList.toggle('sel', x === w);
+  if (!w) { sayObj.visible = false; sayLab.dirtySize = true; return; }
+  w.frozen = true;
+  w.heading = Math.atan2(camera.position.x - w.pos.x, camera.position.z - w.pos.z);
+  const el = sayObj.element; el.textContent = ''; sayObj.visible = true;
+  if (REDUCED) { el.textContent = text; sayLab.dirtySize = true; markDirty(); return; }
+  let i = 0; const step = () => { if (sayWalker !== w) return; i = Math.min(text.length, i + 2); el.textContent = text.slice(0, i); sayLab.dirtySize = true; markDirty(); if (i < text.length) sayTimer = setTimeout(step, 32); };
+  step();
+}
+const _tv = { v: null };
+function updateTagsAndBadges() {
+  if (!_tv.v) _tv.v = new THREE.Vector3();
+  const cam = camera.position, sc = clamp(state.camDist / 20, 1, 1.45);
+  for (const w of WALKERS) {
+    const d = cam.distanceTo(w.pos), headY = w.pos.y + (.42 + (w.role === 'bike' ? .055 : 0)) * sc * (w.teacher != null ? 1.12 : 1);
+    if (w.badge) { w.badge.visible = state.toggles.carry && d < 16; if (w.badge.visible) { w.badge.position.set(w.pos.x, headY + .06, w.pos.z); w.badge.scale.setScalar(.16 * sc); } }
+    if (w.tag) w.tag.position.set(w.pos.x, headY + (w.badge ? .2 : .08), w.pos.z);
+    if (w === sayWalker) sayObj.position.set(w.pos.x, headY + .35, w.pos.z);
+    if (w.bubble) {
+      let txt = '';
+      if (state.toggles.names && d < 14) {
+        if (w.flow) txt = tr(`正在搬 ${DATA.carries[w.flow.carry]}`, `Carrying ${DATA.carriesEn[w.flow.carry]}`);
+        else if (w.activity && w.wait > 0) txt = tr(w.activity.zh, w.activity.en);
+      }
+      const on = !!txt;
+      if (on !== w.bubble.visible) w.bubble.visible = on;
+      if (on && txt !== w.bubbleText) { w.bubble.element.textContent = txt; w.bubbleText = txt; w.bubbleLab.dirtySize = true; }
+      if (on) w.bubble.position.set(w.pos.x, headY + (w.badge && w.badge.visible ? .2 : .06), w.pos.z);
+    }
+  }
+}
+function updateWalkerVisibility() { /* 每幀在 updateTagsAndBadges 中處理 */ }
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  交流線：沿路網折線的 Tube，流動的實線／虛線／點線
+// ═══════════════════════════════════════════════════════════════════════════
+const FLOW_VS = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`;
+const FLOW_FS = `uniform float uTime; uniform float uLen; uniform float uStyle; uniform vec3 uColor; uniform float uOpacity; varying vec2 vUv;
+void main(){
+  float u = vUv.x * uLen * 5. - uTime * 1.4;
+  if (uStyle > .5 && uStyle < 1.5 && fract(u) > .6) discard;
+  if (uStyle > 1.5 && fract(u) > .3) discard;
+  gl_FragColor = vec4(uColor, uOpacity);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`;
+const FLOWS = [];
+function initFlowLines() {
+  const style = { official: 0, thematic: 1, pending: 2 };
+  for (const f of DATA.flows) {
+    const pts = (f.path || routeBetween(f.from, f.to)).map(p => new THREE.Vector3(p.x, p.y + .05, p.z));
+    const cp = new THREE.CurvePath();
+    for (let k = 1; k < pts.length; k++) if (pts[k].distanceTo(pts[k - 1]) > 1e-4) cp.add(new THREE.LineCurve3(pts[k - 1], pts[k]));
+    const len = cp.getLength();
+    const geo = new THREE.TubeGeometry(cp, Math.max(24, Math.ceil(len * 10)), .035, 6, false);
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: FLOW_VS, fragmentShader: FLOW_FS, transparent: true, depthWrite: false,
+      uniforms: { uTime: { value: 0 }, uLen: { value: len }, uStyle: { value: style[f.evidence] || 0 }, uColor: { value: col('#d2542a') }, uOpacity: { value: .82 } }
+    });
+    const m = new THREE.Mesh(geo, mat); m.visible = false; m.renderOrder = 3; m.userData.flow = f.id;
+    scene.add(m); FLOWS.push({ f, m, mat }); PICKABLE.push(m);
+  }
+}
+let flowTime = 0;
+function updateFlowLines(dt) {
+  if (!FLOWS.length) return;
+  flowTime += dt;
+  for (const x of FLOWS) if (x.m.visible) { x.mat.uniforms.uTime.value = flowTime; }
+}
+function refreshFlowVisibility() {
+  const s = state.sel; let any = false;
+  for (const x of FLOWS) {
+    const f = x.f;
+    let on = state.toggles.flows;
+    if (s) {
+      if (s.kind === 'flow') on = on || s.id === f.id;
+      if (s.kind === 'island') on = on || f.from === s.id || f.to === s.id;
+      if (s.kind === 'item') { const isl = ITEM[s.id].island; on = on || f.from === isl || f.to === isl; }
+      if (s.kind === 'walker' && s.walker.flow) on = on || s.walker.flow === f;
+      x.mat.uniforms.uOpacity.value = (s.kind === 'flow' && s.id !== f.id) ? .35 : .82;
+    } else x.mat.uniforms.uOpacity.value = .82;
+    x.m.visible = on; any = any || on;
+  }
+  $('#legend').classList.toggle('hidden', !any);
+  markDirty();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  島嶼日誌
+// ═══════════════════════════════════════════════════════════════════════════
+const JOURNAL = [];
+function initJournal() {
+  const sel = $('#journalFilter');
+  sel.innerHTML = `<option value="">${tr('全部事件', 'All events')}</option><option value="teacher">${tr('老師動態', 'Teachers')}</option>` + DATA.flows.map(f => `<option value="${f.id}">${esc(tr(f.name, f.en))}</option>`).join('');
+  sel.onchange = renderJournal;
+  logEvent('slot', tr('島上的一天開始了，時鐘從 10:00 起走', 'A new day on the island begins at 10:00'));
+}
+function logEvent(flowId, text, type = 'info') {
+  JOURNAL.unshift({ t: fmtTime(state.minute), flowId, text, type });
+  if (JOURNAL.length > 60) JOURNAL.length = 60;
+  if (!$('#journal').classList.contains('hidden')) renderJournal();
+}
+function renderJournal() {
+  const f = $('#journalFilter').value;
+  const icon = { depart: '🚶', arrive: '📍', handoff: '🤝', info: '•', slot: '⏰' };
+  $('#journalList').innerHTML = JOURNAL.filter(e => !f || e.flowId === f).slice(0, 40).map(e => `<div><time>${e.t}</time>${icon[e.type] || '•'} ${esc(e.text)}</div>`).join('') || `<div style="color:var(--muted)">${tr('尚無事件', 'No events yet')}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  主迴圈與啟動
 // ═══════════════════════════════════════════════════════════════════════════
 let lastT = performance.now(), lastStep = -1;
