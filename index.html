@@ -998,11 +998,17 @@ function dijkstra(src, dst) {
   });
   return pts;
 }
-function routeBetween(fromId, toId) {
-  const a = ISL[fromId], b = ISL[toId];
-  return dijkstra(nearestNode(a, b.x, b.z), nearestNode(b, a.x, a.z));
+function sideNode(s, tx, tz, off) {
+  // 選步道環上「偏離目標方向 off 弧度」的節點，讓路線先繞一段步道再過橋
+  const want = Math.atan2(tz - s.z, tx - s.x) + off;
+  let best = s.nodes[0], bd = 1e9;
+  for (const k of s.nodes) { const n = NET.nodes[k]; let d = Math.atan2(n.z - s.z, n.x - s.x) - want; d = Math.abs(Math.atan2(Math.sin(d), Math.cos(d))); if (d < bd) { bd = d; best = k; } }
+  return best;
 }
-
+function routeBetween(fromId, toId, off = 2.1) {
+  const a = ISL[fromId], b = ISL[toId];
+  return dijkstra(sideNode(a, b.x, b.z, off), sideNode(b, a.x, a.z, -off));
+}
 function buildBridges() {
   for (const br of NET.bridges) {
     const { A, B, h } = br;
@@ -1565,6 +1571,545 @@ function initSeaDecor() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  介面：側欄、卡片、HUD、選取／高亮／飛行、標籤避讓
+// ═══════════════════════════════════════════════════════════════════════════
+const CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩';
+const ACT = { study: ['學習', 'Study', '📘'], project: ['專題', 'Project', '🛠'], leisure: ['休閒', 'Leisure', '🎈'], award: ['得獎', 'Award', '🏆'] };
+const WHEN = { fall: [0], spring: [2], year: [0, 2], summer: [3] };
+const EVID = { official: ['正式制度', 'Official program'], thematic: ['社群交流', 'Community'], pending: ['籌備進行中', 'In preparation'] };
+const isDesktop = () => innerWidth > 800;
+const ui = { side: true, card: false, tab: 'islands', query: '', viewOff: { x: 0, y: 0 }, viewOffTarget: { x: 0, y: 0 }, tinted: new Set(), pins: [], pinLines: null, slot: null, birdSaved: null, speaking: false };
+const teacherName = t => tr(t.name + ' 老師', t.en);
+const photoURL = t => DATA.photoBase + t.photo;
+
+function initUI() {
+  applyI18n();
+  const logo = $('#logo');
+  const fallbackLogo = () => { const d = document.createElement('div'); d.className = 'logoFallback'; d.textContent = '資工'; logo.replaceWith(d); };
+  if (logo.complete && !logo.naturalWidth) fallbackLogo(); else logo.addEventListener('error', fallbackLogo);
+
+  $('#btnHome').onclick = () => { if (state.toggles.bird) setToggle('bird', false); clearSelection(); flyTo(overviewPose()); };
+  $('#btnList').onclick = () => setSide(!ui.side);
+  $('#btnHelp').onclick = () => openHelp();
+  $('#cardClose').onclick = () => clearSelection();
+  $('#search').addEventListener('input', e => { ui.query = e.target.value.trim(); renderSide(); });
+  for (const [btn, tab] of [['#tabIslands', 'islands'], ['#tabTeachers', 'teachers'], ['#tabFlows', 'flows']]) $(btn).onclick = () => { ui.tab = tab; renderSide(); };
+  document.querySelectorAll('#hud [data-time]').forEach(b => b.onclick = () => { state.minute = +b.dataset.time; applyTime(state.minute); onMinuteStep(); markDirty(); });
+  document.querySelectorAll('#hud [data-tog]').forEach(b => b.onclick = () => setToggle(b.dataset.tog, !(b.getAttribute('aria-pressed') === 'true')));
+  $('#timeBtn').onclick = () => $('#hud').classList.toggle('collapsed');
+  if (!isDesktop()) { $('#hud').classList.add('collapsed'); setSide(false); }
+  initSheets();
+  initPicking();
+  window.addEventListener('keydown', onKey);
+  window.selectIsland = selectIsland;
+  ui.pinLines = new THREE.Group(); scene.add(ui.pinLines);
+  renderSide();
+  updateSlot(true);
+  addEventListener('resize', () => updateViewOffset());
+}
+function applyI18n() {
+  document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-Hant';
+  if (LANG !== 'en') return;
+  document.title = 'NFU CSIE Island';
+  document.querySelectorAll('[data-en]').forEach(el => { el.textContent = el.dataset.en; });
+  document.querySelectorAll('[data-en-ph]').forEach(el => { el.placeholder = el.dataset.enPh; });
+  document.querySelectorAll('[data-en-title]').forEach(el => { el.title = el.dataset.enTitle; });
+}
+function setToggle(name, on) {
+  const b = document.querySelector(`#hud [data-tog="${name}"]`); if (b) b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  if (name === 'pause') { state.paused = on; if (typeof speechSynthesis !== 'undefined' && on) stopSpeech(); }
+  else state.toggles[name] = on;
+  if (name === 'bird') setBird(on);
+  if (name === 'flows' && typeof refreshFlowVisibility === 'function') refreshFlowVisibility();
+  if (name === 'log') { $('#journal').classList.toggle('hidden', !on); if (on && typeof renderJournal === 'function') renderJournal(); }
+  markDirty();
+}
+function setSide(open) {
+  ui.side = open; $('#side').classList.toggle('closed', !open); $('#btnList').setAttribute('aria-pressed', open ? 'true' : 'false');
+  if (open && !isDesktop() && ui.card) { $('#card').classList.add('closed'); }
+  updateViewOffset();
+}
+function openCard(html, eyebrow) {
+  $('#cardBody').innerHTML = html; $('#cardEyebrow').textContent = eyebrow || '';
+  $('#card').classList.remove('closed'); $('#card').classList.remove('full'); $('#cardBody').scrollTop = 0; ui.card = true;
+  if (!isDesktop() && ui.side) { ui.side = false; $('#side').classList.add('closed'); $('#btnList').setAttribute('aria-pressed', 'false'); }
+  wireCard(); updateViewOffset();
+}
+function closeCard() { $('#card').classList.add('closed'); ui.card = false; stopSpeech(); updateViewOffset(); }
+function updateViewOffset() {
+  const w = innerWidth;
+  if (isDesktop()) { const left = ui.card ? 356 : 0, right = ui.side ? 334 : 0; ui.viewOffTarget = { x: -(left - right) / 2, y: 0 }; }
+  else { const sh = ui.card ? innerHeight * .34 : ui.side ? innerHeight * .52 : 0; ui.viewOffTarget = { x: 0, y: sh * .45 }; }
+  if (REDUCED) ui.viewOff = { ...ui.viewOffTarget };
+  markDirty();
+}
+function stepViewOffset() {
+  const o = ui.viewOff, t = ui.viewOffTarget;
+  if (Math.abs(o.x - t.x) < .5 && Math.abs(o.y - t.y) < .5) { if (o.x !== t.x || o.y !== t.y) { o.x = t.x; o.y = t.y; } else return false; }
+  else { o.x += (t.x - o.x) * .18; o.y += (t.y - o.y) * .18; }
+  const w = innerWidth, h = innerHeight;
+  if (Math.abs(o.x) < .01 && Math.abs(o.y) < .01) camera.clearViewOffset(); else camera.setViewOffset(w, h, o.x, o.y, w, h);
+  return true;
+}
+
+// ── 側欄清單 ────────────────────────────────────────────────────────────────
+function renderSide() {
+  for (const [btn, tab] of [['#tabIslands', 'islands'], ['#tabTeachers', 'teachers'], ['#tabFlows', 'flows']]) $(btn).classList.toggle('on', ui.tab === tab);
+  const q = ui.query.toLowerCase(), body = $('#sideBody');
+  const match = (...s) => !q || s.some(x => x && String(x).toLowerCase().includes(q));
+  let h = '';
+  if (q) {
+    h += `<div class="sec">${tr('搜尋結果', 'RESULTS')}</div>`;
+    let n = 0;
+    for (const d of DATA.islands) {
+      if (match(d.name, d.en, d.full, d.summary)) { h += `<button class="row" data-isl="${d.id}"><span class="n">${d.no}</span>${esc(tr(d.full, d.fullEn))}</button>`; n++; }
+      d.items.forEach((it, i) => { if (match(it.name, it.en, it.desc, it.descEn, ...(it.facts || []))) { h += `<button class="row" data-item="${it.id}"><span class="n">${CIRCLED[i]}</span>${esc(tr(it.name, it.en))} <small style="color:var(--muted)">· ${esc(tr(d.name, d.en))}</small></button>`; n++; } });
+    }
+    DATA.teachers.forEach((t, i) => { if (match(t.name, t.en, t.title, t.lab, ...t.skills.flat())) { h += teacherRow(t, i); n++; } });
+    DATA.flows.forEach(f => { if (match(f.name, f.en)) { h += flowRow(f); n++; } });
+    if (!n) h += `<p style="padding:8px 12px;color:var(--muted)">${tr('找不到符合的項目', 'No matches')}</p>`;
+  } else if (ui.tab === 'islands') {
+    for (const d of DATA.islands) {
+      const open = state.sel && (state.sel.kind === 'island' && state.sel.id === d.id || state.sel.kind === 'item' && ITEM[state.sel.id]?.island === d.id);
+      h += `<details ${open ? 'open' : ''}><summary><span class="sw" style="background:${d.color}"></span><span class="no">${d.no}</span><span class="ttl">${esc(tr(d.full, d.fullEn))}</span><span class="cnt">${d.items.length}</span></summary>`;
+      h += `<button class="row" data-isl="${d.id}"><span class="n">${d.icon}</span>${tr('前往島嶼', 'Go to island')}</button>`;
+      d.items.forEach((it, i) => { h += `<button class="row" data-item="${it.id}"><span class="n">${CIRCLED[i]}</span>${esc(tr(it.name, it.en))}</button>`; });
+      h += `</details>`;
+    }
+  } else if (ui.tab === 'teachers') {
+    h += `<div class="sec">${tr(`專任教師 ${DATA.teachers.length} 位`, `${DATA.teachers.length} FULL-TIME FACULTY`)}</div>`;
+    DATA.teachers.forEach((t, i) => { h += teacherRow(t, i); });
+  } else {
+    h += `<div class="sec">${tr('交流線', 'LINKS')}</div>`;
+    DATA.flows.forEach(f => { h += flowRow(f); });
+  }
+  body.innerHTML = h;
+  body.querySelectorAll('[data-isl]').forEach(b => b.onclick = () => selectIsland(b.dataset.isl));
+  body.querySelectorAll('[data-item]').forEach(b => b.onclick = () => selectItem(b.dataset.item));
+  body.querySelectorAll('[data-teacher]').forEach(b => b.onclick = () => selectTeacher(+b.dataset.teacher));
+  body.querySelectorAll('[data-flow]').forEach(b => b.onclick = () => selectFlow(b.dataset.flow));
+  body.querySelectorAll('img').forEach(im => im.addEventListener('error', () => { im.style.visibility = 'hidden'; }));
+}
+function teacherRow(t, i) {
+  return `<button class="row" data-teacher="${i}"><img src="${photoURL(t)}" alt="" loading="lazy" referrerpolicy="no-referrer"><span><b>${esc(teacherName(t))}</b><br><small style="color:var(--muted)">${esc(tr(t.title, t.titleEn))}</small></span></button>`;
+}
+function flowRow(f) {
+  const a = ISL[f.from].d, b = ISL[f.to].d;
+  return `<button class="row" data-flow="${f.id}"><span class="n">〰</span><span>${esc(tr(f.name, f.en))}<br><small style="color:var(--muted)">${esc(tr(a.name, a.en))} → ${esc(tr(b.name, b.en))} · ${tr(...EVID[f.evidence])}</small></span></button>`;
+}
+
+// ── 卡片內容 ────────────────────────────────────────────────────────────────
+function flowsOf(islandId) { return DATA.flows.filter(f => f.from === islandId || f.to === islandId); }
+function slotsOf(itemId) { return DATA.dayCycle.filter(s => s.items.includes(itemId)); }
+function islandCard(id) {
+  const s = ISL[id], d = s.d;
+  const teachers = DATA.teachers.map((t, i) => [t, i]).filter(([t]) => t.visit === id || id === 't');
+  let h = `<div class="icon">${d.icon}</div><h2>${esc(tr(d.full, d.fullEn))}</h2><p>${esc(tr(d.summary, d.summaryEn))}</p>`;
+  if (id === 't') h += `<p style="font-size:13px;color:var(--muted)">${esc(tr(DATA.dept.intro, DATA.dept.introEn))}</p>`;
+  h += `<div class="eyebrow" style="margin-top:12px">${tr('島上的事', 'ON THIS ISLAND')}</div><div class="list">`;
+  d.items.forEach((it, i) => { const a = ACT[it.activity]; h += `<button data-item="${it.id}"><span class="n">${CIRCLED[i]}</span><span style="flex:1">${esc(tr(it.name, it.en))}</span>${a ? `<small>${a[2]}</small>` : ''}</button>`; });
+  h += `</div>`;
+  const fl = flowsOf(id);
+  if (fl.length) { h += `<div class="eyebrow" style="margin-top:12px">${tr('交流線', 'LINKS')}</div><div class="chips">`; fl.forEach(f => { h += `<button class="chip" data-flow="${f.id}">〰 ${esc(tr(f.name, f.en))}</button>`; }); h += `</div>`; }
+  if (teachers.length) { h += `<div class="eyebrow" style="margin-top:12px">${id === 't' ? tr('專任教師', 'FACULTY') : tr('常來交流的老師', 'VISITING FACULTY')}</div><div class="chips">`; teachers.forEach(([t, i]) => { h += `<button class="chip cream" data-teacher="${i}">🏷 ${esc(teacherName(t))}</button>`; }); h += `</div>`; }
+  h += srcLine();
+  return h;
+}
+function bigNumbers(facts) {
+  const out = [];
+  for (const f of facts || []) {
+    if (/\(\d+\)\d/.test(f)) continue;
+    const m = f.match(/(\d[\d,.]*)\s*(年|月|班|週|小時|學分|大獎|位|名|屆|組|支|間|個|頁|樓|F)?/);
+    if (!m) continue;
+    const label = f.replace(new RegExp('第?\\s*' + m[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), '').replace(/^[\s,，、：:（）()]+|[\s,，、：:（）()]+$/g, '').slice(0, 16);
+    out.push({ n: m[1], u: m[2] || '', label });
+    if (out.length === 3) break;
+  }
+  return out;
+}
+function itemCard(id) {
+  const it = ITEM[id], d = it.d, s = ISL[it.island];
+  const facts = LANG === 'en' && d.factsEn ? d.factsEn : d.facts;
+  const tiles = bigNumbers(d.facts);
+  const a = ACT[d.activity];
+  let h = `<canvas class="thumb" id="thumb" width="320" height="320"></canvas>`;
+  h += `<h2>${esc(tr(d.name, d.en))}</h2>`;
+  h += `<div class="chips"><button class="chip cream" data-isl="${s.d.id}">${s.d.icon} ${esc(tr(s.d.full, s.d.fullEn))}</button>${a ? `<span class="chip">${a[2]} ${tr(a[0], a[1])}</span>` : ''}</div>`;
+  h += `<p>${esc(tr(d.desc, d.descEn))}</p>`;
+  if (tiles.length) { h += `<div class="tiles">`; tiles.forEach(t => { h += `<div class="tile"><span class="big">${esc(t.n)}<small style="font-size:12px;color:var(--coral)">${esc(t.u)}</small></span><small>${esc(t.label)}</small></div>`; }); h += `</div>`; }
+  h += `<div class="eyebrow">${tr('重點', 'FACTS')}</div><ul>${(facts || []).map(f => `<li>${esc(f)}</li>`).join('')}</ul>`;
+  const on = WHEN[d.when] || [];
+  const tl = LANG === 'en' ? ['Fall', 'Winter break', 'Spring', 'Summer'] : ['上學期', '寒假', '下學期', '暑假'];
+  h += `<div class="eyebrow" style="margin-top:12px">${tr('時程', 'WHEN')}</div><div class="timeline">${tl.map((t, i) => `<span class="${on.includes(i) ? 'on' : ''}">${t}</span>`).join('')}</div>`;
+  const sl = slotsOf(id);
+  if (sl.length) h += `<p style="font-size:13px;color:var(--muted)">✨ ${tr('一天中亮起的時段：', 'Lit during: ')}${sl.map(x => esc(tr(x.label, x.en))).join('、')}</p>`;
+  h += srcLine();
+  return h;
+}
+function flowCard(id) {
+  const f = DATA.flows.find(x => x.id === id), a = ISL[f.from].d, b = ISL[f.to].d;
+  const carry = tr(DATA.carries[f.carry], DATA.carriesEn[f.carry]);
+  let h = `<h2>${esc(tr(f.name, f.en))}</h2>`;
+  h += `<div class="flowHead"><button class="chip" data-isl="${a.id}">${a.icon} ${esc(tr(a.name, a.en))}</button> → <button class="chip" data-isl="${b.id}">${b.icon} ${esc(tr(b.name, b.en))}</button></div>`;
+  h += `<div class="tiles"><div class="tile"><span class="big">${f.count}</span><small>${tr('位島民往返', 'walkers')}</small></div><div class="tile"><span class="big" style="font-size:20px">${BADGE_EMOJI[f.carry] || '📦'}</span><small>${esc(carry)}</small></div><div class="tile"><span class="big" style="font-size:16px">${tr(...EVID[f.evidence])}</span><small>${tr('證據等級', 'evidence')}</small></div></div>`;
+  h += `<p>${tr(`島民帶著${carry}，從${a.full}走到${b.full}，到站後停下交接再折返。`, `Islanders carry ${carry} from ${a.fullEn} to ${b.fullEn}, hand it over and walk back.`)}</p>`;
+  h += `<p style="font-size:13px;color:var(--muted)">${tr('線條樣式：實線＝正式制度、虛線＝社群交流、點線＝籌備進行中。', 'Line style: solid = official, dashed = community, dotted = in preparation.')}</p>`;
+  return h;
+}
+const BADGE_EMOJI = { book: '📒', paper: '📄', laptop: '💻', robot: '🤖', cert: '📜', trophy: '🏆', chip: '🔲' };
+function teacherIntro(t) {
+  const sk = t.skills;
+  if (LANG === 'en') {
+    return `Hi! I'm ${t.en}, ${t.titleEn} at NFU CSIE. ` + (t.lab ? `I run the ${t.lab} — find me at ${t.office}. ` : `My office is ${t.office}. `) + `My expertise: ${sk.slice(0, 4).map(s => s[1]).join(', ')}${sk.length > 4 ? ', and more' : ''}. Come talk to me about ${sk[0][1].toLowerCase()}!`;
+  }
+  return `大家好，我是${t.name}老師，${t.title}。` + (t.lab ? `我主持「${t.lab}」，研究室在${t.office}。` : `我的研究室在${t.office}。`) + `我的專業是${sk.slice(0, 4).map(s => s[0]).join('、')}${sk.length > 4 ? '等' : ''}。歡迎來找我聊聊${sk[0][0]}！`;
+}
+function teacherCard(i) {
+  const t = DATA.teachers[i], v = ISL[t.visit]?.d;
+  let h = `<div class="teacherHead"><img src="${photoURL(t)}" alt="${esc(t.name)}" referrerpolicy="no-referrer" data-fallback="${esc(t.name[0])}"><div><h2 style="margin:0">${esc(teacherName(t))}</h2><div style="font-size:13px;color:var(--muted)">${esc(LANG === 'en' ? t.titleEn : t.en + ' · ' + t.title)}</div></div></div>`;
+  h += `<div class="speech" id="introText" data-full="${esc(teacherIntro(t))}"></div>`;
+  h += `<div class="chips"><button class="chip" id="speakBtn">🔊 ${tr('聽老師自我介紹', 'Hear the intro')}</button>${v ? `<button class="chip cream" data-isl="${v.id}">${v.icon} ${tr('常去', 'Visits')} ${esc(tr(v.name, v.en))}</button>` : ''}</div>`;
+  if (t.lab) h += `<div class="eyebrow" style="margin-top:12px">${tr('實驗室', 'LAB')}</div><p style="margin:4px 0">${esc(t.lab)}</p>`;
+  h += `<div class="eyebrow" style="margin-top:12px">${tr('研究室', 'OFFICE')}</div><p style="margin:4px 0">${esc(t.office)}</p>`;
+  h += `<div class="eyebrow" style="margin-top:12px">${tr('專長', 'EXPERTISE')}</div><ul>${t.skills.map(s => `<li>${esc(LANG === 'en' ? s[1] : s[0])}${LANG === 'en' ? '' : ` <small style="color:var(--muted)">${esc(s[1])}</small>`}</li>`).join('')}</ul>`;
+  h += `<div class="src">${tr('資料與照片來源：', 'Data & photo: ')}<a href="${DATA.facultyPage}" target="_blank" rel="noopener">${tr('資工系網站 › 專任教師', 'CSIE website › Faculty')}</a></div>`;
+  return h;
+}
+function walkerCard(w) {
+  const f = w.flow, s = ISL[w.home].d;
+  const carry = f ? tr(DATA.carries[f.carry], DATA.carriesEn[f.carry]) : '';
+  let h = `<div class="icon">${ROLE_ICON[w.role] || '🧑‍🎓'}</div><h2>${esc(tr(s.full, s.fullEn))} ${tr('島民', 'islander')}</h2>`;
+  if (f) {
+    const a = ISL[f.from].d, b = ISL[f.to].d;
+    h += `<p>${tr(`正在搬${carry}，往返${a.name}與${b.name}之間。`, `Carrying ${carry} between ${a.en} and ${b.en}.`)}</p>`;
+    h += `<div class="chips"><button class="chip" data-flow="${f.id}">〰 ${esc(tr(f.name, f.en))}</button><button class="chip cream" data-isl="${a.id}">${a.icon} ${esc(tr(a.name, a.en))}</button><button class="chip cream" data-isl="${b.id}">${b.icon} ${esc(tr(b.name, b.en))}</button></div>`;
+  } else {
+    h += `<p>${esc(w.activity ? tr(`正在${w.activity.zh}`, `Currently ${w.activity.en}`) : tr('在島上散步', 'Strolling around'))}</p>`;
+    h += `<div class="chips"><button class="chip cream" data-isl="${s.id}">${s.icon} ${esc(tr(s.full, s.fullEn))}</button>${w.activity && w.activity.item ? `<button class="chip" data-item="${w.activity.item}">${esc(tr(ITEM[w.activity.item].d.name, ITEM[w.activity.item].d.en))}</button>` : ''}</div>`;
+  }
+  return h;
+}
+const ROLE_ICON = { jc: '🎒', fresh: '🐣', ug: '🧑‍💻', bike: '🚲', grad: '🥼', cap: '🎓', maker: '⛑', intern: '🧳', teacher: '🏷' };
+function srcLine() { return `<div class="src">${tr('資料來源：', 'Source: ')}<a href="${DATA.city.source}" target="_blank" rel="noopener">csie.nfu.edu.tw</a></div>`; }
+function wireCard() {
+  const b = $('#cardBody');
+  b.querySelectorAll('[data-isl]').forEach(x => x.onclick = () => selectIsland(x.dataset.isl));
+  b.querySelectorAll('[data-item]').forEach(x => x.onclick = () => selectItem(x.dataset.item));
+  b.querySelectorAll('[data-flow]').forEach(x => x.onclick = () => selectFlow(x.dataset.flow));
+  b.querySelectorAll('[data-teacher]').forEach(x => x.onclick = () => selectTeacher(+x.dataset.teacher));
+  b.querySelectorAll('img[data-fallback]').forEach(im => {
+    const fb = () => { const d = document.createElement('div'); d.className = 'ava'; d.textContent = im.dataset.fallback; im.replaceWith(d); };
+    if (im.complete && !im.naturalWidth && im.src) fb(); else im.addEventListener('error', fb);
+  });
+}
+
+// ── 選取流程：高亮 → 顯示相關協作線 → 飛行 → 開卡片 ─────────────────────────
+function selectIsland(id) {
+  const s = ISL[id]; state.sel = { kind: 'island', id };
+  afterSelect();
+  flyTo(poseFor(new THREE.Vector3(s.x, TOP, s.z), new THREE.Vector3(2.75, 5.3, 6.2)));
+  openCard(islandCard(id), `ISLAND ${s.d.no}`);
+}
+function selectItem(id) {
+  const it = ITEM[id]; state.sel = { kind: 'item', id };
+  afterSelect();
+  flyTo(poseFor(new THREE.Vector3(it.x, TOP + .2, it.z), new THREE.Vector3(1.6, 2.5, 3.2)));
+  openCard(itemCard(id), `${ISL[it.island].d.no} ${tr(ISL[it.island].d.name, ISL[it.island].d.en)} · ${CIRCLED[it.idx]}`);
+  requestAnimationFrame(() => renderThumb(id));
+}
+function selectFlow(id) {
+  const f = DATA.flows.find(x => x.id === id); state.sel = { kind: 'flow', id };
+  afterSelect();
+  const a = ISL[f.from], b = ISL[f.to], mid = new THREE.Vector3((a.x + b.x) / 2, TOP, (a.z + b.z) / 2);
+  const span = Math.hypot(a.x - b.x, a.z - b.z);
+  flyTo(poseFor(mid, new THREE.Vector3(2.75, 5.3, 6.2).multiplyScalar(clamp(.8 + span / 8, 1, 2.2))));
+  openCard(flowCard(id), tr('交流線', 'LINK'));
+}
+function selectTeacher(i) {
+  const w = (typeof WALKERS !== 'undefined') ? WALKERS.find(x => x.teacher === i) : null;
+  state.sel = { kind: 'teacher', id: i, walker: w };
+  afterSelect();
+  const p = w ? w.pos.clone() : new THREE.Vector3(ISL.t.x, TOP, ISL.t.z);
+  flyTo(poseFor(p, new THREE.Vector3(1.2, 1.8, 2.6)));
+  openCard(teacherCard(i), tr('專任教師', 'FACULTY'));
+  typeIntro();
+  if (typeof showTeacherSay === 'function') showTeacherSay(w, teacherIntro(DATA.teachers[i]));
+  if (store.get('nfucsie.voice', true)) speak(teacherIntro(DATA.teachers[i]));
+}
+function selectWalker(w) {
+  if (w.teacher != null) return selectTeacher(w.teacher);
+  state.sel = { kind: 'walker', id: w.id, walker: w };
+  afterSelect();
+  flyTo(poseFor(w.pos.clone(), new THREE.Vector3(1.2, 1.8, 2.6)));
+  openCard(walkerCard(w), tr('島民', 'ISLANDER'));
+}
+function clearSelection() {
+  state.sel = null; afterSelect(); closeCard();
+  if (typeof showTeacherSay === 'function') showTeacherSay(null);
+}
+function afterSelect() {
+  refreshHighlight(); refreshPins(); refreshIslandLabels();
+  if (typeof refreshFlowVisibility === 'function') refreshFlowVisibility();
+  if (ui.tab === 'islands' && !ui.query) renderSide();
+  markDirty();
+}
+function refreshIslandLabels() {
+  const selIsl = state.sel && (state.sel.kind === 'island' ? state.sel.id : state.sel.kind === 'item' ? ITEM[state.sel.id].island : null);
+  const fl = state.sel && state.sel.kind === 'flow' ? DATA.flows.find(f => f.id === state.sel.id) : null;
+  for (const id in ISL) {
+    const el = ISL[id].label.element;
+    const on = selIsl === id || (fl && (fl.from === id || fl.to === id));
+    el.classList.toggle('sel', !!on);
+    el.classList.toggle('dim', !!state.sel && !on && (selIsl || fl));
+  }
+}
+function refreshHighlight() {
+  for (const o of ui.tinted) tintOwner(o, null, 0);
+  ui.tinted.clear();
+  const yellow = col(PAL.yellow), coral = col(PAL.coral);
+  const slot = currentSlot();
+  if (slot) for (const id of slot.items) { if (ITEM[id]) { tintOwner(id, yellow, .22); ui.tinted.add(id); } }
+  const s = state.sel;
+  if (s && s.kind === 'item') { tintOwner(s.id, coral, .22); ui.tinted.add(s.id); }
+  if (s && s.kind === 'island') for (const id of ISL[s.id].items) { tintOwner(id, coral, .22); ui.tinted.add(id); }
+  markDirty();
+}
+function refreshPins() {
+  for (const p of ui.pins) { scene.remove(p.obj); p.obj.element.remove(); const k = LABELS.indexOf(p.lab); if (k >= 0) LABELS.splice(k, 1); }
+  ui.pins = [];
+  ui.pinLines.clear();
+  const s = state.sel; if (!s) return;
+  const islId = s.kind === 'island' ? s.id : s.kind === 'item' ? ITEM[s.id].island : null;
+  if (!islId) return;
+  const slot = currentSlot();
+  const mat = new THREE.LineBasicMaterial({ color: PAL.coral, depthTest: false, transparent: true, opacity: .9 });
+  ISL[islId].items.forEach((id, i) => {
+    const it = ITEM[id];
+    const el = document.createElement('div');
+    el.className = 'pin' + (slot && slot.items.includes(id) ? ' lit' : '');
+    el.textContent = i + 1; el.title = tr(it.d.name, it.d.en);
+    el.addEventListener('click', e => { e.stopPropagation(); selectItem(id); });
+    const obj = new CSS2DObject(el); const py = it.top + .32; obj.position.set(it.x, py, it.z); scene.add(obj);
+    const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(it.x, py - .1, it.z), new THREE.Vector3(it.x, it.top, it.z)]);
+    const line = new THREE.Line(g, mat); line.renderOrder = 20; ui.pinLines.add(line);
+    const lab = { obj, el, prio: (s.kind === 'item' && s.id === id) ? 9 : 6, kind: 'pin' };
+    LABELS.push(lab); ui.pins.push({ obj, lab });
+  });
+}
+
+// ── 飛行 ───────────────────────────────────────────────────────────────────
+function poseFor(target, offset) {
+  // offset 以預設全景方向定義；依目前鏡頭的水平方位旋轉，飛行不突兀
+  const curYaw = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
+  const o = offset.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), curYaw - Math.atan2(offset.x, offset.z));
+  if (state.toggles.bird) o.set(.01, 22, 3);
+  return { target: target.clone(), pos: target.clone().add(o) };
+}
+function flyTo(pose) {
+  if (REDUCED) { camera.position.copy(pose.pos); controls.target.copy(pose.target); controls.update(); markDirty(); return; }
+  state.flight = { t0: performance.now(), dur: 800, p0: camera.position.clone(), t0v: controls.target.clone(), p1: pose.pos, t1v: pose.target };
+}
+function updateFlight(now) {
+  const moved = stepViewOffset();
+  const f = state.flight; if (!f) return moved;
+  const t = clamp((now - f.t0) / f.dur, 0, 1), e = easeInOutCubic(t);
+  camera.position.lerpVectors(f.p0, f.p1, e); controls.target.lerpVectors(f.t0v, f.t1v, e);
+  if (t >= 1) state.flight = null;
+  return true;
+}
+function setBird(on) {
+  if (on) {
+    controls.minPolarAngle = 0;
+    const t = controls.target.clone();
+    flyTo({ target: t, pos: t.clone().add(new THREE.Vector3(.01, 42, 6)) });
+  } else {
+    controls.minPolarAngle = THREE.MathUtils.degToRad(25);
+    flyTo(overviewPose());
+  }
+}
+
+// ── 點擊與 raycast ─────────────────────────────────────────────────────────
+const PICKABLE = [];
+function initPicking() {
+  const el = renderer.domElement, ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  let down = null;
+  el.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; state.flight = null; el.focus({ preventScroll: true }); });
+  el.addEventListener('pointerup', e => {
+    if (!down) return; const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y); down = null;
+    if (moved > 6) return;
+    const r = el.getBoundingClientRect();
+    ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const targets = [...KIT.meshes.filter(m => m.visible), ...GROUND, ...PICKABLE.filter(m => m.visible)];
+    for (const m of targets) if (m.userData.walkerPart) m.computeBoundingSphere();
+    const hits = ray.intersectObjects(targets, false);
+    for (const h of hits) {
+      const ud = h.object.userData;
+      if (ud.walkerPart && h.instanceId != null && typeof walkerByInstance === 'function') { const w = walkerByInstance(h.object, h.instanceId); if (w) return selectWalker(w); continue; }
+      if (ud.flow) return selectFlow(ud.flow);
+      if (ud.kit && h.instanceId != null) { const o = ud.owners[h.instanceId]; if (o && ITEM[o]) return selectItem(o); }
+      const isl = islandAt(h.point.x, h.point.z);
+      if (isl) return selectIsland(isl);
+      if (ud.kit) continue;
+    }
+    clearSelection();
+  });
+}
+function islandAt(x, z) { for (const id in ISL) { const s = ISL[id]; if (hexDist(x - s.x, z - s.z) < R * Math.cos(Math.PI / 6) + .05) return id; } return null; }
+function onKey(e) {
+  if (e.target.matches && e.target.matches('input,textarea,select')) return;
+  const k = e.key;
+  if (k === 'Escape') { if (!$('#modal').classList.contains('hidden')) closeModal(); else clearSelection(); return; }
+  if (k === 'ArrowLeft') { orbitYaw(.08); e.preventDefault(); }
+  else if (k === 'ArrowRight') { orbitYaw(-.08); e.preventDefault(); }
+  else if (k === 'ArrowUp') { orbitPitch(-.05); e.preventDefault(); }
+  else if (k === 'ArrowDown') { orbitPitch(.05); e.preventDefault(); }
+}
+
+// ── 時段 ───────────────────────────────────────────────────────────────────
+function currentSlot(min = state.minute) {
+  const dc = DATA.dayCycle; let s = dc[dc.length - 1];
+  for (const x of dc) if (x.min <= min) s = x;
+  return s;
+}
+function updateSlot(force) {
+  const s = currentSlot();
+  if (!force && s === ui.slot) return;
+  ui.slot = s;
+  $('#slotName').textContent = tr(s.label, s.en).replace(/^\d\d:\d\d\s*/, '');
+  refreshHighlight(); refreshPins();
+  if (!force && typeof logEvent === 'function') logEvent('slot', tr(`時段切換：${s.label}`, `Now: ${s.en}`), 'slot');
+}
+function onSlotMaybeChanged() { updateSlot(false); }
+
+// ── 縮圖：離屏渲染 160² ────────────────────────────────────────────────────
+let thumbRT, thumbCam;
+function renderThumb(id) {
+  const cv = $('#thumb'); if (!cv || !ITEM[id]) return;
+  try {
+    if (!thumbRT) { thumbRT = new THREE.WebGLRenderTarget(320, 320, { samples: 4 }); thumbRT.texture.colorSpace = THREE.SRGBColorSpace; thumbCam = new THREE.PerspectiveCamera(30, 1, .05, 80); }
+    const it = ITEM[id], c = new THREE.Vector3(it.x, TOP + (it.top - TOP) * .45, it.z);
+    thumbCam.position.copy(c).add(new THREE.Vector3(.9, 1.55, 1.25).multiplyScalar(it.s * 1.35));
+    thumbCam.lookAt(c);
+    const smallVis = KIT.meshes.filter(m => m.userData.small).map(m => [m, m.visible]);
+    smallVis.forEach(([m]) => m.visible = true);
+    renderer.setRenderTarget(thumbRT); renderer.clear(); renderer.render(scene, thumbCam); renderer.setRenderTarget(null);
+    smallVis.forEach(([m, v]) => m.visible = v);
+    const buf = new Uint8Array(320 * 320 * 4); renderer.readRenderTargetPixels(thumbRT, 0, 0, 320, 320, buf);
+    const g = cv.getContext('2d'), img = g.createImageData(320, 320);
+    for (let y = 0; y < 320; y++) img.data.set(buf.subarray((319 - y) * 1280, (320 - y) * 1280), y * 1280);
+    g.putImageData(img, 0, 0);
+    markDirty();
+  } catch (e) { cv.remove(); }
+}
+
+// ── 標籤碰撞避讓（每幀）：先只留號碼，再不行就隱藏；8px hysteresis ────────────
+const _pv = { v: null };
+function layoutLabels() {
+  if (!_pv.v) _pv.v = new THREE.Vector3();
+  const W = innerWidth, H = innerHeight, placed = [];
+  for (const sel of ['#brand', '#toolbar', '#side:not(.closed)', '#card:not(.closed)', '#hud', '#journal:not(.hidden)', '#legend:not(.hidden)']) {
+    const el = document.querySelector(sel); if (!el) continue; const r = el.getBoundingClientRect(); if (r.width) placed.push([r.left, r.top, r.right, r.bottom]);
+  }
+  const list = LABELS.filter(l => l.obj.visible && l.obj.parent && l.el.style.display !== 'none' && l.active !== false).sort((a, b) => b.prio - a.prio);
+  for (const l of list) {
+    _pv.v.copy(l.obj.getWorldPosition(_pv.v)).project(camera);
+    if (_pv.v.z > 1) { setLabelMode(l, 'hide'); continue; }
+    const sx = (_pv.v.x * .5 + .5) * W, sy = (-_pv.v.y * .5 + .5) * H;
+    if (l.w == null || l.dirtySize) { l.el.classList.remove('compact'); l.w = l.el.offsetWidth; l.h = l.el.offsetHeight; if (l.compactable) { l.el.classList.add('compact'); l.cw = l.el.offsetWidth; l.el.classList.remove('compact'); } l.dirtySize = false; l.mode = 'full'; }
+    const pad = m => (l.mode === m ? -4 : 4);
+    const test = (w, h, m) => { const p = pad(m), r = [sx - w / 2 - p, sy - h / 2 - p, sx + w / 2 + p, sy + h / 2 + p]; return placed.some(q => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1]) ? null : r; };
+    let r = test(l.w, l.h, 'full'), mode = 'full';
+    if (!r && l.compactable) { r = test(l.cw, l.h, 'compact'); mode = 'compact'; }
+    if (!r) { setLabelMode(l, 'hide'); continue; }
+    placed.push(r); setLabelMode(l, mode);
+  }
+}
+function setLabelMode(l, m) {
+  if (l.mode === m) return; l.mode = m;
+  l.el.style.visibility = m === 'hide' ? 'hidden' : '';
+  l.el.classList.toggle('compact', m === 'compact');
+}
+
+// ── 手機 bottom sheet 拖曳 ─────────────────────────────────────────────────
+function initSheets() {
+  document.querySelectorAll('.handle').forEach(hd => {
+    const sheet = hd.parentElement; let y0 = null, moved = 0;
+    hd.addEventListener('pointerdown', e => { y0 = e.clientY; moved = 0; hd.setPointerCapture(e.pointerId); });
+    hd.addEventListener('pointermove', e => { if (y0 != null) moved = e.clientY - y0; });
+    hd.addEventListener('pointerup', () => {
+      if (y0 == null) return; y0 = null;
+      if (Math.abs(moved) < 8) sheet.classList.toggle('full');
+      else if (moved < -50) sheet.classList.add('full');
+      else if (moved > 50) { if (sheet.classList.contains('full')) sheet.classList.remove('full'); else if (sheet.id === 'card') clearSelection(); else setSide(false); }
+    });
+  });
+}
+
+// ── 打字機效果與語音 ───────────────────────────────────────────────────────
+function typeIntro() {
+  const el = $('#introText'); if (!el) return;
+  const full = el.dataset.full;
+  if (REDUCED) { el.textContent = full; return; }
+  let i = 0; const step = () => { if (!document.body.contains(el)) return; i = Math.min(full.length, i + 2); el.textContent = full.slice(0, i); if (i < full.length) setTimeout(step, 28); };
+  step();
+  const sb = $('#speakBtn');
+  if (sb) sb.onclick = () => { if (ui.speaking) { stopSpeech(); store.set('nfucsie.voice', false); } else { store.set('nfucsie.voice', true); speak(full); } };
+  updateSpeakBtn();
+}
+function speak(text) {
+  try {
+    if (!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = LANG === 'en' ? 'en-US' : 'zh-TW'; u.rate = 1.02;
+    const vs = speechSynthesis.getVoices(); const v = vs.find(v => v.lang === u.lang) || vs.find(v => v.lang && v.lang.startsWith(LANG === 'en' ? 'en' : 'zh'));
+    if (v) u.voice = v;
+    u.onend = u.onerror = () => { ui.speaking = false; updateSpeakBtn(); };
+    ui.speaking = true; updateSpeakBtn();
+    speechSynthesis.speak(u);
+  } catch (e) { ui.speaking = false; }
+}
+function stopSpeech() { try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) { } ui.speaking = false; updateSpeakBtn(); }
+function updateSpeakBtn() { const b = $('#speakBtn'); if (b) b.textContent = ui.speaking ? tr('⏹ 停止播放', '⏹ Stop') : tr('🔊 聽老師自我介紹', '🔊 Hear the intro'); }
+
+// ── 說明視窗 ───────────────────────────────────────────────────────────────
+function openModal(html) { $('#modalBox').innerHTML = html; $('#modal').classList.remove('hidden'); $('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); }; $('#modalBox').querySelectorAll('[data-close]').forEach(b => b.onclick = closeModal); }
+function closeModal() { $('#modal').classList.add('hidden'); }
+function howToSteps() {
+  const touch = !isDesktop() || matchMedia('(pointer:coarse)').matches;
+  return touch
+    ? [tr('一指拖曳平移地圖，兩指拖曳或扭轉旋轉視角、捏合縮放。', 'One finger pans; two fingers drag or twist to rotate, pinch to zoom.'), tr('點島、建築或島民，卡片會從下方滑出。', 'Tap an island, building or islander to open its card.'), tr('點老師頭上的名牌，老師會自我介紹專業。', 'Tap a teacher’s name tag to hear their introduction.')]
+    : [tr('拖曳旋轉視角、滾輪縮放，方向鍵也能轉動鏡頭。', 'Drag to rotate, scroll to zoom, or use the arrow keys.'), tr('點島、建築或島民，左側會打開詳細卡片；Esc 關閉。', 'Click an island, building or islander to open its card; Esc closes it.'), tr('點老師頭上的名牌，老師會自我介紹專業。', 'Click a teacher’s name tag to hear their introduction.')];
+}
+function openHelp() {
+  const steps = howToSteps();
+  openModal(`<div class="eyebrow">${tr('說明', 'HELP')}</div><h2>${tr('歡迎來到虎尾科大資工系特色島', 'Welcome to NFU CSIE Island')}</h2>
+  <p style="line-height:1.7">${tr('每座六角島是一個年級：五專一到五年級、四技一到四年級，以及碩士班；中間的綜三館是 20 位專任教師的大本營，榮譽殿堂收藏近年競賽成果。島民會上課、做專題、休閒，也會把作品帶去比賽。', 'Each hex island is a cohort: junior-college years 1–5, undergraduate years 1–4, and the master program. Building 3 is home to 20 faculty, and the Hall of Fame holds recent awards.')}</p>
+  <ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>
+  <p style="font-size:13px;color:var(--muted)">${tr('時鐘每秒走 10 分鐘，一天 144 秒；不同時段會有不同的建物亮起（黃色）。', 'The clock runs 10 minutes per second; different buildings light up (yellow) through the day.')}</p>
+  <div class="actions">
+    <button class="btn" id="btnStats" style="background:var(--coral);color:#fff">📈 ${tr('參訪紀錄', 'Visit stats')}</button>
+    <a class="btn" href="${LANG === 'en' ? '?' : '?lang=en'}" style="text-decoration:none">${LANG === 'en' ? '中文' : 'English'}</a>
+    <a class="btn" href="${DATA.city.source}" target="_blank" rel="noopener" style="text-decoration:none">${tr('資工系網站', 'Dept website')} ↗</a>
+    <button class="btn" data-close>${tr('關閉', 'Close')}</button>
+  </div>`);
+  $('#btnStats').onclick = () => { if (typeof openStats === 'function') openStats(); };
+}
+function maybeOnboard() {
+  if (store.get('nfucsie.onboarded', false)) return;
+  const steps = howToSteps();
+  openModal(`<div class="eyebrow">${tr('三步驟開始', '3 STEPS')}</div><h2>${tr('虎尾科大資工系特色島', 'NFU CSIE Island')}</h2><ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol><div class="actions"><button class="btn" data-close style="background:var(--ink);color:#fff">${tr('開始探索', 'Start exploring')}</button></div>`);
+  store.set('nfucsie.onboarded', true);
+}
+
+function afterBoot() {
+  updateViewOffset();
+  maybeOnboard();
+  if (typeof startAnalytics === 'function') startAnalytics();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  主迴圈與啟動
 // ═══════════════════════════════════════════════════════════════════════════
 let lastT = performance.now(), lastStep = -1;
@@ -1651,7 +2196,7 @@ async function boot() {
     if (typeof afterBoot === 'function') afterBoot();
     renderer.render(scene, camera);
     const L = $('#loader'); L.style.opacity = 0; setTimeout(() => L.classList.add('hidden'), 500);
-    window.__dbg = { applyTime, markDirty, state, ISL, ITEM, KIT, camera, controls, get scene() { return scene; }, get renderer() { return renderer; } };
+    window.__dbg = { FLOWS: typeof FLOWS !== 'undefined' ? FLOWS : null, WALKERS: typeof WALKERS !== 'undefined' ? WALKERS : null, applyTime, markDirty, state, ISL, ITEM, KIT, camera, controls, get scene() { return scene; }, get renderer() { return renderer; } };
     window.__ready = true;
     requestAnimationFrame(tick);
   } catch (e) { showError(e); }
