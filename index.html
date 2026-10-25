@@ -62,7 +62,7 @@ button{font-family:inherit;color:inherit}
 /* brand + toolbar */
 #brand{position:fixed;left:16px;top:16px;z-index:10;border-radius:18px;padding:12px 16px 12px 12px;display:flex;align-items:center;gap:12px;max-width:340px}
 #brand img{width:46px;height:46px;object-fit:contain;border-radius:10px;background:#fff}
-#brand .logoFallback{width:46px;height:46px;border-radius:10px;background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900}
+#brand .logoFallback{width:46px;height:46px;flex:none;border-radius:10px;background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;white-space:nowrap}
 #brand h1{margin:0;font-size:19px;line-height:1.2}
 #brand .sub{font-size:12px;color:var(--muted)}
 #toolbar{position:fixed;left:16px;top:96px;z-index:10;display:flex;gap:8px;border-radius:14px;padding:6px}
@@ -647,10 +647,12 @@ function onResize() {
   camera.aspect = w / h; camera.updateProjectionMatrix();
   markDirty();
 }
-const OVERVIEW_DIR = () => new THREE.Vector3(.24, .33, .87).normalize();
-function overviewDistance() { const a = innerWidth / innerHeight; return a > 1.3 ? 28.5 : a > 0.8 ? 38 : 56; }
+// 直式螢幕時把全景方位轉 0.4 rad，讓東西向較長的城市斜放進窄畫面
+const OVERVIEW_DIR = () => { const v = new THREE.Vector3(.24, .33, .87).normalize(); if (innerWidth / innerHeight < .8) v.applyAxisAngle(new THREE.Vector3(0, 1, 0), -.4); return v; };
+function overviewDistance() { const a = innerWidth / innerHeight; return a > 1.3 ? 32 : a > 0.8 ? 40 : a > .6 ? 56 : 67; }
 function overviewPose() {
-  const target = new THREE.Vector3(CENTER.x, TOP, CENTER.z);
+  // 透視下前方（+z）的島看起來較大，橫式畫面把目標往左挪一點讓整座城置中
+  const target = new THREE.Vector3(CENTER.x - (innerWidth / innerHeight > 1.3 ? 1.6 : 0), TOP, CENTER.z);
   return { target, pos: target.clone().add(OVERVIEW_DIR().multiplyScalar(overviewDistance())) };
 }
 
@@ -1760,7 +1762,7 @@ const BADGE_EMOJI = { book: '📒', paper: '📄', laptop: '💻', robot: '🤖'
 function teacherIntro(t) {
   const sk = t.skills;
   if (LANG === 'en') {
-    return `Hi! I'm ${t.en}, ${t.titleEn} at NFU CSIE. ` + (t.lab ? `I run the ${t.lab} — find me at ${t.office}. ` : `My office is ${t.office}. `) + `My expertise: ${sk.slice(0, 4).map(s => s[1]).join(', ')}${sk.length > 4 ? ', and more' : ''}. Come talk to me about ${sk[0][1].toLowerCase()}!`;
+    return `Hi! I'm ${t.en}, ${t.titleEn} at NFU CSIE. ` + (t.lab ? `I run the lab “${t.lab}” — find me at ${t.office.replace('綜三館', 'Building 3,')}. ` : `My office is ${t.office.replace('綜三館', 'Building 3,')}. `) + `My expertise: ${sk.slice(0, 4).map(s => s[1]).join(', ')}${sk.length > 4 ? ', and more' : ''}. Come talk to me about ${sk[0][1].toLowerCase()}!`;
   }
   return `大家好，我是${t.name}老師，${t.title}。` + (t.lab ? `我主持「${t.lab}」，研究室在${t.office}。` : `我的研究室在${t.office}。`) + `我的專業是${sk.slice(0, 4).map(s => s[0]).join('、')}${sk.length > 4 ? '等' : ''}。歡迎來找我聊聊${sk[0][0]}！`;
 }
@@ -1830,7 +1832,7 @@ function selectTeacher(i) {
   state.sel = { kind: 'teacher', id: i, walker: w };
   afterSelect();
   const p = w ? w.pos.clone() : new THREE.Vector3(ISL.t.x, TOP, ISL.t.z);
-  flyTo(poseFor(p, new THREE.Vector3(1.2, 1.8, 2.6)));
+  flyTo(poseFor(p, new THREE.Vector3(1.9, 3.0, 4.2)));
   openCard(teacherCard(i), tr('專任教師', 'FACULTY'));
   typeIntro();
   if (typeof showTeacherSay === 'function') showTeacherSay(w, teacherIntro(DATA.teachers[i]));
@@ -1840,7 +1842,7 @@ function selectWalker(w) {
   if (w.teacher != null) return selectTeacher(w.teacher);
   state.sel = { kind: 'walker', id: w.id, walker: w };
   afterSelect();
-  flyTo(poseFor(w.pos.clone(), new THREE.Vector3(1.2, 1.8, 2.6)));
+  flyTo(poseFor(w.pos.clone(), new THREE.Vector3(1.9, 3.0, 4.2)));
   openCard(walkerCard(w), tr('島民', 'ISLANDER'));
 }
 function clearSelection() {
@@ -2105,6 +2107,7 @@ function maybeOnboard() {
 
 function afterBoot() {
   updateViewOffset();
+  if (REDUCED && typeof onReducedChange === 'function') onReducedChange();
   maybeOnboard();
   if (typeof startAnalytics === 'function') startAnalytics();
 }
@@ -2402,7 +2405,7 @@ function updateTagsAndBadges() {
   for (const w of WALKERS) {
     const d = cam.distanceTo(w.pos), headY = w.pos.y + (.42 + (w.role === 'bike' ? .055 : 0)) * sc * (w.teacher != null ? 1.12 : 1);
     if (w.badge) { w.badge.visible = state.toggles.carry && d < 16; if (w.badge.visible) { w.badge.position.set(w.pos.x, headY + .06, w.pos.z); w.badge.scale.setScalar(.16 * sc); } }
-    if (w.tag) w.tag.position.set(w.pos.x, headY + (w.badge ? .2 : .08), w.pos.z);
+    if (w.tag) { const on = d < 45 || state.sel && state.sel.kind === 'teacher' && state.sel.id === w.teacher; if (w.tag.visible !== on) w.tag.visible = on; w.tag.position.set(w.pos.x, headY + (w.badge ? .2 : .08), w.pos.z); }
     if (w === sayWalker) sayObj.position.set(w.pos.x, headY + .35, w.pos.z);
     if (w.bubble) {
       let txt = '';
@@ -2495,6 +2498,88 @@ function renderJournal() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  收尾：reduced-motion、參訪紀錄（Vercel API + Upstash Redis）
+// ═══════════════════════════════════════════════════════════════════════════
+function onReducedChange() {
+  // 減少動態：時鐘與動畫凍結（tick 內判斷）、相機瞬移、交流線改成靜態虛線
+  for (const x of (typeof FLOWS !== 'undefined' ? FLOWS : [])) {
+    const base = { official: 0, thematic: 1, pending: 2 }[x.f.evidence] || 0;
+    x.mat.uniforms.uStyle.value = REDUCED ? Math.max(1, base) : base;
+    x.mat.uniforms.uTime.value = 0;
+  }
+  if (REDUCED) { state.flight = null; ui.viewOff = { ...ui.viewOffTarget }; }
+  markDirty();
+}
+
+const AN = { vid: null, shownAt: null, sentFirst: false };
+function visitorId() {
+  let v = store.get('nfucsie.vid', null);
+  if (!v || !/^[A-Za-z0-9-]{8,64}$/.test(v)) {
+    v = (crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''));
+    store.set('nfucsie.vid', v);
+  }
+  return v;
+}
+function postJSON(url, body, beacon) {
+  try {
+    const data = JSON.stringify(body);
+    if (beacon && navigator.sendBeacon && navigator.sendBeacon(url, new Blob([data], { type: 'application/json' }))) return;
+    fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: data, keepalive: true }).catch(() => { });
+  } catch (e) { /* 紀錄失敗不影響瀏覽 */ }
+}
+function startAnalytics() {
+  if (!/^https?:$/.test(location.protocol)) return;
+  AN.vid = visitorId();
+  postJSON('/api/track', { type: 'visit', vid: AN.vid });
+  AN.shownAt = document.visibilityState === 'visible' ? performance.now() : null;
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushDwell(); else AN.shownAt = performance.now(); });
+  addEventListener('pagehide', flushDwell);
+}
+function flushDwell() {
+  if (AN.shownAt == null || !AN.vid) return;
+  const ms = Math.round(performance.now() - AN.shownAt); AN.shownAt = null;
+  if (ms < 500) return;
+  postJSON('/api/track', { type: 'dwell', vid: AN.vid, ms, first: !AN.sentFirst }, true);
+  AN.sentFirst = true;
+}
+function fmtDur(ms) {
+  if (!ms || !isFinite(ms)) return '0:00';
+  const s = Math.round(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60;
+  return h ? `${h}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}` : `${m}:${String(r).padStart(2, '0')}`;
+}
+async function openStats() {
+  openModal(`<div class="eyebrow">${tr('參訪紀錄', 'VISIT STATS')}</div><h2>${tr('有多少人來過資工島？', 'Who has visited?')}</h2><p style="color:var(--muted)">${tr('讀取中…', 'Loading…')}</p>`);
+  let d;
+  try {
+    const r = await fetch('/api/stats', { cache: 'no-store' });
+    d = await r.json();
+    if (!r.ok) throw new Error(d && d.error || r.status);
+  } catch (e) {
+    const notCfg = String(e.message || e).includes('not configured');
+    openModal(`<div class="eyebrow">${tr('參訪紀錄', 'VISIT STATS')}</div><h2>${tr('暫時無法取得紀錄', 'Stats unavailable')}</h2><p>${notCfg ? tr('伺服器尚未設定 Upstash Redis 環境變數（UPSTASH_REDIS_REST_URL、UPSTASH_REDIS_REST_TOKEN）。', 'Upstash Redis env vars are not set on the server.') : tr('連線失敗，請稍後再試。', 'Request failed, please try again later.')}</p><div class="actions"><button class="btn" id="statsBack">← ${tr('說明', 'Help')}</button><button class="btn" data-close>${tr('關閉', 'Close')}</button></div>`);
+    $('#statsBack').onclick = openHelp; return;
+  }
+  const days = d.days || [], max = Math.max(1, ...days.map(x => x.visits));
+  const today = days[days.length - 1] || { visits: 0, unique: 0 };
+  let bars = days.map(x => `<div class="b" title="${x.date}｜${tr('造訪', 'visits')} ${x.visits}｜${tr('訪客', 'visitors')} ${x.unique}"><i style="height:max(2px, calc(${x.visits / max * 100}% - 18px))"></i><u style="height:max(0px, calc(${x.unique / max * 100}% - 18px))"></u><span>${x.date.slice(8)}</span></div>`).join('');
+  const rows = days.slice().reverse().filter(x => x.visits).slice(0, 14).map(x => `<tr><td>${x.date}</td><td>${x.visits}</td><td>${x.unique}</td><td>${fmtDur(x.avgDwellMs)}</td></tr>`).join('');
+  openModal(`<div class="eyebrow">${tr('參訪紀錄', 'VISIT STATS')}</div><h2>${tr('有多少人來過資工島？', 'Who has visited?')}</h2>
+    <div class="stats">
+      <div class="stat"><span class="big">${(d.total || 0).toLocaleString()}</span><small>${tr('總造訪次數', 'Total visits')}</small></div>
+      <div class="stat"><span class="big">${(d.unique || 0).toLocaleString()}</span><small>${tr('不重複訪客', 'Unique visitors')}</small></div>
+      <div class="stat"><span class="big">${fmtDur(d.avgDwellMs)}</span><small>${tr('平均停留時間', 'Average time on site')}</small></div>
+      <div class="stat"><span class="big">${today.visits || 0}</span><small>${tr(`今日造訪（${today.unique || 0} 位訪客）`, `Visits today (${today.unique || 0} visitors)`)}</small></div>
+    </div>
+    <div class="eyebrow">${tr('近 30 天每日人數', 'LAST 30 DAYS')}</div>
+    <div class="bars" role="img" aria-label="${tr('近 30 天每日造訪與訪客數', 'Daily visits and visitors, last 30 days')}">${bars}</div>
+    <div class="keys"><span><i style="background:var(--coral)"></i>${tr('造訪次數', 'Visits')}</span><span><i style="background:var(--sea)"></i>${tr('不重複訪客', 'Unique visitors')}</span></div>
+    ${rows ? `<table class="dayTable"><thead><tr><th>${tr('日期', 'Date')}</th><th>${tr('造訪', 'Visits')}</th><th>${tr('訪客', 'Visitors')}</th><th>${tr('平均停留', 'Avg. stay')}</th></tr></thead><tbody>${rows}</tbody></table>` : ''}
+    <p style="font-size:12px;color:var(--muted)">${tr('日期以台灣時間計算；訪客以瀏覽器匿名 ID 去重複。', 'Dates in Taiwan time; visitors are de-duplicated by an anonymous browser ID.')}</p>
+    <div class="actions"><button class="btn" id="statsBack">← ${tr('說明', 'Help')}</button><button class="btn" data-close>${tr('關閉', 'Close')}</button></div>`);
+  $('#statsBack').onclick = openHelp;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  主迴圈與啟動
 // ═══════════════════════════════════════════════════════════════════════════
 let lastT = performance.now(), lastStep = -1;
@@ -2541,6 +2626,7 @@ function showError(e) {
 }
 async function boot() {
   try {
+    if (typeof applyI18n === 'function') applyI18n();
     const base = 'three/addons/';
     const mods = await Promise.all([
       import('three'), import(base + 'controls/OrbitControls.js'), import(base + 'renderers/CSS2DRenderer.js'),

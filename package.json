@@ -1,0 +1,7 @@
+{
+  "name": "nfucsie",
+  "private": true,
+  "type": "module",
+  "description": "虎尾科大資工系特色島 — single-file Three.js site + Vercel serverless visit stats (Upstash Redis)",
+  "engines": { "node": ">=18" }
+}
