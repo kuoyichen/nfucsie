@@ -4887,9 +4887,9 @@ function updateWalk(dt) {
 //  騎一陣子會停車下來飛遙控飛機，或跳進聯詠島周邊的海裡玩動力滑板
 // ═══════════════════════════════════════════════════════════════════════════
 const RIDER = { co: 'novatek', name: '崔勤遠', en: 'Chin-Yuan Tsui', g: null, ang: 0, r: 1.08, sayT: 0, nextSay: 6, welcomed: null,
-  mode: 'ride', modeT: 0, nextMode: 14, pos: null, parkA: 0, planeA: 0, jump: null };
+  mode: 'ride', modeT: 0, nextMode: 14, wheelT: 5, wheelie: -1, pos: null, parkA: 0, planeA: 0, jump: null };
 const RIDER_LINES = [['歡迎學弟妹來聯詠！', 'Welcome to Novatek, juniors!'], ['學弟妹加油，聯詠等你們！', 'Keep going. Novatek is waiting for you!'], ['來，學長帶你們繞一圈！', 'Come on, I’ll show you around!'], ['有問題儘管問學長～', 'Ask me anything!'],
-  ['看我的遙控飛機！', 'Check out my RC plane!'], ['再飛一圈就降落～', 'One more lap, then I’ll land.'], ['衝浪時間到！', 'Jet board time!'], ['海水好涼，學弟妹也來玩！', 'The water’s great. Come join me!']];
+  ['看我的遙控飛機！', 'Check out my RC plane!'], ['再飛一圈就降落～', 'One more lap, then I’ll land.'], ['衝浪時間到！', 'Jet board time!'], ['海水好涼，學弟妹也來玩！', 'The water’s great. Come join me!'], ['看學長翹孤輪！', 'Watch this wheelie!']];
 const RIDER_ICON = { ride: '🏍', plane: '✈', board: '🌊', toBoard: '🏍', jumpIn: '🌊', jumpOut: '🌊' };
 const RC = { suit: '#1c1f26', shirt: '#eef1f6', tie: '#8c9097', ink: '#15161a', hair: '#1b1715', blue: '#1f3f8f', silver: '#c3c8cf', chrome: '#e3e7eb' };
 // 照片中的 Hayabusa：前半部深藍、後半部銀色、長排氣管
@@ -4968,8 +4968,10 @@ function boardGeos() {
 function initRider() {
   const co = COMP[RIDER.co]; if (!co) return;
   RIDER.pos = new THREE.Vector3(); RIDER.g = new THREE.Group(); scene.add(RIDER.g);
-  RIDER.bike = mergedMesh(bikeGeos()); RIDER.g.add(RIDER.bike);
-  RIDER.seat = mergedMesh(personGeos('seat')); RIDER.g.add(RIDER.seat);
+  // 車身與騎士掛在以後輪著地點為支點的群組，翹孤輪時整台往後仰
+  RIDER.body = new THREE.Group(); RIDER.body.position.z = -.13; RIDER.g.add(RIDER.body);
+  RIDER.bike = mergedMesh(bikeGeos()); RIDER.bike.position.z = .13; RIDER.body.add(RIDER.bike);
+  RIDER.seat = mergedMesh(personGeos('seat')); RIDER.seat.position.z = .13; RIDER.body.add(RIDER.seat);
   RIDER.helmet = mergedMesh([paintGeo(new THREE.SphereGeometry(.055, 12, 8, 0, Math.PI * 2, 0, Math.PI * .55).translate(0, .2, -.06), RC.silver)]); RIDER.g.add(RIDER.helmet);
   RIDER.walk = mergedMesh(personGeos('rc')); scene.add(RIDER.walk);
   RIDER.surf = new THREE.Group(); scene.add(RIDER.surf);
@@ -5005,7 +5007,13 @@ function updateRider(dt) {
   if (!calm && R.mode !== 'ride') riderMode('ride');                       // 颱風天：收飛機、上岸，停好車
   R.modeT += dt;
   // 狀態機：騎車 → 停車飛遙控飛機／停到碼頭對面跳下水玩動力滑板 → 回來繼續騎
-  if (R.mode === 'ride' && calm) { R.ang += dt * .55; R.nextMode -= dt; if (R.nextMode <= 0) riderMode(fxRand() < .5 ? 'plane' : 'toBoard'); }
+  if (R.mode === 'ride' && calm) {
+    R.ang += dt * .55;
+    // 騎一騎會翹孤輪：每 9～17 秒一次，約 2.6 秒
+    if (R.wheelie < 0) { R.wheelT -= dt; if (R.wheelT <= 0) { R.wheelie = 0; if (fxRand() < .5) riderSay(8); } }
+    else { R.wheelie += dt; R.ang += dt * .25; if (R.wheelie > 2.6) { R.wheelie = -1; R.wheelT = 9 + fxRand() * 8; } }
+    if (R.wheelie < 0) { R.nextMode -= dt; if (R.nextMode <= 0) riderMode(fxRand() < .5 ? 'plane' : 'toBoard'); }
+  }
   else if (R.mode === 'toBoard') { R.ang += dt * .55; if (angDiff(((R.ang % 6.2832) + 6.2832) % 6.2832, ((R.back % 6.2832) + 6.2832) % 6.2832) < .08) { R.parkA = R.ang; riderMode('jumpIn'); } }
   else if (R.mode === 'plane' && R.modeT > 20) riderMode('ride');
   else if ((R.mode === 'jumpIn' || R.mode === 'jumpOut') && R.modeT > 1.1) riderMode(R.mode === 'jumpIn' ? 'board' : 'ride');
@@ -5026,6 +5034,9 @@ function updateRider(dt) {
   const bx = co.x + Math.cos(a) * R.r, bz = co.z + Math.sin(a) * R.r;
   R.g.position.set(bx, TOP + (riding && calm ? Math.abs(Math.sin(state.time * 9)) * .004 : 0), bz);
   R.g.rotation.set(0, Math.atan2(-Math.sin(a), Math.cos(a)), riding && calm ? -.16 : .12, 'YXZ');  // 停車時用側柱微傾
+  if (R.mode !== 'ride' || !calm) R.wheelie = -1;
+  const wk = R.wheelie < 0 ? 0 : Math.min(1, R.wheelie / .45, (2.6 - R.wheelie) / .6);
+  R.body.rotation.x = -(wk * wk * (3 - 2 * wk)) * (.5 + .05 * Math.sin(R.wheelie * 7));
   R.seat.visible = riding; R.helmet.visible = !riding;
   R.walk.visible = R.mode === 'plane' || R.mode === 'jumpIn' || R.mode === 'jumpOut';
   R.surf.visible = R.mode === 'board' || R.mode === 'jumpIn' || R.mode === 'jumpOut';
@@ -5078,7 +5089,7 @@ function selectRider() {
   let h = `<div class="icon">${RIDER_ICON[RIDER.mode]}</div><h2>${esc(tr(RIDER.name + ' 學長', RIDER.en))}</h2>`;
   h += `<div class="chips"><button class="chip" data-co="${RIDER.co}">🏢 ${esc(tr(co.d.name, co.d.en))}</button></div>`;
   h += `<div class="speech">「${esc(tr(RIDER_LINES[0][0], RIDER_LINES[0][1]))}」</div>`;
-  h += `<p>${tr(`穿黑西裝、戴眼鏡的帥氣學長，在${co.d.name}外島騎著銀藍色 Hayabusa 重機繞島巡航。騎累了會停車下來飛遙控飛機，或跳進海裡玩動力滑板。學弟妹搭${DOCK[co.d.dock].d.ferry}來參訪時，他總是第一個來歡迎大家。`, `A sharp senior in a black suit and glasses who cruises around the ${co.d.en} island on his silver-and-blue Hayabusa. Now and then he parks to fly an RC plane or jumps into the sea on a jet board. He is always first to welcome juniors arriving on the ${DOCK[co.d.dock].d.ferryEn}.`)}</p>`;
+  h += `<p>${tr(`穿黑西裝、戴眼鏡的帥氣學長，在${co.d.name}外島騎著銀藍色 Hayabusa 重機繞島巡航。騎一騎還會翹孤輪，騎累了就停車下來飛遙控飛機，或跳進海裡玩動力滑板。學弟妹搭${DOCK[co.d.dock].d.ferry}來參訪時，他總是第一個來歡迎大家。`, `A sharp senior in a black suit and glasses who cruises around the ${co.d.en} island on his silver-and-blue Hayabusa, popping the odd wheelie. Now and then he parks to fly an RC plane or jumps into the sea on a jet board. He is always first to welcome juniors arriving on the ${DOCK[co.d.dock].d.ferryEn}.`)}</p>`;
   openCard(h, tr('外島 · 特別人物', 'OUTER ISLAND · SPECIAL GUEST'));
 }
 
