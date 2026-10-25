@@ -1,8 +1,10 @@
 // Upstash Redis REST 小工具（不需額外套件）。
 // 環境變數：UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
 // （若是透過 Vercel Marketplace 安裝 Upstash，會自動提供 KV_REST_API_URL / KV_REST_API_TOKEN，也能用）
-const URL_ = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || '';
-const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || '';
+// Marketplace 安裝時若自訂了前綴（例如 STORAGE_KV_REST_API_URL），也一併找得到
+const envEnding = suffix => { const k = Object.keys(process.env).find(k => k.endsWith(suffix) && process.env[k]); return k ? process.env[k] : ''; };
+const URL_ = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || envEnding('_KV_REST_API_URL') || envEnding('_REDIS_REST_URL') || '';
+const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || envEnding('_KV_REST_API_TOKEN') || envEnding('_REDIS_REST_TOKEN') || '';
 
 export const PREFIX = 'nfucsie:';
 export const configured = () => Boolean(URL_ && TOKEN);
