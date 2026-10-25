@@ -2548,6 +2548,8 @@ function makeWalker(o) {
     skin: col(SKIN[Math.floor(r() * SKIN.length)]), hair: col(HAIR[Math.floor(r() * HAIR.length)]), frozen: false, endWait: o.endWait || [1.4, 1.4],
     logEvents: !!o.logEvents
   };
+  // 髮型：短髮、旁分最常見，長髮、馬尾、平頭其次（不用 r()，以免改變原本的隨機序列）
+  w.hairStyle = [0, 1, 0, 2, 1, 3, 0, 4, 2, 1, 3, 0][(w.i * 5 + 3) % 12];
   if (role === 'bike') w.speed = .62 + r() * .08;
   w.cum = [0]; for (let k = 1; k < w.path.length; k++) w.cum.push(w.cum[k - 1] + w.path[k].distanceTo(w.path[k - 1]));
   w.len = w.cum[w.cum.length - 1];
@@ -2598,6 +2600,26 @@ function initWalkers() {
   for (const w of WALKERS) { w.heading = samplePath(w, w.s, w.pos); }
   updateWalkers(0);
 }
+// 一般髮型（以頭心為原點、頭半徑 .07）：0 短髮、1 旁分瀏海、2 及肩長髮、3 馬尾、4 平頭
+const HAIR_STYLES = 5;
+function hairStyleGeo(k) {
+  const S = (r, p0, pl, t0, tl, seg = 12) => new THREE.SphereGeometry(r, seg, 6, p0, pl, t0, tl);
+  const g = [];
+  const crop = k === 4 ? .072 : .075;
+  g.push(S(crop, 0, Math.PI * 2, 0, Math.PI * (k === 4 ? .36 : .4)));                 // 頭頂，前方髮際線在眼睛上方
+  g.push(S(crop - .001, Math.PI, Math.PI, 0, Math.PI * (k === 4 ? .56 : .64)));       // 後腦勺
+  for (const s of [-1, 1]) g.push(S(crop - .002, s < 0 ? Math.PI * .72 : Math.PI * 1.98, Math.PI * .3, Math.PI * .3, Math.PI * (k === 4 ? .22 : .3))); // 鬢角
+  if (k === 1) g.push(S(crop + .003, Math.PI * .5, Math.PI * .42, Math.PI * .28, Math.PI * .17));                          // 貼額頭的旁分瀏海（偏一側）
+  if (k === 2) {
+    g.push(new THREE.CylinderGeometry(.074, .08, .13, 12, 1, true, Math.PI * .45, Math.PI * 1.1).translate(0, -.045, 0)); // 披肩長髮
+    g.push(S(crop + .003, Math.PI * .2, Math.PI * .6, Math.PI * .3, Math.PI * .14));                                     // 貼額頭的瀏海
+  }
+  if (k === 3) {
+    g.push(new THREE.SphereGeometry(.018, 8, 6).translate(0, .03, -.074));                                                // 髮圈
+    g.push(new THREE.CapsuleGeometry(.02, .07, 3, 8).rotateX(.35).translate(0, -.015, -.092));                          // 馬尾
+  }
+  return BufferGeometryUtils.mergeGeometries(g);
+}
 function buildWalkerMeshes() {
   const N = walkerN;
   ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
@@ -2606,7 +2628,6 @@ function buildWalkerMeshes() {
     limb: new THREE.CylinderGeometry(.5, .5, 1, 8),
     body: new THREE.CapsuleGeometry(.045, .06, 4, 10),
     head: new THREE.SphereGeometry(.07, 18, 14),
-    hair: new THREE.SphereGeometry(.076, 16, 10, 0, Math.PI * 2, 0, Math.PI * .52),
     eye: new THREE.SphereGeometry(.5, 8, 6),
     shadow: new THREE.CircleGeometry(.1, 20).rotateX(-Math.PI / 2),
     vest: new THREE.CylinderGeometry(.05, .052, .085, 12, 1, true),
@@ -2631,7 +2652,11 @@ function buildWalkerMeshes() {
     scene.add(m); WM[name] = m; return m;
   };
   mk('legL', geo.limb, std()); mk('legR', geo.limb, std()); mk('armL', geo.limb, std()); mk('armR', geo.limb, std());
-  mk('body', geo.body, std()); mk('head', geo.head, std()); mk('hair', geo.hair, std());
+  mk('body', geo.body, std()); mk('head', geo.head, std());
+  // 每種髮型一個 InstancedMesh，只放該髮型的人（w.hairIdx 是在該 mesh 裡的序號）
+  const hairN = new Array(HAIR_STYLES).fill(0);
+  for (const w of WALKERS) w.hairIdx = hairN[w.hairStyle]++;
+  for (let k = 0; k < HAIR_STYLES; k++) mk('hair' + k, hairStyleGeo(k), std(), Math.max(1, hairN[k]));
   mk('eyes', geo.eye, std('#211d1d'), N * 2, false);
   mk('shadow', geo.shadow, new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: .22, depthWrite: false }), N, false);
   mk('vest', geo.vest, std(PAL.coral)); mk('badge', geo.badge, std('#ffffff'), N, false);
@@ -2647,7 +2672,7 @@ function buildWalkerMeshes() {
     WM.legL.setColorAt(i, w.pants); WM.legR.setColorAt(i, w.pants);
     const sleeve = w.role === 'grad' ? col('#fbfbf8') : w.shirt;
     WM.armL.setColorAt(i, sleeve); WM.armR.setColorAt(i, sleeve);
-    WM.body.setColorAt(i, w.shirt); WM.head.setColorAt(i, w.skin); WM.hair.setColorAt(i, w.hair);
+    WM.body.setColorAt(i, w.shirt); WM.head.setColorAt(i, w.skin); WM['hair' + w.hairStyle].setColorAt(w.hairIdx, w.hair);
     WM.capTop.setColorAt(i, col(w.role === 'maker' ? '#f2c230' : PAL.yellow));
     WM.pack.setColorAt(i, col(['#db6a41', '#3e7c8c', '#6f7fb5', '#211d1d'][i % 4]));
     WM.case.setColorAt(i, col(['#6f7fb5', '#db6a41', '#58a6a6'][i % 3]));
@@ -2659,7 +2684,11 @@ function buildWalkerMeshes() {
 }
 let ZERO;
 const _W = { M: null, L: null, v: null, q: null, s: null, e: null, up: null };
-function walkerByInstance(mesh, id) { const n = mesh.userData.walkerPart === 'eyes' ? id >> 1 : id; return WALKERS[n] || null; }
+function walkerByInstance(mesh, id) {
+  const part = mesh.userData.walkerPart;
+  if (part.startsWith('hair')) return WALKERS.find(w => 'hair' + w.hairStyle === part && w.hairIdx === id) || null;
+  return WALKERS[part === 'eyes' ? id >> 1 : id] || null;
+}
 
 // ── 移動與動畫 ───────────────────────────────────────────────────────────
 function updateWalkers(dt) {
@@ -2726,7 +2755,7 @@ function local(x, y, z, sx, sy, sz, rx = 0, ry = 0, rz = 0, pivotY = 0) {
 }
 const _L = {};
 function poseWalker(w, sc) {
-  if (WX.indoor) { for (const k in WM) { if (k === 'eyes') { WM.eyes.setMatrixAt(w.i * 2, ZERO); WM.eyes.setMatrixAt(w.i * 2 + 1, ZERO); } else WM[k].setMatrixAt(w.i, ZERO); } return; }
+  if (WX.indoor) { for (const k in WM) { if (k === 'eyes') { WM.eyes.setMatrixAt(w.i * 2, ZERO); WM.eyes.setMatrixAt(w.i * 2 + 1, ZERO); } else if (k.startsWith('hair')) { if (k === 'hair' + w.hairStyle) WM[k].setMatrixAt(w.hairIdx, ZERO); } else WM[k].setMatrixAt(w.i, ZERO); } return; }
   const i = w.i, t = state.time, ph = t * 9 + w.phase * 20;
   const amp = w.walking ? 1 : 0;
   const bike = w.role === 'bike';
@@ -2743,7 +2772,7 @@ function poseWalker(w, sc) {
   setPart('armR', i, local(.058, .18 + lift, 0, .026, .08, .026, wave != null ? wave : w.role === 'intern' ? .15 : armSw, 0, wave != null ? -.35 + Math.sin(t * 14) * .3 : -.12, .04));
   setPart('body', i, local(0, .14 + lift, 0, 1, 1, 1));
   setPart('head', i, local(0, .28 + lift, 0, 1, 1, 1));
-  setPart('hair', i, local(0, .284 + lift, -.006, 1, 1, 1, -.25));
+  setPart('hair' + w.hairStyle, w.hairIdx, local(0, .28 + lift, 0, 1, 1, 1));
   setPart('eyes', i * 2, local(-.024, .285 + lift, .062, .02, .024, .02));
   setPart('eyes', i * 2 + 1, local(.024, .285 + lift, .062, .02, .024, .02));
   _L.sh = _L.sh || new THREE.Matrix4();
@@ -3201,7 +3230,7 @@ const vcMat = () => new THREE.MeshStandardMaterial({ vertexColors: true, roughne
 function figureGeos(x, z, y, s, shirt, out) {
   out.push(paintGeo(new THREE.CylinderGeometry(.04 * s, .045 * s, .11 * s, 10).translate(x, y + .055 * s, z), shirt));
   out.push(paintGeo(new THREE.SphereGeometry(.05 * s, 12, 10).translate(x, y + .16 * s, z), pick(SKIN)));
-  out.push(paintGeo(new THREE.SphereGeometry(.053 * s, 12, 6, 0, Math.PI * 2, 0, Math.PI * .5).translate(x, y + .168 * s, z), pick(HAIR)));
+  out.push(paintGeo(hairStyleGeo(Math.floor(Math.random() * HAIR_STYLES)).scale(s / 1.4, s / 1.4, s / 1.4).translate(x, y + .16 * s, z), pick(HAIR)));
 }
 function mergedMesh(geos, mat) { const m = new THREE.Mesh(BufferGeometryUtils.mergeGeometries(geos), mat || vcMat()); m.castShadow = true; return m; }
 function bubbleLabel(prio = 2) {
