@@ -2974,6 +2974,7 @@ function initHarbor() {
     for (let k = 0; k < 4; k++) { const a = toC + Math.PI + (k - 1.5) * .6, r = .3; figureGeos(b.x + Math.cos(a) * r, b.z + Math.sin(a) * r, TOP, 1.2, [PAL.coral, PAL.teal, '#6f7fb5', PAL.yellow][k], geos); }
     co.visitors = mergedMesh(geos); co.visitors.visible = false; scene.add(co.visitors);
     co.bubble = bubbleLabel(3);
+    co.logo = buildLogo(co, DATA.companies.indexOf(co.d));
     const el = document.createElement('div'); el.className = 'ilabel co';
     el.innerHTML = `<span class="no">🏢</span><span class="nm">${esc(tr(co.d.name, co.d.en))}</span>`;
     el.title = tr(`${co.d.name} · ${co.d.ind}`, `${co.d.en} · ${co.d.indEn}`);
@@ -3130,6 +3131,7 @@ function updateHarbor(dt) {
   }
   for (const id in COMP) {
     const co = COMP[id]; co.bubbleT -= dt;
+    if (co.logo) co.logo.rotation.y = state.time * .45 + co.logo.userData.phase;
     const near = Math.hypot(cam.x - co.x, cam.z - co.z) < 46;
     setBubble(co.bubble, near && co.bubbleT > 0 ? co.bubbleText : '', co.boss.x, TOP + .72, co.boss.z);
   }
@@ -3179,7 +3181,7 @@ function heliCard() {
 function selectCompany(id) {
   const co = COMP[id]; state.sel = { kind: 'company', id };
   afterSelect();
-  flyTo(poseFor(new THREE.Vector3(co.x, TOP, co.z), new THREE.Vector3(2.4, 4.6, 5.4)));
+  flyTo(poseFor(new THREE.Vector3(co.x, TOP + .9, co.z), new THREE.Vector3(2.6, 4.4, 6.2)));
   openCard(companyCard(id), tr('外島 · 科技公司', 'OUTER ISLAND · COMPANY'));
 }
 function selectFerry(dockId) {
@@ -3206,6 +3208,40 @@ function refreshCoLabels() {
     const on = s && (s.kind === 'company' && s.id === id || s.kind === 'ferry' && DOCK[s.id].companies.includes(id));
     COMP[id].label.element.classList.toggle('sel', !!on);
   }
+}
+
+// ── 外島公司標誌：大樓頂上的雙面圓牌，緩慢旋轉 ─────────────────────────────
+const LOGO_MARK = { foxconn: 'FOXCONN', asus: 'ASUS', quanta: 'QUANTA', delta: 'DELTA', tsmc: 'tsmc', mediatek: 'MEDIATEK', novatek: 'NOVATEK', realtek: 'Realtek', umc: 'UMC', psmc: 'PSMC', ase: 'ASE', advantech: 'ADVANTECH' };
+function logoTexture(co) {
+  const c = co.d, mark = LOGO_MARK[c.id] || c.en;
+  return canvasTex(256, 256, (g, w, h) => {
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(w / 2, h / 2, 126, 0, 7); g.fill();
+    g.lineWidth = 12; g.strokeStyle = c.color; g.beginPath(); g.arc(w / 2, h / 2, 118, 0, 7); g.stroke();
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = c.color;
+    let fs = 78; const font = s => `${c.id === 'tsmc' || c.id === 'realtek' ? '' : 'italic '}900 ${s}px "Arial Black", "Helvetica Neue", Arial, sans-serif`;
+    g.font = font(fs); while (g.measureText(mark).width > 196 && fs > 20) g.font = font(--fs);
+    g.fillText(mark, w / 2, h / 2 - 12);
+    g.fillStyle = '#211d1d'; g.font = '700 30px "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
+    g.fillText(c.name, w / 2, h / 2 + 50);
+  }, false);
+}
+function buildLogo(co, k) {
+  const c = co.d, h = c.h, tx = k % 2 ? .14 : -.14;
+  const x = c.x - co.dir.x * .12 + tx, z = c.z - co.dir.y * .12 - .08 - .06, y0 = TOP + .41 + h;
+  const g = new THREE.Group(); g.position.set(x, y0 + .62, z); g.userData.phase = k * .9;
+  const tex = logoTexture(co);
+  const face = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: .25, roughness: .5 });
+  const R = .48;
+  const front = new THREE.Mesh(new THREE.CircleGeometry(R, 40), face); front.position.z = .026; g.add(front);
+  const back = new THREE.Mesh(new THREE.CircleGeometry(R, 40), face); back.rotation.y = Math.PI; back.position.z = -.026; g.add(back);
+  const rim = new THREE.Mesh(new THREE.CylinderGeometry(R + .01, R + .01, .05, 40, 1, true).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({ color: c.color, roughness: .5, side: THREE.DoubleSide }));
+  g.add(rim);
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  scene.add(g);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .2, 8), new THREE.MeshStandardMaterial({ color: '#8d8d8d' }));
+  pole.position.set(x, y0 + .06, z); scene.add(pole);
+  nightHooks.push(n => { face.emissiveIntensity = .25 + n * .9; });
+  return g;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
