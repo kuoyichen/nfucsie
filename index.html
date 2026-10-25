@@ -603,7 +603,7 @@ const DATA = {
   teachers: [
     { name:'江季翰', en:'Ji-Han Jiang', title:'副教授兼系主任', titleEn:'Associate Professor & Chair', lab:'行動應用與軟體工程實驗室', office:'綜三館 5F 504', photo:'692302d208577729cc5e9239/thumb_%E6%B1%9F%E5%AD%A3%E7%BF%B0.jpg', visit:'fb',
       skills:[['雲端運算與應用','Cloud computing'],['資料庫系統設計','Database system design'],['大數據分析與安全','Big data analysis & security'],['智慧物聯網與安全','AIoT & security'],['資通訊安全','ICT security']] },
-    { name:'許永和', en:'Young-Huh Sheu', title:'特聘教授兼電資學院院長', titleEn:'Distinguished Professor & Dean', lab:'嵌入式異質系統應用設計實驗室', office:'綜三館 5F 506', photo:'692302d308577729cc5e9243/thumb_%E8%A8%B1%E6%B0%B8%E5%92%8C.jpg', visit:'b2',
+    { name:'許永和', en:'Young-Huh Sheu', title:'特聘教授兼電資學院院長', titleEn:'Distinguished Professor & Dean', lab:'嵌入式異質系統應用設計實驗室', office:'綜三館 5F 506', photo:'692302d308577729cc5e9243/thumb_%E8%A8%B1%E6%B0%B8%E5%92%8C.jpg', visit:'b2', also:['h'],
       skills:[['嵌入式系統設計','Embedded system design'],['車載通訊電子網路設計','In-vehicle network design'],['智慧農業應用設計','Smart agriculture'],['智慧機械感測應用設計','Smart machinery sensing'],['醫學電子設計','Medical electronics']] },
     { name:'林易泉', en:'Yih-Chuan Lin', title:'教授兼學務長', titleEn:'Professor & Dean of Student Affairs', lab:'多媒體網路實驗室', office:'綜三館 6F 611', photo:'692302d408577729cc5e924c/thumb_%E6%9E%97%E6%98%93%E6%B3%89.jpg', visit:'b1',
       skills:[['行動計算','Mobile computing'],['無線通訊','Wireless communication'],['網路多媒體','Network multimedia']] },
@@ -617,7 +617,7 @@ const DATA = {
       skills:[['人工智慧系統整合應用','Integrated AI systems'],['自主無人機應用系統設計','Autonomous drone systems'],['物聯網系統','IoT systems'],['無線感測網路','Wireless sensor networks'],['行動通訊網路','Mobile networks']] },
     { name:'黃世昌', en:'Shih-Chang Huang', title:'教授', titleEn:'Professor', lab:'無線與感測網路實驗室', office:'綜三館 5F 510', photo:'692302d708577729cc5e9279/thumb_%E9%BB%83%E4%B8%96%E6%98%8C.jpg', visit:'b4',
       skills:[['無線區域網路與智慧型物聯網','WLAN, WSN & IoT'],['無線網路定位','Wireless positioning'],['智能型系統開發','Intelligent systems'],['銀髮族輔具設計','Assistive design for seniors'],['智慧農業系統','Smart agriculture'],['資訊金融系統分析','Financial information systems'],['人工智能辨識系統','AI recognition']] },
-    { name:'陳國益', en:'Kuo-Yi Chen', title:'教授', titleEn:'Professor', lab:'行動運算與人機介面實驗室', office:'綜三館 5F 509', photo:'692302d808577729cc5e9282/thumb_%E9%99%B3%E5%9C%8B%E7%9B%8A.jpg', visit:'h',
+    { name:'陳國益', en:'Kuo-Yi Chen', title:'教授', titleEn:'Professor', lab:'行動運算與人機介面實驗室', office:'綜三館 5F 509', photo:'692302d808577729cc5e9282/thumb_%E9%99%B3%E5%9C%8B%E7%9B%8A.jpg', visit:'h', also:['fr', 'fd'],
       skills:[['生成式 AI 運用與實作','Generative AI'],['行動平台應用','Mobile platforms'],['虛擬實境／3D 互動應用','VR / 3D interaction'],['嵌入式平台應用','Embedded platforms'],['人機互動與介面設計','HCI & interface design']] },
     { name:'許乙清', en:'I-Ching Hsu', title:'教授', titleEn:'Professor', lab:'雲端軟體實驗室', office:'綜三館 6F 609', photo:'692302d808577729cc5e928b/thumb_%E8%A8%B1%E4%B9%99%E6%B8%85.jpg', visit:'b3',
       skills:[['深度學習','Deep learning'],['機器學習','Machine learning'],['雲端運算','Cloud computing'],['軟體工程','Software engineering'],['Web 技術與 AI 應用','Web technology & AI']] },
@@ -670,7 +670,25 @@ const DATA = {
     ['程式寫得又快又穩，明年還要更多人', 'Fast, solid code. We want more next year!'],
     ['團隊合作好、學習態度佳，讚！', 'Great teamwork and attitude!'],
     ['從實習到正職都很亮眼', 'Outstanding from internship to full-time'],
-    ['資工系的同學，我們搶著要', 'We compete to hire CSIE grads']
+    ['資工系的同學，我們搶著要', 'We compete to hire CSIE grads'],
+    ['debug 很有耐心，問題追到底', 'Patient debuggers who chase bugs to the root'],
+    ['軟硬體都懂，整合專案交給他們很放心', 'Hardware and software both. We trust them with integration'],
+    ['簡報清楚、溝通到位，主管一聽就懂', 'Clear presentations, great communication'],
+    ['學得超快，新技術一週就上手', 'Fast learners. New tech in a week'],
+    ['做事踏實，交代的事一定準時完成', 'Reliable and always on time'],
+    ['實習生直接留下來當正職，太好用了', 'Our interns become full-timers'],
+    ['看得出老師帶得很用心', 'You can tell the faculty really care'],
+    ['寫的程式碼乾淨，又會寫文件', 'Clean code, and they write docs too'],
+    ['遇到難題不放棄，還會主動找解法', 'They don’t give up and find solutions themselves'],
+    ['AI 工具用得很熟，效率一級棒', 'Fluent with AI tools, super efficient'],
+    ['嵌入式和韌體底子很紮實', 'Solid embedded and firmware skills'],
+    ['團隊裡的開心果，也是技術擔當', 'Team mood-maker and tech lead in one'],
+    ['競賽得獎的經驗，在專案上都看得到', 'Their contest experience shows in our projects'],
+    ['有問必答，帶新人也很有一套', 'Great at mentoring new hires'],
+    ['懂製造現場，也懂資料分析', 'They get both the fab floor and the data'],
+    ['跨部門合作沒問題，大家都喜歡找他們', 'Everyone wants them on cross-team projects'],
+    ['虎科資工畢業的，履歷我們會優先看', 'NFU CSIE résumés go to the top of the pile'],
+    ['今年參訪的學弟妹，明年歡迎來實習！', 'Today’s visitors: come intern with us next year!']
   ],
   photoBase: SRC + '/uploads/member_profile/avatar/',
   facultyPage: SRC + '/zh_tw/team/faculty'
@@ -2091,7 +2109,7 @@ function flowsOf(islandId) { return DATA.flows.filter(f => f.from === islandId |
 function slotsOf(itemId) { return DATA.dayCycle.filter(s => s.items.includes(itemId)); }
 function islandCard(id) {
   const s = ISL[id], d = s.d;
-  const teachers = DATA.teachers.map((t, i) => [t, i]).filter(([t]) => t.visit === id || id === 't');
+  const teachers = DATA.teachers.map((t, i) => [t, i]).filter(([t]) => t.visit === id || (t.also || []).includes(id) || id === 't');
   let h = `<div class="icon">${d.icon}</div><h2>${esc(tr(d.full, d.fullEn))}</h2><p>${esc(tr(d.summary, d.summaryEn))}</p>`;
   if (id === 't') h += `<p style="font-size:13px;color:var(--muted)">${esc(tr(DATA.dept.intro, DATA.dept.introEn))}</p>`;
   h += `<div class="eyebrow" style="margin-top:12px">${tr('島上的事', 'ON THIS ISLAND')}</div><div class="list">`;
@@ -2157,7 +2175,7 @@ function teacherCard(i) {
   const t = DATA.teachers[i], v = ISL[t.visit]?.d;
   let h = `<div class="teacherHead"><img src="${photoURL(t)}" alt="${esc(t.name)}" referrerpolicy="no-referrer" data-fallback="${esc(t.name[0])}"><div><h2 style="margin:0">${esc(teacherName(t))}</h2><div style="font-size:13px;color:var(--muted)">${esc(LANG === 'en' ? t.titleEn : t.en + ' · ' + t.title)}</div></div></div>`;
   h += `<div class="speech" id="introText" data-full="${esc(teacherIntro(t))}"></div>`;
-  h += `<div class="chips"><button class="chip" id="speakBtn">🔊 ${tr('聽老師自我介紹', 'Hear the intro')}</button>${v ? `<button class="chip cream" data-isl="${v.id}">${v.icon} ${tr('常去', 'Visits')} ${esc(tr(v.name, v.en))}</button>` : ''}</div>`;
+  h += `<div class="chips"><button class="chip" id="speakBtn">🔊 ${tr('聽老師自我介紹', 'Hear the intro')}</button>${[t.visit, ...(t.also || [])].map(id => ISL[id]?.d).filter(Boolean).map(v => `<button class="chip cream" data-isl="${v.id}">${v.icon} ${tr('常去', 'Visits')} ${esc(tr(v.name, v.en))}</button>`).join('')}</div>`;
   if (t.lab) h += `<div class="eyebrow" style="margin-top:12px">${tr('實驗室', 'LAB')}</div><p style="margin:4px 0">${esc(t.lab)}</p>`;
   h += `<div class="eyebrow" style="margin-top:12px">${tr('研究室', 'OFFICE')}</div><p style="margin:4px 0">${esc(t.office)}</p>`;
   h += `<div class="eyebrow" style="margin-top:12px">${tr('專長', 'EXPERTISE')}</div><ul>${t.skills.map(s => `<li>${esc(LANG === 'en' ? s[1] : s[0])}${LANG === 'en' ? '' : ` <small style="color:var(--muted)">${esc(s[1])}</small>`}</li>`).join('')}</ul>`;
@@ -2553,7 +2571,8 @@ function initWalkers() {
   }
   // 老師：綜三館 ↔ 常去的島
   DATA.teachers.forEach((t, i) => {
-    const path = routeBetween('t', t.visit);
+    const stops = ['t', t.visit, ...(t.also || [])], path = [];
+    for (let k = 1; k < stops.length; k++) { const r = routeBetween(stops[k - 1], stops[k]); path.push(...(path.length ? r.slice(1) : r)); }
     const w = makeWalker({ role: 'teacher', home: 't', teacher: i, path, speed: .3 + (i % 5) * .012, endWait: [2.2, 4.5], logEvents: true });
     w.s = (i * 0.37 % 1) * w.len;
   });
@@ -2688,7 +2707,7 @@ function onArrive(w, atEnd) {
     const isl = ISL[atEnd ? w.flow.to : w.flow.from].d;
     logEvent(w.flow.id, tr(`${roleName(w)}抵達${isl.name}，和大家分享${DATA.carries[w.flow.carry]}`, `${roleNameEn(w)} reaches ${isl.en} and shares ${DATA.carriesEn[w.flow.carry]}`), atEnd ? 'handoff' : 'arrive');
   } else if (w.teacher != null) {
-    const t = DATA.teachers[w.teacher], isl = ISL[atEnd ? t.visit : 't'].d;
+    const t = DATA.teachers[w.teacher], isl = ISL[atEnd ? (t.also && t.also.length ? t.also[t.also.length - 1] : t.visit) : 't'].d;
     logEvent('teacher', tr(atEnd ? `${t.name}老師抵達${isl.name}，和同學交流` : `${t.name}老師回到綜三館研究室`, atEnd ? `${t.en} arrives at ${isl.en}` : `${t.en} is back at Building 3`), 'arrive');
   }
 }
@@ -3818,10 +3837,12 @@ const TOUR = { on: false };
 const SEASONS = { spring: ['春 · 櫻花', 'Spring', '🌸'], summer: ['夏 · 螢火蟲', 'Summer', '☀️'], autumn: ['秋 · 落葉', 'Autumn', '🍂'], winter: ['冬 · 寒流', 'Winter', '❄️'] };
 const EVENTS = { none: ['平常日', 'Regular day', '📅'], start: ['開學週', 'First week', '🎒'], midterm: ['期中考週', 'Midterms', '📝'], anniv: ['校慶', 'Anniversary', '🎉'], grad: ['畢業典禮', 'Graduation', '🎓'] };
 const WEATHERS = { clear: ['晴天', 'Clear', '☀️'], rain: ['下雨', 'Rain', '🌧'], typhoon: ['颱風', 'Typhoon', '🌀'], meteor: ['流星雨', 'Meteors', '🌠'] };
-// 行事曆（約略日期，可依當年度校曆調整）：[月, 日] 起訖
+// 行事曆：依虎科大 115 學年度行事曆（https://www.nfu.edu.tw/zh_tw/nfu_calendar），[月, 日] 起訖，每年換新校曆時更新
+//   8/31-9/2 新生週、9/7 開學；11/1-11/7 期中考；11/16-11/20 校慶週、11/21 校慶活動；2/22 開學；4/18-4/24 期中考；6/5 畢業典禮
+DATA.calendarSource = 'https://www.nfu.edu.tw/zh_tw/nfu_calendar';
 DATA.calendar = [
-  { ev: 'start', from: [2, 23], to: [3, 8] }, { ev: 'midterm', from: [4, 13], to: [4, 26] }, { ev: 'grad', from: [6, 1], to: [6, 14] },
-  { ev: 'start', from: [9, 8], to: [9, 21] }, { ev: 'midterm', from: [11, 2], to: [11, 15] }, { ev: 'anniv', from: [12, 14], to: [12, 20] }
+  { ev: 'start', from: [2, 22], to: [3, 7] }, { ev: 'midterm', from: [4, 18], to: [4, 24] }, { ev: 'grad', from: [6, 1], to: [6, 5] },
+  { ev: 'start', from: [8, 31], to: [9, 13] }, { ev: 'midterm', from: [11, 1], to: [11, 7] }, { ev: 'anniv', from: [11, 16], to: [11, 21] }
 ];
 const SRC_LINKS = {
   ugp: [DATA.city.source + '/zh_tw/downloads/ugp', '大學部專題資料', 'Undergrad capstone files'],
@@ -3900,6 +3921,7 @@ function initFeatures() {
   initMascots();
   initBottles();
   initWalk();
+  initRider();
   $('#btnTour').onclick = () => TOUR.on ? stopTour() : startTour();
   $('#btnPath').onclick = openPath;
   $('#btnQuest').onclick = openQuests;
@@ -3910,7 +3932,7 @@ function initFeatures() {
 }
 function updateFeatures(dt, animating) {
   let moved = false;
-  if (animating) { moved = updateSeasonFX(dt) || moved; moved = updateWeatherFX(dt) || moved; moved = updateEventFX(dt) || moved; moved = updateMascots(dt) || moved; moved = updateBottles(dt) || moved; }
+  if (animating) { moved = updateSeasonFX(dt) || moved; moved = updateWeatherFX(dt) || moved; moved = updateEventFX(dt) || moved; moved = updateMascots(dt) || moved; moved = updateBottles(dt) || moved; moved = updateRider(dt) || moved; }
   if (PATHFX.mat) PATHFX.mat.uniforms.uTime.value += animating ? dt : 0;
   if (FP.on) { updateWalk(dt); hideNearWalkers(); moved = true; }
   if (moved) markDirty();
@@ -4858,6 +4880,87 @@ function updateWalk(dt) {
   if (FP.ride) { const moving = FP.ride.f.phase === 'out' || FP.ride.f.phase === 'back'; bb.classList.toggle('hidden', moving); bb.querySelector('span').textContent = tr('下船', 'Get off'); }
   else if (nf) { const co = COMP[nf.dock.companies[nf.idx]]; bb.classList.remove('hidden'); bb.querySelector('span').textContent = nf.phase === 'board' ? tr(`搭${ferryName(nf)}去${co.d.name}`, `Ride to ${co.d.en}`) : tr(`搭${ferryName(nf)}回系上`, `Ride back to campus`); }
   else bb.classList.add('hidden');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  聯詠外島的特殊角色：崔勤遠學長騎重機繞島，學弟妹搭船來時熱情歡迎
+// ═══════════════════════════════════════════════════════════════════════════
+const RIDER = { co: 'novatek', name: '崔勤遠', en: 'Chin-Yuan Tsui', g: null, ang: 0, r: 1.08, sayT: 0, nextSay: 6, welcomed: null };
+const RIDER_LINES = [['歡迎學弟妹來聯詠！', 'Welcome to Novatek, juniors!'], ['學弟妹加油，聯詠等你們！', 'Keep going. Novatek is waiting for you!'], ['來，學長帶你們繞一圈！', 'Come on, I’ll show you around!'], ['有問題儘管問學長～', 'Ask me anything!']];
+function riderGeos() {
+  const o = [], red = '#c8102e', ink = '#1d1b22', chrome = '#c9ced4', jacket = '#2c3550'; // 西裝外套
+  for (const z of [-.12, .12]) { o.push(paintGeo(new THREE.TorusGeometry(.058, .02, 8, 18).rotateY(Math.PI / 2).translate(0, .078, z), ink)); o.push(paintGeo(new THREE.CylinderGeometry(.022, .022, .03, 8).rotateZ(Math.PI / 2).translate(0, .078, z), chrome)); }
+  o.push(paintGeo(new THREE.BoxGeometry(.06, .06, .2).translate(0, .13, 0), '#3a3f55'));
+  o.push(paintGeo(new THREE.BoxGeometry(.085, .055, .1).translate(0, .175, .05), red));
+  o.push(paintGeo(new THREE.BoxGeometry(.07, .02, .1).translate(0, .175, -.06), ink));
+  o.push(paintGeo(new THREE.BoxGeometry(.08, .03, .05).translate(0, .16, .14).rotateX(-.3), red));
+  o.push(paintGeo(new THREE.CylinderGeometry(.008, .008, .14, 6).rotateX(.35).translate(0, .14, .13), chrome));
+  o.push(paintGeo(new THREE.BoxGeometry(.17, .012, .012).translate(0, .22, .11), chrome));
+  o.push(paintGeo(new THREE.CylinderGeometry(.014, .018, .12, 8).rotateX(Math.PI / 2).translate(.045, .1, -.1), chrome));
+  o.push(paintGeo(new THREE.SphereGeometry(.018, 8, 6).translate(0, .19, .175), '#fff3c4'));
+  // 騎士
+  for (const s of [-1, 1]) {
+    o.push(paintGeo(new THREE.BoxGeometry(.03, .03, .1).translate(.04 * s, .2, .0), jacket));
+    o.push(paintGeo(new THREE.BoxGeometry(.028, .07, .03).translate(.045 * s, .15, .05), jacket)); o.push(paintGeo(new THREE.BoxGeometry(.03, .02, .045).translate(.045 * s, .11, .06), ink));
+    o.push(paintGeo(new THREE.CylinderGeometry(.013, .013, .12, 6).rotateX(1.1).translate(.07 * s, .27, .06), jacket));
+  }
+  o.push(paintGeo(new THREE.CapsuleGeometry(.045, .07, 4, 10).rotateX(.35).translate(0, .28, -.01), jacket));
+  // 白襯衫領口與紅領帶
+  o.push(paintGeo(new THREE.BoxGeometry(.034, .06, .006).rotateX(.35).translate(0, .3, .04), '#ffffff'));
+  o.push(paintGeo(new THREE.BoxGeometry(.012, .05, .008).rotateX(.35).translate(0, .295, .044), red));
+  o.push(paintGeo(new THREE.SphereGeometry(.05, 12, 10).translate(0, .38, .02), SKIN[0]));
+  for (const s of [-1, 1]) { o.push(paintGeo(new THREE.SphereGeometry(.007, 6, 4).translate(.018 * s, .382, .068), ink)); o.push(paintGeo(new THREE.BoxGeometry(.016, .004, .004).translate(.018 * s, .395, .066), '#2b2321')); }
+  o.push(paintGeo(new THREE.BoxGeometry(.018, .004, .004).translate(0, .36, .068), '#b5654a'));
+  o.push(paintGeo(new THREE.SphereGeometry(.062, 14, 10, 0, Math.PI * 2, 0, Math.PI * .5).translate(0, .392, .012), red));
+  o.push(paintGeo(new THREE.BoxGeometry(.08, .012, .03).translate(0, .4, .068), '#1d1b22'));
+  return o;
+}
+function initRider() {
+  const co = COMP[RIDER.co]; if (!co) return;
+  RIDER.g = mergedMesh(riderGeos()); scene.add(RIDER.g);
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(.3, .5, .4).translate(0, .22, 0), new THREE.MeshBasicMaterial({ visible: false })); RIDER.g.add(hit);
+  hit.userData.pick = () => { selectRider(); return true; }; PICKABLE.push(hit);
+  const el = document.createElement('div'); el.className = 'tag';
+  el.innerHTML = LANG === 'en' ? `🏍 ${RIDER.en}` : `🏍 ${RIDER.name}<small>學長</small>`;
+  el.addEventListener('click', e => { e.stopPropagation(); selectRider(); });
+  RIDER.tag = new CSS2DObject(el); scene.add(RIDER.tag); LABELS.push({ obj: RIDER.tag, el, prio: 4, kind: 'teacher' });
+  RIDER.bubble = bubbleLabel(5);
+  updateRider(0);
+}
+function riderSay(i) { const l = RIDER_LINES[i]; RIDER.text = tr(`${RIDER.name}：${l[0]}`, `${RIDER.en}: ${l[1]}`); RIDER.sayT = 5.5; }
+function updateRider(dt) {
+  if (!RIDER.g) return false;
+  const co = COMP[RIDER.co];
+  const f = FERRIES.find(x => x.d.id === co.d.dock), here = f && f.dock.companies[f.idx] === RIDER.co;
+  if (!WX.stopHarbor) RIDER.ang += dt * .55;
+  // 學弟妹搭船抵達：靠近碼頭時大聲歡迎
+  if (here && f.phase === 'visit' && RIDER.welcomed !== f.s + ':' + f.idx) {
+    RIDER.welcomed = f.s + ':' + f.idx; riderSay(0);
+    logEvent('harbor', tr(`${RIDER.name}學長騎著重機繞過來：「歡迎學弟妹來聯詠！」`, `${RIDER.en} rides over on his motorcycle: “Welcome to Novatek, juniors!”`), 'praise');
+  }
+  if (here && f.phase !== 'visit') RIDER.welcomed = null;
+  RIDER.nextSay -= dt;
+  if (RIDER.nextSay <= 0) { RIDER.nextSay = 18 + fxRand() * 14; riderSay(1 + Math.floor(fxRand() * 3)); }
+  RIDER.sayT -= dt;
+  const a = RIDER.ang, x = co.x + Math.cos(a) * RIDER.r, z = co.z + Math.sin(a) * RIDER.r;
+  RIDER.g.position.set(x, TOP + Math.abs(Math.sin(state.time * 9)) * .004, z);
+  RIDER.g.rotation.set(0, Math.atan2(-Math.sin(a), Math.cos(a)), WX.stopHarbor ? 0 : -.16, 'YXZ');
+  RIDER.g.visible = !WX.indoor;
+  RIDER.tag.visible = !WX.indoor && camera.position.distanceTo(RIDER.g.position) < 45;
+  RIDER.tag.position.set(x, TOP + .62, z);
+  setBubble(RIDER.bubble, RIDER.sayT > 0 && !WX.indoor && camera.position.distanceTo(RIDER.g.position) < 40 ? RIDER.text : '', x, TOP + .82, z);
+  return true;
+}
+function selectRider() {
+  const co = COMP[RIDER.co]; state.sel = { kind: 'company', id: RIDER.co };
+  afterSelect();
+  flyTo(poseFor(RIDER.g.position.clone(), new THREE.Vector3(1.9, 3.0, 4.2)));
+  riderSay(0);
+  let h = `<div class="icon">🏍</div><h2>${esc(tr(RIDER.name + ' 學長', RIDER.en))}</h2>`;
+  h += `<div class="chips"><button class="chip" data-co="${RIDER.co}">🏢 ${esc(tr(co.d.name, co.d.en))}</button></div>`;
+  h += `<div class="speech">「${esc(tr(RIDER_LINES[0][0], RIDER_LINES[0][1]))}」</div>`;
+  h += `<p>${tr(`戴著安全帽、穿著西裝的帥氣學長，在${co.d.name}外島騎著重機繞島巡航。學弟妹搭${DOCK[co.d.dock].d.ferry}來參訪時，他會第一個騎過來歡迎大家。`, `A sharp senior in a suit and helmet who cruises around the ${co.d.en} island on his motorcycle, and is always first to welcome juniors arriving on the ${DOCK[co.d.dock].d.ferryEn}.`)}</p>`;
+  openCard(h, tr('外島 · 特別人物', 'OUTER ISLAND · SPECIAL GUEST'));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
