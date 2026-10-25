@@ -3874,7 +3874,7 @@ MODELS.gallery = c => {
 MODEL_TOP.gallery = .6;
 
 const fxRand = mulberry32(4242);
-const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, groundAt: (x, z) => groundAt(x, z) };
+const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, get RIDER() { return RIDER; }, riderMode: m => riderMode(m), groundAt: (x, z) => groundAt(x, z) };
 function toast(msg, ms = 2600) {
   const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), ms);
@@ -4883,83 +4883,202 @@ function updateWalk(dt) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  聯詠外島的特殊角色：崔勤遠學長騎重機繞島，學弟妹搭船來時熱情歡迎
+//  聯詠外島的特殊角色：崔勤遠學長騎銀藍重機繞島，學弟妹搭船來時熱情歡迎；
+//  騎一陣子會停車下來飛遙控飛機，或跳進聯詠島周邊的海裡玩動力滑板
 // ═══════════════════════════════════════════════════════════════════════════
-const RIDER = { co: 'novatek', name: '崔勤遠', en: 'Chin-Yuan Tsui', g: null, ang: 0, r: 1.08, sayT: 0, nextSay: 6, welcomed: null };
-const RIDER_LINES = [['歡迎學弟妹來聯詠！', 'Welcome to Novatek, juniors!'], ['學弟妹加油，聯詠等你們！', 'Keep going. Novatek is waiting for you!'], ['來，學長帶你們繞一圈！', 'Come on, I’ll show you around!'], ['有問題儘管問學長～', 'Ask me anything!']];
-function riderGeos() {
-  const o = [], red = '#c8102e', ink = '#1d1b22', chrome = '#c9ced4', jacket = '#2c3550'; // 西裝外套
-  for (const z of [-.12, .12]) { o.push(paintGeo(new THREE.TorusGeometry(.058, .02, 8, 18).rotateY(Math.PI / 2).translate(0, .078, z), ink)); o.push(paintGeo(new THREE.CylinderGeometry(.022, .022, .03, 8).rotateZ(Math.PI / 2).translate(0, .078, z), chrome)); }
-  o.push(paintGeo(new THREE.BoxGeometry(.06, .06, .2).translate(0, .13, 0), '#3a3f55'));
-  o.push(paintGeo(new THREE.BoxGeometry(.085, .055, .1).translate(0, .175, .05), red));
-  o.push(paintGeo(new THREE.BoxGeometry(.07, .02, .1).translate(0, .175, -.06), ink));
-  o.push(paintGeo(new THREE.BoxGeometry(.08, .03, .05).translate(0, .16, .14).rotateX(-.3), red));
-  o.push(paintGeo(new THREE.CylinderGeometry(.008, .008, .14, 6).rotateX(.35).translate(0, .14, .13), chrome));
-  o.push(paintGeo(new THREE.BoxGeometry(.17, .012, .012).translate(0, .22, .11), chrome));
-  o.push(paintGeo(new THREE.CylinderGeometry(.014, .018, .12, 8).rotateX(Math.PI / 2).translate(.045, .1, -.1), chrome));
-  o.push(paintGeo(new THREE.SphereGeometry(.018, 8, 6).translate(0, .19, .175), '#fff3c4'));
-  // 騎士
+const RIDER = { co: 'novatek', name: '崔勤遠', en: 'Chin-Yuan Tsui', g: null, ang: 0, r: 1.08, sayT: 0, nextSay: 6, welcomed: null,
+  mode: 'ride', modeT: 0, nextMode: 14, pos: null, parkA: 0, planeA: 0, jump: null };
+const RIDER_LINES = [['歡迎學弟妹來聯詠！', 'Welcome to Novatek, juniors!'], ['學弟妹加油，聯詠等你們！', 'Keep going. Novatek is waiting for you!'], ['來，學長帶你們繞一圈！', 'Come on, I’ll show you around!'], ['有問題儘管問學長～', 'Ask me anything!'],
+  ['看我的遙控飛機！', 'Check out my RC plane!'], ['再飛一圈就降落～', 'One more lap, then I’ll land.'], ['衝浪時間到！', 'Jet board time!'], ['海水好涼，學弟妹也來玩！', 'The water’s great. Come join me!']];
+const RIDER_ICON = { ride: '🏍', plane: '✈', board: '🌊', toBoard: '🏍', jumpIn: '🌊', jumpOut: '🌊' };
+const RC = { suit: '#1c1f26', shirt: '#eef1f6', tie: '#8c9097', ink: '#15161a', hair: '#1b1715', blue: '#1f3f8f', silver: '#c3c8cf', chrome: '#e3e7eb' };
+// 照片中的 Hayabusa：前半部深藍、後半部銀色、長排氣管
+function bikeGeos() {
+  const o = [], { ink, blue, silver, chrome } = RC;
+  for (const z of [-.13, .13]) { o.push(paintGeo(new THREE.TorusGeometry(.058, .022, 8, 18).rotateY(Math.PI / 2).translate(0, .078, z), ink)); o.push(paintGeo(new THREE.CylinderGeometry(.028, .028, .032, 10).rotateZ(Math.PI / 2).translate(0, .078, z), chrome)); }
+  o.push(paintGeo(new THREE.BoxGeometry(.05, .05, .2).translate(0, .12, 0), '#3a3d45'));
+  o.push(paintGeo(new THREE.CapsuleGeometry(.05, .1, 4, 10).rotateX(Math.PI / 2 - .25).translate(0, .16, .1), blue));      // 前整流罩
+  o.push(paintGeo(new THREE.BoxGeometry(.1, .05, .1).translate(0, .125, .06), blue));
+  o.push(paintGeo(new THREE.BoxGeometry(.104, .02, .07).translate(0, .14, .02), silver));                                     // 側邊銀色飾帶
+  o.push(paintGeo(new THREE.BoxGeometry(.09, .05, .09).translate(0, .18, -.01), blue));                                       // 油箱
+  o.push(paintGeo(new THREE.BoxGeometry(.08, .03, .14).rotateX(-.12).translate(0, .175, -.1), silver));                       // 銀色尾段
+  o.push(paintGeo(new THREE.BoxGeometry(.07, .012, .08).translate(0, .195, -.06), ink));                                      // 坐墊
+  o.push(paintGeo(new THREE.BoxGeometry(.06, .025, .03).translate(0, .18, -.185), '#c0262b'));                                // 尾燈
+  o.push(paintGeo(new THREE.BoxGeometry(.06, .04, .012).rotateX(-.6).translate(0, .225, .14), '#8fa4b8'));                     // 風鏡
+  o.push(paintGeo(new THREE.CylinderGeometry(.008, .008, .14, 6).rotateX(.35).translate(0, .14, .15), chrome));
+  o.push(paintGeo(new THREE.BoxGeometry(.15, .01, .01).translate(0, .205, .1), ink));
+  for (const s of [-1, 1]) o.push(paintGeo(new THREE.CylinderGeometry(.016, .02, .13, 10).rotateX(Math.PI / 2).translate(.05 * s, .1, -.12), chrome)); // 雙排氣管
+  o.push(paintGeo(new THREE.SphereGeometry(.02, 8, 6).translate(0, .17, .2), '#fff3c4'));
+  for (const s of [-1, 1]) o.push(paintGeo(new THREE.SphereGeometry(.009, 6, 4).translate(.03 * s, .165, .19), '#f5a623'));    // 方向燈
+  return o;
+}
+// 學長本人：黑西裝、白襯衫、灰領帶、黑皮鞋、眼鏡、黑口罩、側剃短髮；騎車時戴銀藍安全帽
+function personGeos(pose) {
+  const o = [], { suit, shirt, tie, ink, hair } = RC, seated = pose === 'seat', y0 = seated ? .1 : 0, z0 = seated ? -.03 : 0;
   for (const s of [-1, 1]) {
-    o.push(paintGeo(new THREE.BoxGeometry(.03, .03, .1).translate(.04 * s, .2, .0), jacket));
-    o.push(paintGeo(new THREE.BoxGeometry(.028, .07, .03).translate(.045 * s, .15, .05), jacket)); o.push(paintGeo(new THREE.BoxGeometry(.03, .02, .045).translate(.045 * s, .11, .06), ink));
-    o.push(paintGeo(new THREE.CylinderGeometry(.013, .013, .12, 6).rotateX(1.1).translate(.07 * s, .27, .06), jacket));
+    if (seated) {
+      o.push(paintGeo(new THREE.BoxGeometry(.03, .03, .1).translate(.04 * s, .2, .0), suit));
+      o.push(paintGeo(new THREE.BoxGeometry(.028, .07, .03).translate(.045 * s, .15, .05), suit)); o.push(paintGeo(new THREE.BoxGeometry(.03, .02, .05).translate(.045 * s, .11, .065), ink));
+      o.push(paintGeo(new THREE.CylinderGeometry(.013, .013, .12, 6).rotateX(1.1).translate(.07 * s, .27, .06), suit));
+    } else {
+      o.push(paintGeo(new THREE.BoxGeometry(.032, .13, .034).translate(.025 * s, .075, 0), suit));
+      o.push(paintGeo(new THREE.BoxGeometry(.034, .02, .055).translate(.025 * s, .01, .01), ink));
+      if (pose === 'rc') o.push(paintGeo(new THREE.CylinderGeometry(.013, .013, .1, 6).rotateX(1.25).translate(.05 * s, .23, .045), suit));
+      else o.push(paintGeo(new THREE.CylinderGeometry(.013, .013, .11, 6).rotateZ(s * (pose === 'board' ? 1.0 : .15)).translate(.07 * s + (pose === 'board' ? .03 * s : 0), .2, 0), suit));
+    }
   }
-  o.push(paintGeo(new THREE.CapsuleGeometry(.045, .07, 4, 10).rotateX(.35).translate(0, .28, -.01), jacket));
-  // 白襯衫領口與紅領帶
-  o.push(paintGeo(new THREE.BoxGeometry(.034, .06, .006).rotateX(.35).translate(0, .3, .04), '#ffffff'));
-  o.push(paintGeo(new THREE.BoxGeometry(.012, .05, .008).rotateX(.35).translate(0, .295, .044), red));
-  o.push(paintGeo(new THREE.SphereGeometry(.05, 12, 10).translate(0, .38, .02), SKIN[0]));
-  for (const s of [-1, 1]) { o.push(paintGeo(new THREE.SphereGeometry(.007, 6, 4).translate(.018 * s, .382, .068), ink)); o.push(paintGeo(new THREE.BoxGeometry(.016, .004, .004).translate(.018 * s, .395, .066), '#2b2321')); }
-  o.push(paintGeo(new THREE.BoxGeometry(.018, .004, .004).translate(0, .36, .068), '#b5654a'));
-  o.push(paintGeo(new THREE.SphereGeometry(.062, 14, 10, 0, Math.PI * 2, 0, Math.PI * .5).translate(0, .392, .012), red));
-  o.push(paintGeo(new THREE.BoxGeometry(.08, .012, .03).translate(0, .4, .068), '#1d1b22'));
+  if (pose === 'rc') { o.push(paintGeo(new THREE.BoxGeometry(.06, .035, .02).translate(0, .225, .1), '#2b2e36')); o.push(paintGeo(new THREE.CylinderGeometry(.002, .002, .07).translate(.02, .26, .1), '#9aa0a8')); }
+  const by = y0 + (seated ? .18 : .2);
+  o.push(paintGeo(new THREE.CapsuleGeometry(.045, .07, 4, 10).rotateX(seated ? .35 : 0).translate(0, by, z0), suit));
+  o.push(paintGeo(new THREE.BoxGeometry(.034, .06, .006).rotateX(seated ? .35 : 0).translate(0, by + .02, z0 + .044), shirt));
+  o.push(paintGeo(new THREE.BoxGeometry(.012, .05, .008).rotateX(seated ? .35 : 0).translate(0, by + .015, z0 + .049), tie));
+  const hy = by + .1;
+  o.push(paintGeo(new THREE.SphereGeometry(.05, 12, 10).translate(0, hy, z0 + .02), SKIN[0]));
+  o.push(paintGeo(new THREE.SphereGeometry(.036, 10, 8, 0, Math.PI * 2, Math.PI * .5, Math.PI * .3).scale(1.2, 1, .8).translate(0, hy - .004, z0 + .046), ink)); // 黑口罩
+  for (const s of [-1, 1]) {
+    o.push(paintGeo(new THREE.SphereGeometry(.007, 6, 4).translate(.018 * s, hy + .005, z0 + .068), ink));
+    o.push(paintGeo(new THREE.TorusGeometry(.012, .0025, 4, 12).translate(.019 * s, hy + .005, z0 + .071), '#2a2a2a'));                    // 眼鏡
+  }
+  o.push(paintGeo(new THREE.BoxGeometry(.012, .003, .003).translate(0, hy + .005, z0 + .072), '#2a2a2a'));
+  if (seated) {
+    o.push(paintGeo(new THREE.SphereGeometry(.062, 14, 10, 0, Math.PI * 2, 0, Math.PI * .55).translate(0, hy + .01, z0 + .01), RC.silver));
+    o.push(paintGeo(new THREE.SphereGeometry(.0625, 14, 6, Math.PI * .6, Math.PI * .8, Math.PI * .1, Math.PI * .22).translate(0, hy + .01, z0 + .01), RC.blue));
+  } else {
+    o.push(paintGeo(new THREE.SphereGeometry(.053, 12, 8, 0, Math.PI * 2, 0, Math.PI * .38).scale(.92, 1.1, 1).translate(0, hy + .006, z0 + .01), hair)); // 側剃短髮，頂部較高
+  }
+  return o;
+}
+function planeGeos() {
+  const o = [];
+  o.push(paintGeo(new THREE.CapsuleGeometry(.018, .13, 4, 8).rotateX(Math.PI / 2), '#f4f6f9'));
+  o.push(paintGeo(new THREE.BoxGeometry(.24, .006, .05).translate(0, .006, .01), RC.blue));
+  o.push(paintGeo(new THREE.BoxGeometry(.09, .005, .03).translate(0, .004, -.075), RC.blue));
+  o.push(paintGeo(new THREE.BoxGeometry(.005, .04, .03).translate(0, .022, -.078), '#c0262b'));
+  o.push(paintGeo(new THREE.BoxGeometry(.05, .006, .004).translate(0, 0, .086), '#2b2e36'));
+  return o;
+}
+function boardGeos() {
+  const o = [];
+  o.push(paintGeo(new THREE.CapsuleGeometry(.04, .16, 4, 10).rotateX(Math.PI / 2).scale(1, .22, 1), RC.blue));
+  o.push(paintGeo(new THREE.BoxGeometry(.05, .02, .04).translate(0, 0, -.1), '#2b2e36'));
+  for (const s of [-1, 1]) o.push(paintGeo(new THREE.PlaneGeometry(.018, .34).rotateX(-Math.PI / 2).rotateY(s * .22).translate(s * .04, -.01, -.28), '#e6f5f3')); // V 字尾浪
+  o.push(paintGeo(new THREE.PlaneGeometry(.03, .12).rotateX(-Math.PI / 2).translate(0, -.01, -.16), '#ffffff'));
   return o;
 }
 function initRider() {
   const co = COMP[RIDER.co]; if (!co) return;
-  RIDER.g = mergedMesh(riderGeos()); scene.add(RIDER.g);
-  const hit = new THREE.Mesh(new THREE.BoxGeometry(.3, .5, .4).translate(0, .22, 0), new THREE.MeshBasicMaterial({ visible: false })); RIDER.g.add(hit);
-  hit.userData.pick = () => { selectRider(); return true; }; PICKABLE.push(hit);
-  const el = document.createElement('div'); el.className = 'tag';
-  el.innerHTML = LANG === 'en' ? `🏍 ${RIDER.en}` : `🏍 ${RIDER.name}<small>學長</small>`;
+  RIDER.pos = new THREE.Vector3(); RIDER.g = new THREE.Group(); scene.add(RIDER.g);
+  RIDER.bike = mergedMesh(bikeGeos()); RIDER.g.add(RIDER.bike);
+  RIDER.seat = mergedMesh(personGeos('seat')); RIDER.g.add(RIDER.seat);
+  RIDER.helmet = mergedMesh([paintGeo(new THREE.SphereGeometry(.055, 12, 8, 0, Math.PI * 2, 0, Math.PI * .55).translate(0, .2, -.06), RC.silver)]); RIDER.g.add(RIDER.helmet);
+  RIDER.walk = mergedMesh(personGeos('rc')); scene.add(RIDER.walk);
+  RIDER.surf = new THREE.Group(); scene.add(RIDER.surf);
+  RIDER.surf.add(mergedMesh(personGeos('board'))); RIDER.surf.children[0].position.y = .012;
+  RIDER.boardM = mergedMesh(boardGeos()); RIDER.surf.add(RIDER.boardM);
+  RIDER.plane = mergedMesh(planeGeos()); scene.add(RIDER.plane);
+  RIDER.hit = new THREE.Mesh(new THREE.BoxGeometry(.3, .5, .4).translate(0, .22, 0), new THREE.MeshBasicMaterial({ visible: false })); scene.add(RIDER.hit);
+  RIDER.hit.userData.pick = () => { selectRider(); return true; }; PICKABLE.push(RIDER.hit);
+  const el = document.createElement('div'); el.className = 'tag'; RIDER.el = el;
   el.addEventListener('click', e => { e.stopPropagation(); selectRider(); });
   RIDER.tag = new CSS2DObject(el); scene.add(RIDER.tag); LABELS.push({ obj: RIDER.tag, el, prio: 4, kind: 'teacher' });
   RIDER.bubble = bubbleLabel(5);
+  RIDER.back = Math.atan2(-co.dir.y, -co.dir.x);  // 碼頭對面，玩水時避開浮橋與渡輪
+  riderMode('ride');
   updateRider(0);
 }
 function riderSay(i) { const l = RIDER_LINES[i]; RIDER.text = tr(`${RIDER.name}：${l[0]}`, `${RIDER.en}: ${l[1]}`); RIDER.sayT = 5.5; }
+function riderMode(m) {
+  const R = RIDER, co = COMP[R.co];
+  if (m === 'plane' || m === 'toBoard') R.parkA = R.ang;
+  if (m === 'plane') { R.planeA = R.ang; riderSay(4); }
+  if (m === 'jumpIn') R.jump = { t: 0, a: [co.x + Math.cos(R.parkA) * (R.r - .1), TOP, co.z + Math.sin(R.parkA) * (R.r - .1)], b: [co.x + Math.cos(R.back) * 1.68, WATER_Y + .03, co.z + Math.sin(R.back) * 1.68] };
+  if (m === 'board') riderSay(6);
+  if (m === 'jumpOut') R.jump = { t: 0, a: R.pos.toArray(), b: [co.x + Math.cos(R.parkA) * (R.r - .1), TOP, co.z + Math.sin(R.parkA) * (R.r - .1)] };
+  if (m === 'ride') { R.ang = m === R.mode ? R.ang : R.parkA || R.ang; R.nextMode = 22 + fxRand() * 16; }
+  R.mode = m; R.modeT = 0;
+  if (R.el) R.el.innerHTML = LANG === 'en' ? `${RIDER_ICON[m]} ${R.en}` : `${RIDER_ICON[m]} ${R.name}<small>學長</small>`;
+}
 function updateRider(dt) {
   if (!RIDER.g) return false;
-  const co = COMP[RIDER.co];
-  const f = FERRIES.find(x => x.d.id === co.d.dock), here = f && f.dock.companies[f.idx] === RIDER.co;
-  if (!WX.stopHarbor) RIDER.ang += dt * .55;
-  // 學弟妹搭船抵達：靠近碼頭時大聲歡迎
-  if (here && f.phase === 'visit' && RIDER.welcomed !== f.s + ':' + f.idx) {
-    RIDER.welcomed = f.s + ':' + f.idx; riderSay(0);
-    logEvent('harbor', tr(`${RIDER.name}學長騎著重機繞過來：「歡迎學弟妹來聯詠！」`, `${RIDER.en} rides over on his motorcycle: “Welcome to Novatek, juniors!”`), 'praise');
+  const R = RIDER, co = COMP[R.co], calm = !WX.stopHarbor;
+  const f = FERRIES.find(x => x.d.id === co.d.dock), here = f && f.dock.companies[f.idx] === R.co;
+  if (!calm && R.mode !== 'ride') riderMode('ride');                       // 颱風天：收飛機、上岸，停好車
+  R.modeT += dt;
+  // 狀態機：騎車 → 停車飛遙控飛機／停到碼頭對面跳下水玩動力滑板 → 回來繼續騎
+  if (R.mode === 'ride' && calm) { R.ang += dt * .55; R.nextMode -= dt; if (R.nextMode <= 0) riderMode(fxRand() < .5 ? 'plane' : 'toBoard'); }
+  else if (R.mode === 'toBoard') { R.ang += dt * .55; if (angDiff(((R.ang % 6.2832) + 6.2832) % 6.2832, ((R.back % 6.2832) + 6.2832) % 6.2832) < .08) { R.parkA = R.ang; riderMode('jumpIn'); } }
+  else if (R.mode === 'plane' && R.modeT > 20) riderMode('ride');
+  else if ((R.mode === 'jumpIn' || R.mode === 'jumpOut') && R.modeT > 1.1) riderMode(R.mode === 'jumpIn' ? 'board' : 'ride');
+  else if (R.mode === 'board' && R.modeT > 2 * Math.PI / .35) riderMode('jumpOut');
+  if (R.mode === 'board' && Math.abs(R.modeT - 9) < dt) riderSay(7);
+  if (R.mode === 'plane' && Math.abs(R.modeT - 12) < dt) riderSay(5);
+  // 學弟妹搭船抵達：不管在做什麼都會大聲歡迎
+  if (here && f.phase === 'visit' && R.welcomed !== f.s + ':' + f.idx) {
+    R.welcomed = f.s + ':' + f.idx; riderSay(0);
+    const how = { ride: ['騎著重機繞過來', 'rides over on his motorcycle'], toBoard: ['騎著重機繞過來', 'rides over on his motorcycle'], plane: ['一邊飛遙控飛機一邊揮手', 'waves while flying his RC plane'], board: ['踩著動力滑板衝過來', 'zooms over on his jet board'] }[R.mode] || ['揮手', 'waves'];
+    logEvent('harbor', tr(`${R.name}學長${how[0]}：「歡迎學弟妹來聯詠！」`, `${R.en} ${how[1]}: “Welcome to Novatek, juniors!”`), 'praise');
   }
-  if (here && f.phase !== 'visit') RIDER.welcomed = null;
-  RIDER.nextSay -= dt;
-  if (RIDER.nextSay <= 0) { RIDER.nextSay = 18 + fxRand() * 14; riderSay(1 + Math.floor(fxRand() * 3)); }
-  RIDER.sayT -= dt;
-  const a = RIDER.ang, x = co.x + Math.cos(a) * RIDER.r, z = co.z + Math.sin(a) * RIDER.r;
-  RIDER.g.position.set(x, TOP + Math.abs(Math.sin(state.time * 9)) * .004, z);
-  RIDER.g.rotation.set(0, Math.atan2(-Math.sin(a), Math.cos(a)), WX.stopHarbor ? 0 : -.16, 'YXZ');
-  RIDER.g.visible = !WX.indoor;
-  RIDER.tag.visible = !WX.indoor && camera.position.distanceTo(RIDER.g.position) < 45;
-  RIDER.tag.position.set(x, TOP + .62, z);
-  setBubble(RIDER.bubble, RIDER.sayT > 0 && !WX.indoor && camera.position.distanceTo(RIDER.g.position) < 40 ? RIDER.text : '', x, TOP + .82, z);
+  if (here && f.phase !== 'visit') R.welcomed = null;
+  R.nextSay -= dt;
+  if (R.nextSay <= 0) { R.nextSay = 18 + fxRand() * 14; if (R.mode === 'ride') riderSay(1 + Math.floor(fxRand() * 3)); }
+  R.sayT -= dt;
+  const riding = R.mode === 'ride' || R.mode === 'toBoard', a = riding ? R.ang : R.parkA;
+  const bx = co.x + Math.cos(a) * R.r, bz = co.z + Math.sin(a) * R.r;
+  R.g.position.set(bx, TOP + (riding && calm ? Math.abs(Math.sin(state.time * 9)) * .004 : 0), bz);
+  R.g.rotation.set(0, Math.atan2(-Math.sin(a), Math.cos(a)), riding && calm ? -.16 : .12, 'YXZ');  // 停車時用側柱微傾
+  R.seat.visible = riding; R.helmet.visible = !riding;
+  R.walk.visible = R.mode === 'plane' || R.mode === 'jumpIn' || R.mode === 'jumpOut';
+  R.surf.visible = R.mode === 'board' || R.mode === 'jumpIn' || R.mode === 'jumpOut';
+  R.boardM.visible = R.mode === 'board'; R.surf.children[0].visible = R.mode === 'board';
+  R.plane.visible = R.mode === 'plane';
+  if (riding) R.pos.set(bx, TOP, bz);
+  if (R.mode === 'plane') {
+    // 站在車旁（往島心一點），手拿遙控器盯著飛機
+    const px = co.x + Math.cos(a) * (R.r - .2), pz = co.z + Math.sin(a) * (R.r - .2);
+    R.walk.position.set(px, TOP, pz); R.pos.set(px, TOP, pz);
+    const t = R.modeT, up = Math.min(1, t / 1.6, Math.max(0, (20 - t) / 1.6));
+    R.planeA += dt * 1.1 * (.4 + .6 * up);
+    const ox = co.x + Math.cos(R.planeA) * .95, oz = co.z + Math.sin(R.planeA) * .95, oy = TOP + 1.15 + Math.sin(t * 1.3) * .08;
+    const hand = new THREE.Vector3(px + Math.cos(a) * -.08, TOP + .26, pz + Math.sin(a) * -.08);
+    const e = up * up * (3 - 2 * up);
+    R.plane.position.set(hand.x + (ox - hand.x) * e, hand.y + (oy - hand.y) * e, hand.z + (oz - hand.z) * e);
+    R.plane.rotation.set(-.1 * (1 - e), Math.atan2(-Math.sin(R.planeA), Math.cos(R.planeA)), -.45 * e, 'YXZ');
+    R.walk.rotation.set(0, Math.atan2(R.plane.position.x - px, R.plane.position.z - pz), 0);
+  }
+  if (R.mode === 'board') {
+    // 在碼頭對面的海面左右甩尾（S 形），避開浮橋與渡輪
+    const t = R.modeT, th = R.back + 1.7 * Math.sin(t * .35), rr = 1.68 + .14 * Math.sin(t * 2.1);
+    const dth = 1.7 * .35 * Math.cos(t * .35), drr = .14 * 2.1 * Math.cos(t * 2.1);
+    const x = co.x + Math.cos(th) * rr, z = co.z + Math.sin(th) * rr;
+    const vx = -Math.sin(th) * rr * dth + Math.cos(th) * drr, vz = Math.cos(th) * rr * dth + Math.sin(th) * drr;
+    R.surf.position.set(x, WATER_Y + .03 + Math.sin(t * 6) * .006, z);
+    R.surf.rotation.set(-.08, Math.atan2(vx, vz), Math.max(-.35, Math.min(.35, -dth * .35)), 'YXZ');
+    R.pos.set(x, WATER_Y + .03, z);
+  }
+  if (R.jump && (R.mode === 'jumpIn' || R.mode === 'jumpOut')) {
+    const k = Math.min(1, R.modeT / 1.1), [ax, ay, az] = R.jump.a, [cx, cy, cz] = R.jump.b;
+    const x = ax + (cx - ax) * k, z = az + (cz - az) * k, y = ay + (cy - ay) * k + Math.sin(Math.PI * k) * .45;
+    R.walk.position.set(x, y, z); R.walk.rotation.set(Math.sin(Math.PI * k) * .5, Math.atan2(cx - ax, cz - az), 0, 'YXZ');
+    R.pos.set(x, y, z); R.walk.visible = true; R.surf.visible = false;
+  }
+  const show = !WX.indoor;
+  R.g.visible = show; if (!show) { R.walk.visible = R.surf.visible = R.plane.visible = false; }
+  R.hit.position.copy(R.pos);
+  const near = camera.position.distanceTo(R.pos);
+  R.tag.visible = show && near < 45;
+  R.tag.position.set(R.pos.x, R.pos.y + .62 - (R.mode === 'board' ? .25 : 0), R.pos.z);
+  setBubble(R.bubble, R.sayT > 0 && show && near < 40 ? R.text : '', R.pos.x, R.pos.y + .82 - (R.mode === 'board' ? .25 : 0), R.pos.z);
   return true;
 }
 function selectRider() {
   const co = COMP[RIDER.co]; state.sel = { kind: 'company', id: RIDER.co };
   afterSelect();
-  flyTo(poseFor(RIDER.g.position.clone(), new THREE.Vector3(1.9, 3.0, 4.2)));
+  flyTo(poseFor(RIDER.pos.clone(), new THREE.Vector3(1.9, 3.0, 4.2)));
   riderSay(0);
-  let h = `<div class="icon">🏍</div><h2>${esc(tr(RIDER.name + ' 學長', RIDER.en))}</h2>`;
+  let h = `<div class="icon">${RIDER_ICON[RIDER.mode]}</div><h2>${esc(tr(RIDER.name + ' 學長', RIDER.en))}</h2>`;
   h += `<div class="chips"><button class="chip" data-co="${RIDER.co}">🏢 ${esc(tr(co.d.name, co.d.en))}</button></div>`;
   h += `<div class="speech">「${esc(tr(RIDER_LINES[0][0], RIDER_LINES[0][1]))}」</div>`;
-  h += `<p>${tr(`戴著安全帽、穿著西裝的帥氣學長，在${co.d.name}外島騎著重機繞島巡航。學弟妹搭${DOCK[co.d.dock].d.ferry}來參訪時，他會第一個騎過來歡迎大家。`, `A sharp senior in a suit and helmet who cruises around the ${co.d.en} island on his motorcycle, and is always first to welcome juniors arriving on the ${DOCK[co.d.dock].d.ferryEn}.`)}</p>`;
+  h += `<p>${tr(`穿黑西裝、戴眼鏡的帥氣學長，在${co.d.name}外島騎著銀藍色 Hayabusa 重機繞島巡航。騎累了會停車下來飛遙控飛機，或跳進海裡玩動力滑板。學弟妹搭${DOCK[co.d.dock].d.ferry}來參訪時，他總是第一個來歡迎大家。`, `A sharp senior in a black suit and glasses who cruises around the ${co.d.en} island on his silver-and-blue Hayabusa. Now and then he parks to fly an RC plane or jumps into the sea on a jet board. He is always first to welcome juniors arriving on the ${DOCK[co.d.dock].d.ferryEn}.`)}</p>`;
   openCard(h, tr('外島 · 特別人物', 'OUTER ISLAND · SPECIAL GUEST'));
 }
 
