@@ -1049,6 +1049,522 @@ function initIslandLabels() {
 const LABELS = [];
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  細項模型 archetypes（單位空間：底面 ±0.5、高 0–1.5；由 DATA.items[].model 決定）
+// ═══════════════════════════════════════════════════════════════════════════
+// 以「底部 y」定位的便利函式
+const B = (x, y, z, w, h, d, c, o) => P('box', x, y + h / 2, z, w, h, d, c, o);
+const RB = (x, y, z, w, h, d, c, o) => P('rbox', x, y + h / 2, z, w, h, d, c, o);
+const CY = (x, y, z, r, h, c, o) => P('cyl', x, y + h / 2, z, r * 2, h, r * 2, c, o);
+const CO = (x, y, z, r, h, c, o) => P('cone', x, y + h / 2, z, r * 2, h, r * 2, c, o);
+const SP = (x, y, z, r, c, o) => P('sphere', x, y, z, r * 2, r * 2, r * 2, c, o);
+const IC = (x, y, z, r, c, o) => P('ico', x, y, z, r * 2, r * 2, r * 2, c, o);
+const GB = (x, y, z, w, h, d, c, o) => P('glowbox', x, y + h / 2, z, w, h, d, c || PAL.window, o);
+const GS = (x, y, z, r, c, o) => P('glowsphere', x, y, z, r * 2, r * 2, r * 2, c || '#fff3c4', o);
+const HIP = (x, y, z, w, h, d, c, o) => P('hip', x, y + h / 2, z, w, h, d, c, o);
+const SKIN = ['#f3d2b3', '#e8b98f', '#d9a27a', '#f6dcc4'];
+const HAIR = ['#2b2321', '#3b2a22', '#5a3b2a', '#1d1b22'];
+function mini(x, y, z, s, shirt, o) { // 靜態迷你人
+  CY(x, y, z, .035 * s, .1 * s, shirt, o);
+  SP(x, y + .14 * s, z, .045 * s, pick(SKIN), o);
+  P('dome', x, y + .155 * s, z, .1 * s, .1 * s, .1 * s, pick(HAIR), o);
+}
+function windowsGrid(x0, y0, z, cols, rows, w, h, gx, gy, o) {
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) GB(x0 + c * gx, y0 + r * gy, z, w, h, .02, PAL.window, o);
+}
+const MODELS = {
+  // 一般教室大樓（各年級島主建物）
+  school(c) {
+    B(0, 0, 0, .96, .05, .7, PAL.stone);
+    B(0, .05, -.02, .88, .62, .5, PAL.wall);
+    B(0, .36, .235, .9, .03, .04, c.accent);
+    windowsGrid(-.33, .13, .235, 5, 2, .1, .13, .165, .27);
+    B(0, .05, .24, .14, .2, .02, PAL.eave);
+    B(0, .67, -.02, .96, .04, .58, PAL.eave);
+    HIP(0, .71, -.02, .9, .32, .52, PAL.coral);
+    B(.28, .86, -.05, .08, .14, .08, PAL.stone);
+    CY(-.42, .05, .3, .012, .62, '#8d8d8d');
+    B(-.37, .55, .3, .1, .07, .01, c.color);
+    B(0, .5, .245, .3, .1, .02, c.color);
+  },
+  // 綜三館：高樓＋鐘塔
+  hall(c) {
+    B(0, 0, 0, 1, .05, .75, PAL.stone);
+    B(-.27, .05, -.05, .42, .78, .5, PAL.wall); B(.27, .05, -.05, .42, .78, .5, PAL.wall);
+    for (const sx of [-.27, .27]) { windowsGrid(sx - .14, .14, .205, 4, 4, .06, .1, .093, .17); B(sx, .83, -.05, .46, .04, .54, PAL.eave); }
+    for (let f = 1; f < 5; f++) B(0, .05 + f * .17, .205, 1, .012, .01, PAL.stone);
+    B(0, .05, 0, .2, 1.05, .2, '#efe2d0');
+    CY(0, .82, .1, .07, .02, PAL.cream, { rx: Math.PI / 2 });
+    P('torus', 0, .83, .112, .18, .18, .1, PAL.coral);
+    B(0, .83, .115, .01, .055, .006, PAL.ink); B(.02, .83, .115, .04, .01, .006, PAL.ink);
+    HIP(0, 1.1, 0, .26, .3, .26, PAL.coral);
+    GB(0, .05, .205, .12, .2, .02, '#d5e3df');
+    B(0, .32, .23, .34, .08, .02, c.color);
+    CY(.46, .05, .3, .012, .7, '#8d8d8d'); B(.51, .64, .3, .1, .07, .01, PAL.coral);
+  },
+  classroom(c) {
+    B(0, 0, 0, .94, .04, .82, PAL.wood);
+    B(0, .04, -.38, .9, .5, .05, PAL.wall); B(-.44, .04, -.1, .04, .32, .55, PAL.wall);
+    B(0, .2, -.35, .56, .28, .02, '#2f4a3c'); B(0, .19, -.345, .6, .02, .03, PAL.wood);
+    B(-.12, .34, -.338, .2, .01, .005, '#e8efe6'); B(.08, .28, -.338, .14, .01, .005, '#e8efe6');
+    B(.3, .04, -.2, .18, .14, .1, PAL.wood);
+    for (let r = 0; r < 2; r++) for (let k = 0; k < 3; k++) {
+      const x = -.28 + k * .28, z = .02 + r * .22;
+      B(x, .04, z, .18, .11, .1, '#d9b48c', { small: true }); B(x, .04, z + .1, .08, .06, .06, c.accent, { small: true });
+      mini(x, .1, z + .1, 1, pick([PAL.cream, c.color, '#c9d8e6', '#f3e2a6']), { small: true });
+    }
+    mini(.3, .18, -.12, 1.2, PAL.teal, { small: true });
+  },
+  lab(c) {
+    B(0, 0, 0, .94, .04, .82, '#d8d3cc');
+    B(0, .04, -.38, .9, .44, .05, PAL.wall);
+    for (let r = 0; r < 2; r++) {
+      const z = -.12 + r * .32;
+      B(0, .04, z, .8, .14, .14, '#e9e2d8');
+      for (let k = 0; k < 4; k++) {
+        const x = -.3 + k * .2;
+        RB(x, .18, z - .02, .14, .1, .015, PAL.ink); GB(x, .19, z - .01, .12, .08, .005, '#bfe6ff');
+        B(x, .04, z + .13, .08, .07, .07, c.accent, { small: true });
+        if ((k + r) % 2) mini(x, .1, z + .14, 1, pick([PAL.cream, c.color, '#c9d8e6']), { small: true });
+      }
+    }
+    B(.36, .04, -.3, .14, .4, .12, PAL.ink); GB(.36, .3, -.235, .1, .02, .005, '#9ff0b0');
+  },
+  chip(c) {
+    B(0, 0, 0, .92, .05, .92, '#3f7d55');
+    for (let i = 0; i < 7; i++) B(-.4, .05, -.38 + i * .12, .3, .006, .015, '#c9b46a', { small: true });
+    RB(0, .05, 0, .5, .12, .5, PAL.ink);
+    for (let i = 0; i < 6; i++) { const t = -.2 + i * .08; B(t, .05, .28, .03, .03, .08, '#cfd3d6'); B(t, .05, -.28, .03, .03, .08, '#cfd3d6'); B(.28, .05, t, .08, .03, .03, '#cfd3d6'); B(-.28, .05, t, .08, .03, .03, '#cfd3d6'); }
+    B(0, .17, 0, .2, .008, .2, '#3a3535'); SP(-.15, .18, -.15, .02, '#7c7676');
+    CY(.36, .05, .32, .045, .12, '#3e6ea8', { small: true }); CY(.36, .05, .18, .035, .1, '#d1a03a', { small: true });
+    GS(-.36, .08, .36, .025, '#ff9c7a'); GS(-.28, .08, .36, .025, '#9cff9c');
+    B(.4, .05, -.3, .08, .06, .16, PAL.ink, { small: true });
+  },
+  server(c) {
+    B(0, 0, 0, .92, .04, .8, '#d8d3cc');
+    for (let k = 0; k < 3; k++) {
+      const x = -.28 + k * .28;
+      B(x, .04, -.08, .22, .82, .32, '#2c2a30');
+      for (let j = 0; j < 6; j++) { B(x, .1 + j * .12, .085, .19, .08, .01, '#3a3940'); GS(x - .07, .14 + j * .12, .093, .012, j % 2 ? '#9cff9c' : '#7cc8ff'); }
+    }
+    B(0, .86, -.08, .86, .03, .06, '#7a7f86');
+    for (const [x, y, r] of [[-.1, 1.12, .13], [.06, 1.16, .16], [.22, 1.1, .11], [.0, 1.05, .12]]) SP(x, y, -.06, r, '#ffffff');
+    B(.3, .04, .27, .16, .1, .12, c.accent);
+  },
+  robot(c) {
+    B(0, 0, 0, .9, .04, .8, '#d8d3cc');
+    CY(0, .04, 0, .3, .03, c.color);
+    for (const s of [-1, 1]) P('torus', .13 * s, .1, .02, .14, .14, .2, PAL.ink, { ry: Math.PI / 2 });
+    RB(0, .09, 0, .3, .32, .24, '#e9eef2');
+    B(0, .25, .121, .16, .08, .01, c.accent);
+    RB(0, .43, 0, .22, .18, .2, '#e9eef2');
+    GS(-.05, .52, .1, .025, '#7cd8ff'); GS(.05, .52, .1, .025, '#7cd8ff');
+    CY(0, .61, 0, .008, .1, '#8d8d8d'); GS(0, .72, 0, .022, '#ff7a5a');
+    for (const s of [-1, 1]) { P('cyl', .2 * s, .28, .02, .05, .22, .05, '#c7ced4', { rz: .5 * s }); SP(.26 * s, .17, .02, .035, PAL.coral); }
+    // 機械手臂
+    CY(.33, .04, -.25, .06, .06, PAL.ink); P('cyl', .33, .22, -.25, .05, .3, .05, PAL.yellow, { rz: .3 }); P('cyl', .24, .42, -.25, .04, .22, .04, PAL.yellow, { rz: -.9 }); SP(.17, .48, -.25, .035, PAL.coral);
+    mini(-.32, .04, .22, 1.1, c.color, { small: true });
+  },
+  drone(c) {
+    CY(0, 0, 0, .44, .04, '#b8bcbf');
+    CY(0, .04, 0, .36, .006, c.color);
+    B(-.08, .045, 0, .03, .004, .2, PAL.cream); B(.08, .045, 0, .03, .004, .2, PAL.cream); B(0, .045, 0, .16, .004, .03, PAL.cream);
+    const y = .52;
+    RB(0, y, 0, .2, .07, .2, PAL.ink);
+    for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      P('box', .12 * sx, y + .04, .12 * sz, .2, .02, .025, '#3c3c44', { ry: Math.PI / 4 * sx * sz });
+      CY(.19 * sx, y + .05, .19 * sz, .02, .03, '#3c3c44'); CY(.19 * sx, y + .08, .19 * sz, .1, .006, '#d6dde2');
+    }
+    GS(0, y - .005, .1, .02, '#9cff9c');
+    CY(.38, .04, -.3, .012, .7, '#8d8d8d'); P('dome', .38, .78, -.3, .12, .06, .12, '#e2e6e8', { rx: -.6 });
+    mini(-.36, .04, .32, 1.1, PAL.cream, { small: true });
+  },
+  court(c) {
+    B(0, 0, 0, .96, .03, .74, '#c66b4a');
+    B(0, .03, 0, .86, .004, .64, '#d98058');
+    for (const [x, z, w, d] of [[0, .32, .86, .012], [0, -.32, .86, .012], [.43, 0, .012, .64], [-.43, 0, .012, .64], [0, 0, .012, .64]]) B(x, .034, z, w, .003, d, '#fff8f4');
+    P('torus', 0, .036, 0, .3, .3, .05, '#fff8f4', { rx: Math.PI / 2 });
+    for (const s of [-1, 1]) {
+      CY(.46 * s, .03, 0, .015, .5, '#6c6c6c'); B(.44 * s, .45, 0, .015, .14, .22, '#ffffff'); P('torus', .4 * s, .44, 0, .08, .08, .1, PAL.coral, { rx: Math.PI / 2 });
+    }
+    SP(.12, .25, .1, .04, '#e8823a');
+    mini(.18, .03, .05, 1.1, c.color, { small: true }); mini(-.1, .03, -.12, 1.1, PAL.cream, { small: true }); mini(-.22, .03, .18, 1.1, c.color, { small: true });
+  },
+  stage(c) {
+    B(0, 0, 0, .94, .14, .62, PAL.wood);
+    B(0, .14, -.28, .9, .62, .05, PAL.ink);
+    B(-.3, .14, -.25, .26, .58, .02, PAL.coral); B(.3, .14, -.25, .26, .58, .02, PAL.coral);
+    B(0, .7, -.2, .94, .06, .1, c.color);
+    for (const s of [-1, 1]) { B(.44 * s, .14, -.15, .1, .22, .1, '#2c2a30'); CY(.44 * s, .14, .25, .012, .55, '#8d8d8d'); GS(.44 * s, .72, .25, .04, '#fff1b0'); }
+    for (let k = 0; k < 4; k++) GS(-.3 + k * .2, .66, -.12, .025, pick(['#ffd7a8', '#ffb3c8', '#c8e6ff']));
+    mini(-.08, .14, -.02, 1.3, c.color); mini(.12, .14, .04, 1.3, PAL.yellow);
+    B(.12, .24, .08, .08, .03, .03, PAL.wood, { small: true });
+    for (let k = 0; k < 4; k++) mini(-.3 + k * .2, 0, .42, 1, pick([PAL.cream, '#c9d8e6', c.color]), { small: true });
+  },
+  stall(c) {
+    B(0, 0, 0, .9, .03, .7, '#d8d3cc');
+    B(0, .03, -.05, .7, .26, .3, PAL.wood);
+    B(0, .29, -.05, .74, .03, .34, PAL.cream);
+    for (const s of [-1, 1]) CY(.34 * s, .03, .13, .012, .5, '#8a6446');
+    for (let k = 0; k < 6; k++) B(-.31 + k * .124, .52, .06, .124, .05, .3, k % 2 ? PAL.cream : PAL.coral, { rx: -.35 });
+    B(0, .6, -.14, .4, .1, .02, c.color);
+    for (let k = 0; k < 4; k++) SP(-.2 + k * .13, .34, -.05, .035, pick(['#e8a23a', '#c8553a', '#f6e1a0', '#9cc27a']), { small: true });
+    for (let k = 0; k < 3; k++) GS(-.25 + k * .25, .47, .2, .03, '#ffcf8a');
+    for (const x of [-.22, .02, .26]) { CY(x, .03, .28, .04, .1, PAL.coral, { small: true }); }
+    mini(-.1, .03, -.3, 1.1, PAL.cream, { small: true }); mini(.24, .03, .32, 1, c.color, { small: true });
+  },
+  trophy(c) {
+    B(0, 0, 0, .92, .05, .8, PAL.stone);
+    B(0, .05, .1, .32, .26, .3, PAL.cream); B(-.32, .05, .14, .3, .17, .26, '#ece4da'); B(.32, .05, .16, .3, .1, .24, '#ece4da');
+    B(0, .2, .26, .1, .06, .01, PAL.coral); B(-.32, .14, .275, .06, .04, .01, PAL.coral); B(.32, .1, .285, .06, .04, .01, PAL.coral);
+    const g = '#e3b341';
+    CY(0, .31, .05, .1, .05, '#8a6446'); CY(0, .36, .05, .035, .18, g); CO(0, .54, .05, .17, .3, g, { rx: Math.PI });
+    for (const s of [-1, 1]) P('torus', .17 * s, .7, .05, .14, .14, .2, g, { ry: Math.PI / 2 });
+    CY(0, .84, .05, .17, .03, g); GS(0, .95, .05, .045, '#fff1b0');
+    CY(-.32, .22, .12, .05, .14, '#c7ced4'); SP(-.32, .4, .12, .06, '#c7ced4');
+    CY(.32, .15, .14, .05, .1, '#c98b56'); SP(.32, .29, .14, .05, '#c98b56');
+    B(0, .05, -.3, .8, .4, .04, c.color); B(0, .4, -.28, .6, .06, .02, PAL.cream);
+  },
+  book(c) {
+    B(0, 0, 0, .9, .03, .8, '#e6ddd2');
+    B(0, .03, 0, .7, .14, .5, PAL.teal, { ry: .1 }); B(0, .03, 0, .66, .12, .46, '#f8f2e6', { ry: .1 });
+    B(.02, .17, 0, .64, .13, .46, PAL.coral, { ry: -.12 }); B(.02, .17, 0, .6, .11, .42, '#f8f2e6', { ry: -.12 });
+    B(0, .3, 0, .58, .12, .42, c.color, { ry: .05 });
+    B(-.15, .45, 0, .32, .02, .42, '#fffaf0', { rz: .18 }); B(.15, .45, 0, .32, .02, .42, '#fffaf0', { rz: -.18 });
+    B(0, .42, 0, .02, .06, .42, PAL.wood);
+    for (let k = 0; k < 4; k++) { B(-.15, .465 + .0, -.12 + k * .08, .22, .004, .01, '#c4b6a6', { rz: .18 }); B(.15, .465, -.12 + k * .08, .22, .004, .01, '#c4b6a6', { rz: -.18 }); }
+    B(.05, .42, .2, .03, .2, .005, PAL.coral);
+    mini(.36, .03, .3, 1.1, c.color, { small: true });
+  },
+  globe(c) {
+    B(0, 0, 0, .8, .04, .8, PAL.stone);
+    CY(0, .04, 0, .18, .06, PAL.wood); CY(0, .1, 0, .03, .2, PAL.wood);
+    P('torus', 0, .62, 0, 1.1, 1.1, .5, '#c9a35a', { rz: .4 });
+    SP(0, .62, 0, .36, '#79b8c9');
+    for (const [x, y, z, r] of [[.18, .72, .24, .12], [-.2, .58, .25, .14], [.05, .45, .3, .1], [-.05, .85, .15, .1], [.28, .55, -.1, .12], [-.25, .7, -.2, .13]]) IC(x * .92, y, z * .92, r, '#9cc27a');
+    B(.32, .04, .3, .12, .12, .12, c.color, { small: true });
+  },
+  clock(c) {
+    B(0, 0, 0, .8, .04, .6, PAL.stone);
+    for (const s of [-1, 1]) B(.3 * s, .04, 0, .06, .5, .06, PAL.wood);
+    CY(0, .7, 0, .38, .08, PAL.cream, { rx: Math.PI / 2 });
+    P('torus', 0, .74, 0, .95, .95, .7, PAL.coral);
+    for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6; B(Math.cos(a) * .3, .74 + Math.sin(a) * .3, .045, .02, .02, .01, PAL.ink); }
+    B(0, .82, .05, .018, .16, .01, PAL.ink); B(.06, .74, .05, .12, .018, .01, PAL.ink, { rz: .3 });
+    SP(0, .74, .055, .022, c.color);
+    B(0, 1.13, 0, .12, .06, .06, PAL.coral); SP(0, 1.2, 0, .05, PAL.yellow);
+  },
+  house(c) {
+    B(0, 0, 0, .86, .04, .72, PAL.stone);
+    B(0, .04, -.05, .62, .42, .46, PAL.wall);
+    B(0, .46, -.05, .7, .03, .54, PAL.eave);
+    HIP(0, .49, -.05, .64, .3, .48, PAL.coral);
+    B(.18, .6, -.1, .08, .18, .08, PAL.stone);
+    GB(-.18, .18, .18, .12, .13, .02); GB(.18, .18, .18, .12, .13, .02);
+    B(0, .04, .185, .12, .22, .02, PAL.eave);
+    B(0, .3, .19, .3, .06, .02, c.color);
+    for (let k = 0; k < 3; k++) IC(-.38 + k * .08, .1, .3, .06, pick(PAL.plant), { small: true });
+    CY(.36, .04, .28, .05, .08, PAL.coral, { small: true });
+  },
+  antenna(c) {
+    B(0, 0, 0, .86, .04, .74, PAL.stone);
+    for (let k = 0; k < 5; k++) { const s = .26 - k * .045; B(-.15, .04 + k * .2, -.1, s, .2, s, k % 2 ? PAL.coral : PAL.cream); }
+    CY(-.15, 1.04, -.1, .01, .25, '#8d8d8d'); GS(-.15, 1.31, -.1, .03, '#ff6a4a');
+    P('dome', .22, .38, .05, .36, .18, .36, '#e2e6e8', { rx: -.9 }); CY(.22, .04, .05, .03, .28, '#8d8d8d');
+    B(.25, .04, -.28, .3, .22, .2, PAL.wall); B(.25, .26, -.28, .34, .03, .24, PAL.eave); GB(.25, .1, -.175, .1, .08, .01);
+    for (let k = 0; k < 3; k++) P('torus', -.15, .9 + k * .05, -.1, .2 + k * .1, .2 + k * .1, .1, c.color, { rx: Math.PI / 2, small: true });
+  },
+  bikes(c) {
+    B(0, 0, 0, .9, .03, .7, '#d8d3cc');
+    B(0, .03, -.25, .8, .04, .04, '#8d8d8d');
+    for (let k = 0; k < 4; k++) {
+      const x = -.3 + k * .2, cc = pick([PAL.coral, PAL.teal, PAL.yellow, c.color]);
+      for (const z of [-.18, .12]) P('torus', x, .12, z, .22, .22, .25, PAL.ink, { ry: Math.PI / 2 });
+      B(x, .17, -.03, .02, .02, .3, cc); B(x, .2, -.1, .02, .1, .02, cc, { rx: .4 }); B(x, .27, -.14, .04, .015, .07, PAL.ink); B(x, .25, .1, .1, .015, .02, '#8d8d8d');
+    }
+    mini(.38, .03, .25, 1.1, c.color, { small: true });
+    CY(-.38, .03, .25, .012, .4, '#8d8d8d'); B(-.38, .4, .25, .12, .12, .01, '#3e7cc8');
+  },
+  busstop(c) {
+    B(0, 0, 0, .94, .03, .8, '#9a958e');
+    B(0, .031, .05, .94, .004, .04, PAL.yellow);
+    B(-.25, .03, -.3, .4, .03, .16, PAL.stone);
+    B(-.25, .38, -.3, .46, .03, .22, c.color); for (const s of [-1, 1]) B(-.25 + .2 * s, .06, -.38, .02, .32, .02, '#8d8d8d');
+    B(-.25, .06, -.39, .38, .26, .01, '#cfe4e6'); B(-.25, .1, -.28, .3, .03, .08, PAL.wood);
+    mini(-.3, .06, -.27, 1.1, PAL.cream, { small: true });
+    P('box', -.3, .16, -.3, .06, .07, .03, PAL.wood, { small: true });
+    CY(.15, .03, -.32, .012, .45, '#8d8d8d'); CY(.15, .45, -.32, .05, .02, '#3e7cc8', { rx: Math.PI / 2 });
+    RB(.05, .06, .25, .8, .28, .26, PAL.teal);
+    B(.05, .3, .25, .78, .03, .24, PAL.cream);
+    for (let k = 0; k < 5; k++) GB(-.27 + k * .15, .17, .385, .11, .09, .005, '#d5ecf0');
+    GB(.45, .1, .25, .005, .06, .18, '#fff1b0');
+    for (const x of [-.22, .3]) for (const z of [.12, .38]) CY(x, .02, z, .05, .03, PAL.ink, { rx: Math.PI / 2 });
+  },
+  coin(c) {
+    B(0, 0, 0, .86, .04, .74, PAL.stone);
+    const g = '#e3b341';
+    for (let s = 0; s < 3; s++) for (let k = 0; k < 3 + s * 2; k++) CY(-.25 + s * .2, .04 + k * .045, .22 - s * .04, .08, .04, k % 2 ? g : '#d8a531');
+    CY(.12, .45, -.12, .3, .08, g, { rx: Math.PI / 2 });
+    P('torus', .12, .45, -.07, .45, .45, .3, '#d8a531');
+    B(.12, .45, -.075, .08, .2, .01, PAL.cream); B(.12, .45, -.075, .16, .03, .01, PAL.cream);
+    B(.12, .04, -.12, .16, .08, .1, PAL.wood);
+    mini(.38, .04, .26, 1.1, c.color, { small: true });
+  },
+  cert(c) {
+    B(0, 0, 0, .84, .04, .7, PAL.stone);
+    for (const s of [-1, 1]) B(.25 * s, .04, .05, .04, .62, .04, PAL.wood, { rx: -.15 });
+    B(0, .2, -.05, .66, .5, .03, '#fffaf0', { rx: -.15 });
+    B(0, .2, -.06, .7, .54, .02, c.color, { rx: -.15 });
+    for (let k = 0; k < 4; k++) B(0, .55 - k * .07, .0 - k * .01, .4 - (k ? .1 : 0), .02, .005, k ? '#c4b6a6' : PAL.ink, { rx: -.15 });
+    CY(.18, .28, .03, .07, .02, PAL.coral, { rx: Math.PI / 2 - .15 });
+    B(.15, .16, .04, .03, .12, .01, PAL.coral, { rz: .3 }); B(.21, .16, .04, .03, .12, .01, PAL.coral, { rz: -.3 });
+    P('cyl', -.25, .1, .28, .08, .38, .08, '#fffaf0', { rz: Math.PI / 2 }); P('torus', -.25, .1, .28, .1, .1, .2, PAL.coral, { ry: Math.PI / 2 });
+  },
+  cap(c) {
+    B(0, 0, 0, .84, .04, .74, PAL.stone);
+    CY(0, .04, 0, .2, .14, '#e9e2d8');
+    CY(0, .18, 0, .2, .18, PAL.ink);
+    B(0, .36, 0, .62, .04, .62, PAL.ink, { ry: Math.PI / 4 });
+    SP(0, .39, 0, .03, PAL.yellow);
+    B(.15, .39, .15, .2, .012, .012, PAL.yellow, { ry: -Math.PI / 4 });
+    B(.22, .26, .22, .015, .24, .015, PAL.yellow); SP(.22, .14, .22, .03, PAL.yellow);
+    P('cyl', -.25, .1, .26, .08, .4, .08, '#fffaf0', { rz: Math.PI / 2, ry: .4 }); P('torus', -.25, .1, .26, .1, .1, .2, c.color, { ry: Math.PI / 2 + .4 });
+    mini(.32, .04, -.25, 1.1, PAL.ink, { small: true });
+  }
+};
+const MODEL_TOP = { school: 1.05, hall: 1.4, classroom: .55, lab: .5, chip: .3, server: 1.3, robot: .8, drone: .9, court: .6, stage: .8, stall: .7, trophy: 1.0, book: .55, globe: 1.0, clock: 1.25, house: .8, antenna: 1.35, bikes: .45, busstop: .5, coin: .8, cert: .8, cap: .5 };
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  島內配置：主建物 (0,-0.58)、其餘交錯格子在內切半徑 1.36 內
+// ═══════════════════════════════════════════════════════════════════════════
+function layoutCells(n) {
+  for (let s = 0.62; s >= 0.455; s -= 0.01) {
+    const cand = [], dz = s * 0.9;
+    for (let r = -6; r <= 6; r++) for (let c = -6; c <= 6; c++) {
+      const x = (c + (r & 1 ? .5 : 0)) * s, z = r * dz;
+      if (hexDist(x, z) > 1.36 - s * .5) continue;
+      if (Math.abs(x) < .58 + s * .5 && z < -0.58 + .55 + s * .5) continue; // 避開主建物
+      cand.push({ x, z, d: Math.hypot(x, z - .25) });
+    }
+    if (cand.length >= n) { cand.sort((a, b) => a.d - b.d); return { s, cells: cand.slice(0, n) }; }
+  }
+  return { s: .455, cells: [] };
+}
+function buildIslandContent() {
+  for (const id in ISL) {
+    const s = ISL[id], items = s.d.items;
+    const lay = layoutCells(items.length - 1);
+    items.forEach((it, i) => {
+      let lx, lz, sc, ry;
+      if (i === 0) { lx = 0; lz = -0.58; sc = 1.15; ry = 0; }
+      else { const c = lay.cells[i - 1]; lx = c.x; lz = c.z; sc = lay.s * .92; ry = Math.atan2(-lx, 2.4) * .6 + rr(-.12, .12); }
+      const x = s.x + lx, z = s.z + lz;
+      curOwner = it.id; curFrame = frameAt(x, TOP, z, sc, ry);
+      const accent = s.color.clone().lerp(col(PAL.ink), .25);
+      (MODELS[it.model] || MODELS.house)({ color: s.color, accent, island: s });
+      ITEM[it.id] = { d: it, island: id, idx: i, x, z, s: sc, top: TOP + (MODEL_TOP[it.model] || .8) * sc, pin: null };
+      s.items.push(it.id);
+    });
+    curFrame = null; curOwner = null;
+    islandDecor(s, lay);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  街道家具與樹
+// ═══════════════════════════════════════════════════════════════════════════
+const TREE_TYPES = ['conifer', 'sakura', 'fruit', 'palm', 'willow', 'round', 'poplar', 'maple'];
+function bigTree(type, x, z, s) {
+  const y = TOP;
+  const trunk = (h, c = '#8a6446') => CY(x, y, z, .025 * s, h * s, c);
+  switch (type) {
+    case 'conifer': trunk(.12); for (let k = 0; k < 3; k++) CO(x, y + (.1 + k * .13) * s, z, (.17 - k * .04) * s, .22 * s, k % 2 ? '#5f7d58' : '#6f8a62'); break;
+    case 'sakura': trunk(.22); for (const [dx, dy, dz, r] of [[0, .32, 0, .14], [.08, .28, .05, .1], [-.08, .3, -.04, .1]]) IC(x + dx * s, y + dy * s, z + dz * s, r * s, pick(['#f2b5c6', '#f7c9d6', '#efa7bb'])); break;
+    case 'fruit': trunk(.18); IC(x, y + .3 * s, z, .15 * s, '#8db86f'); for (let k = 0; k < 4; k++) { const a = k * 1.7; SP(x + Math.cos(a) * .12 * s, y + (.27 + (k % 2) * .06) * s, z + Math.sin(a) * .12 * s, .025 * s, '#e8823a', { small: true }); } break;
+    case 'palm': for (let k = 0; k < 4; k++) P('cyl', x + k * .012 * s, y + (.06 + k * .1) * s, z, .045 * s, .11 * s, .045 * s, k % 2 ? '#a07a52' : '#8a6446', { rz: -.1 }); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; P('box', x + .05 * s + Math.cos(a) * .1 * s, y + .42 * s, z + Math.sin(a) * .1 * s, .22 * s, .015 * s, .06 * s, '#7da05e', { ry: -a, rz: -.35 }); } break;
+    case 'willow': trunk(.2); SP(x, y + .3 * s, z, .13 * s, '#a9c98a'); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; CO(x + Math.cos(a) * .1 * s, y + .12 * s, z + Math.sin(a) * .1 * s, .05 * s, .2 * s, '#9cc27a', { rx: Math.PI }); } break;
+    case 'round': trunk(.16); SP(x, y + .3 * s, z, .16 * s, pick(PAL.plant)); break;
+    case 'poplar': trunk(.1); P('sphere', x, y + .33 * s, z, .2 * s, .5 * s, .2 * s, '#7a9a62'); break;
+    case 'maple': trunk(.18); IC(x, y + .3 * s, z, .16 * s, pick(['#e08a4a', '#d96b3d', '#eaa35a'])); break;
+  }
+}
+let poolMesh, poolMat;
+function islandDecor(s, lay) {
+  curOwner = null; curFrame = null;
+  const pools = [];
+  // 路燈：六角頂點
+  for (let i = 0; i < 6; i++) {
+    const [x, z] = hexCorner(1.92, i, s.x, s.z);
+    CY(x, TOP, z, .016, .34, '#5a5450'); B(x, TOP + .34, z, .05, .02, .05, '#5a5450'); GS(x, TOP + .31, z, .032, '#fff1c4');
+    pools.push([x, z, .42]);
+  }
+  // 島緣串燈＋盆栽灌木花
+  for (let i = 0; i < 6; i++) {
+    const [ax, az] = hexCorner(1.92, i, s.x, s.z), [bx, bz] = hexCorner(1.92, (i + 1) % 6, s.x, s.z);
+    for (let k = 1; k < 6; k++) { const t = k / 6; GS(lerp(ax, bx, t), TOP + .05, lerp(az, bz, t), .014, '#ffe6a8', { small: true }); }
+    for (const t of [.22, .78]) {
+      const x = lerp(ax, bx, t), z = lerp(az, bz, t), kind = (i + (t > .5 ? 1 : 0)) % 3;
+      if (kind === 0) { CY(x, TOP, z, .035, .05, '#c46a46', { small: true }); IC(x, TOP + .08, z, .045, pick(PAL.plant), { small: true }); }
+      else if (kind === 1) IC(x, TOP + .04, z, .055, pick(PAL.plant), { small: true });
+      else for (let f = 0; f < 3; f++) SP(x + rr(-.04, .04), TOP + .03, z + rr(-.04, .04), .018, pick(['#f2b5c6', PAL.yellow, '#ffffff', '#f0a35a']), { small: true });
+    }
+  }
+  // 外圈 4–6 棵大樹（該島樹種），避開前方頂點（標籤）
+  const type = s.d.tree || TREE_TYPES[s.idx % TREE_TYPES.length];
+  const corners = [0, 1, 2, 3, 5].filter(() => rand() > .1);
+  for (const i of corners) { const [x, z] = hexCorner(1.6, i, s.x, s.z); bigTree(type, x, z, rr(1.0, 1.25)); }
+  // 長椅
+  for (let n = 0; n < 2; n++) {
+    const i = Math.floor(rand() * 6), [x, z] = hexMid(1.66, i, s.x, s.z), a = (i + 1) * Math.PI / 3;
+    B(x, TOP + .05, z, .2, .02, .07, PAL.wood, { ry: a + Math.PI / 2, small: true });
+    B(x, TOP, z, .02, .05, .06, '#5a5450', { ry: a + Math.PI / 2, small: true });
+  }
+  // 窗光溢出（主建物前）
+  pools.push([s.x, s.z - .1, .55]);
+  ISL[s.d.id].pools = pools;
+  POOLS.push(...pools);
+}
+const POOLS = [];
+function buildPools() {
+  const tex = canvasTex(128, 128, (g, w) => { const gr = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); gr.addColorStop(0, 'rgba(255,220,150,1)'); gr.addColorStop(1, 'rgba(255,200,120,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, w); }, false);
+  const geos = POOLS.map(([x, z, r]) => new THREE.PlaneGeometry(r * 2, r * 2).rotateX(-Math.PI / 2).translate(x, TOP + .02, z));
+  poolMat = new THREE.MeshBasicMaterial({ map: tex, color: '#ffc777', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+  poolMesh = new THREE.Mesh(BufferGeometryUtils.mergeGeometries(geos), poolMat);
+  poolMesh.renderOrder = 2; scene.add(poolMesh);
+  nightHooks.push(n => { poolMat.opacity = n * .6; poolMesh.visible = n > .02; });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  遠景：盆地地形、背景樹、遠山、雲、海上點綴
+// ═══════════════════════════════════════════════════════════════════════════
+let noise;
+function fbm(x, z, oct = 4) { let a = 0, amp = 1, f = .035; for (let i = 0; i < oct; i++) { a += noise.noise(x * f, z * f) * amp; amp *= .5; f *= 2; } return a; }
+function terrainH(x, z) {
+  const dx = x - CENTER.x, dz = z - CENTER.z, r = Math.hypot(dx, dz) + 1e-6;
+  let h = -1.4 + smooth(17, 30, r) * 1.9;
+  h += smooth(25, 50, r) * (6.5 + fbm(x, z) * 3.2);
+  h += fbm(x * 1.9 + 40, z * 1.9 - 13, 3) * .7 * smooth(16, 30, r);
+  const cam = (dx * .266 + dz * .964) / r;                     // 鏡頭這一側壓低
+  const k = smooth(.05, .7, cam);
+  h = lerp(h, Math.min(h, -0.9 + smooth(45, 75, r) * 3.5 + fbm(x, z, 2) * .6), k * .95);
+  if (h > .45) { const step = .55, q = Math.floor(h / step) * step; h = lerp(h, q + (h - q) * .2, .65); }
+  return h;
+}
+function initTerrain() {
+  noise = new SimplexNoise({ random: mulberry32(1031) });
+  const g = new THREE.PlaneGeometry(170, 170, 160, 160).rotateX(-Math.PI / 2).translate(CENTER.x, 0, CENTER.z);
+  const p = g.attributes.position, cs = [];
+  const C = ['#8fb3ad', '#d9c9a3', '#aec493', '#a3b986', '#6f8a62', '#b2a38d'].map(col);
+  const c = new THREE.Color();
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), z = p.getZ(i), h = terrainH(x, z);
+    p.setY(i, h);
+    const n = fbm(x * 3, z * 3, 2) * .35;
+    const t = h + n;
+    if (t < -.05) c.copy(C[0]); else if (t < .35) c.copy(C[1]); else if (t < 1.6) c.copy(C[2]).lerp(C[3], smooth(.4, 1.6, t)); else if (t < 3.6) c.copy(C[3]).lerp(C[4], smooth(2.2, 3.6, t)); else if (t < 6.2) c.copy(C[4]); else c.copy(C[4]).lerp(C[5], smooth(6.2, 7.5, t));
+    cs.push(c.r, c.g, c.b);
+  }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(cs, 3));
+  g.computeVertexNormals();
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 }));
+  m.receiveShadow = true; scene.add(m);
+}
+function initBackgroundTrees() {
+  const merge = BufferGeometryUtils.mergeGeometries;
+  const conG = merge([new THREE.CylinderGeometry(.05, .07, .4, 5).translate(0, .2, 0), new THREE.ConeGeometry(.42, .7, 7).translate(0, .6, 0), new THREE.ConeGeometry(.34, .6, 7).translate(0, .9, 0), new THREE.ConeGeometry(.24, .5, 7).translate(0, 1.18, 0)]);
+  const icoR = mulberry32(5);
+  const jit = g => { const p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setXYZ(i, p.getX(i) * (1 + (icoR() - .5) * .25), p.getY(i) * (1 + (icoR() - .5) * .25), p.getZ(i) * (1 + (icoR() - .5) * .25)); return g; };
+  const leafG = merge([new THREE.CylinderGeometry(.05, .07, .5, 5).translate(0, .25, 0).toNonIndexed(), jit(new THREE.IcosahedronGeometry(.36, 0)).translate(0, .75, 0), jit(new THREE.IcosahedronGeometry(.28, 0)).translate(.22, .62, .05), jit(new THREE.IcosahedronGeometry(.26, 0)).translate(-.2, .66, -.06), jit(new THREE.IcosahedronGeometry(.22, 0)).translate(.02, 1.0, .1)]);
+  // 樹幹顏色用頂點色、樹冠用 instance 色相乘：以白色頂點色區分
+  const paint = (g, trunkTop) => { const p = g.attributes.position, cs = []; for (let i = 0; i < p.count; i++) { const t = p.getY(i) < trunkTop; cs.push(t ? .55 : 1, t ? .42 : 1, t ? .32 : 1); } g.setAttribute('color', new THREE.Float32BufferAttribute(cs, 3)); return g; };
+  paint(conG, .32); paint(leafG, .42);
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: .95 });
+  const N = IS_MOBILE ? 1100 : 2800;
+  const pos = [];
+  const r2 = mulberry32(99);
+  for (let tries = 0; pos.length < N && tries < N * 12; tries++) {
+    const a = r2() * Math.PI * 2, r = 16 + Math.sqrt(r2()) * 36;
+    const x = CENTER.x + Math.cos(a) * r, z = CENTER.z + Math.sin(a) * r, h = terrainH(x, z);
+    if (h < .3 || h > 7.6) continue;
+    if (fbm(x * 2.2, z * 2.2, 2) < -.25) continue;
+    pos.push([x, h, z, .55 + r2() * .7, r2()]);
+  }
+  const con = new THREE.InstancedMesh(conG, mat, pos.length), leaf = new THREE.InstancedMesh(leafG, mat, pos.length);
+  let nc = 0, nl = 0; const m = new THREE.Matrix4(), q = new THREE.Quaternion(), c = new THREE.Color();
+  const greens = ['#6f8a62', '#5f7d58', '#7a9a62', '#8db86f', '#728f5f', '#a3b986'].map(col);
+  for (const [x, h, z, s, k] of pos) {
+    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), k * 6.28);
+    m.compose(new THREE.Vector3(x, h - .05, z), q, new THREE.Vector3(s, s * (.85 + k * .4), s));
+    c.copy(greens[Math.floor(k * 997) % greens.length]);
+    if (h > 3.2 ? k < .75 : k < .35) { con.setMatrixAt(nc, m); con.setColorAt(nc++, c); }
+    else { leaf.setMatrixAt(nl, m); leaf.setColorAt(nl++, c); }
+  }
+  con.count = nc; leaf.count = nl;
+  for (const t of [con, leaf]) { t.castShadow = false; t.receiveShadow = true; t.instanceMatrix.needsUpdate = true; if (t.instanceColor) t.instanceColor.needsUpdate = true; t.computeBoundingSphere(); scene.add(t); }
+}
+let mountainRings = [];
+function initMountains() {
+  const specs = [[98, '#8fa39a', .38, 9], [118, '#a3b1b4', .56, 12], [138, '#b9c1c8', .72, 15]];
+  specs.forEach(([rad, base, mix, amp], idx) => {
+    const seg = 160, pos = [], ind = [];
+    for (let i = 0; i <= seg; i++) {
+      const a = i / seg * Math.PI * 2, x = CENTER.x + Math.cos(a) * rad, z = CENTER.z + Math.sin(a) * rad;
+      const h = amp * (.55 + .45 * noise.noise(Math.cos(a) * 2.2 + idx * 9, Math.sin(a) * 2.2)) + amp * .3 * noise.noise(Math.cos(a) * 7 + idx, Math.sin(a) * 7);
+      pos.push(x, -3, z, x, Math.max(1, h), z);
+      if (i < seg) { const b = i * 2; ind.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
+    }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(ind);
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: base, fog: false, side: THREE.DoubleSide }));
+    m.renderOrder = -5; scene.add(m);
+    mountainRings.push({ m, base: col(base), mix });
+  });
+  nightHooks.push((n, e) => { for (const r of mountainRings) r.m.material.color.copy(r.base).multiplyScalar(1 - n * .55).lerp(e.hor, r.mix); });
+}
+let cloudMesh, clouds = [];
+function initClouds() {
+  const puffs = [];
+  const r2 = mulberry32(404);
+  for (let i = 0; i < 12; i++) {
+    const cl = { x: CENTER.x + (r2() - .5) * 140, y: 14 + r2() * 9, z: CENTER.z - 10 - r2() * 55, v: .25 + r2() * .35, puffs: [] };
+    const n = 4 + Math.floor(r2() * 4);
+    for (let k = 0; k < n; k++) cl.puffs.push([(k - n / 2) * 1.3 + r2() * .6, r2() * .9, (r2() - .5) * 1.4, 1.1 + r2() * 1.1]);
+    clouds.push(cl); puffs.push(...cl.puffs);
+  }
+  cloudMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true, emissive: '#ffffff', emissiveIntensity: .12 }), puffs.length);
+  cloudMesh.castShadow = false; cloudMesh.frustumCulled = false;
+  scene.add(cloudMesh); updateClouds(0);
+}
+const _cm = { m: null, v: null, s: null, q: null };
+function updateClouds(dt) {
+  if (!_cm.m) { _cm.m = new THREE.Matrix4(); _cm.v = new THREE.Vector3(); _cm.s = new THREE.Vector3(); _cm.q = new THREE.Quaternion(); }
+  let i = 0;
+  for (const cl of clouds) {
+    cl.x += cl.v * dt; if (cl.x - CENTER.x > 75) cl.x -= 150;
+    for (const [px, py, pz, s] of cl.puffs) { _cm.v.set(cl.x + px, cl.y + py, cl.z + pz); _cm.s.set(s, s * .72, s); _cm.m.compose(_cm.v, _cm.q, _cm.s); cloudMesh.setMatrixAt(i++, _cm.m); }
+  }
+  cloudMesh.instanceMatrix.needsUpdate = true;
+}
+function initSeaDecor() {
+  curOwner = null; curFrame = null;
+  const spots = [[-14, 14, 1.2], [15, 13, .9], [-20, 4, .8], [21, 2, 1.1], [3, 20, .7]];
+  spots.forEach(([dx, dz, s], i) => {
+    const x = CENTER.x + dx, z = CENTER.z + dz;
+    CY(x, WATER_Y - .1, z, 1.1 * s, .25, '#d9c9a3'); CO(x, WATER_Y + .1, z, .9 * s, .6 * s, '#9cb97e');
+    IC(x + .4 * s, WATER_Y + .45 * s, z - .2, .3 * s, '#7a9a62');
+    if (i === 1) { // 燈塔
+      for (let k = 0; k < 5; k++) CY(x - .2, WATER_Y + .2 + k * .3, z, .16 - k * .015, .3, k % 2 ? '#ffffff' : PAL.coral);
+      CY(x - .2, WATER_Y + 1.7, z, .12, .14, PAL.ink); GS(x - .2, WATER_Y + 1.82, z, .1, '#fff1c4'); CO(x - .2, WATER_Y + 1.9, z, .16, .18, PAL.coral);
+    }
+  });
+  for (const [dx, dz, ry] of [[-8, 16, .6], [10, 18, -.4], [-25, 12, 1.2]]) { // 帆船
+    const x = CENTER.x + dx, z = CENTER.z + dz;
+    P('prism', x, WATER_Y + .08, z, .5, .2, 1.1, '#f8f2e6', { rx: Math.PI, ry });
+    CY(x, WATER_Y + .1, z, .02, 1.0, '#8a6446');
+    P('prism', x, WATER_Y + .65, z + .02, .02, .8, .6, '#ffffff', { ry: ry + Math.PI / 2 });
+    B(x, WATER_Y + 1.08, z, .1, .06, .01, PAL.coral, { ry });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  主迴圈與啟動
 // ═══════════════════════════════════════════════════════════════════════════
 let lastT = performance.now(), lastStep = -1;
