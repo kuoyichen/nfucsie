@@ -1,0 +1,1147 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>虎尾科大資工系特色島</title>
+<meta name="description" content="國立虎尾科技大學資訊工程系的 3D 互動特色島：五專五個年級、大學四個年級與研究生化身島民，上課、做專題、休閒、比賽得獎；點老師的名牌聽他們介紹自己的專業。">
+<meta name="theme-color" content="#db6a41">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="虎尾科大資工系特色島">
+<meta property="og:title" content="虎尾科大資工系特色島 · NFU CSIE Island">
+<meta property="og:description" content="五專、大學、研究所島民的一天：上課、專題、休閒與競賽。點老師名牌，聽老師介紹專業。">
+<meta property="og:url" content="https://nfucsie.vercel.app/">
+<meta property="og:image" content="https://nfucsie.vercel.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="虎尾科大資工系特色島">
+<meta name="twitter:description" content="五專、大學、研究所島民的一天：上課、專題、休閒與競賽。">
+<meta name="twitter:image" content="https://nfucsie.vercel.app/og.png">
+<style>
+:root{
+  --coral:#db6a41;--ink:#211d1d;--cream:#fff8f4;--yellow:#fcea8b;--stone:#c5b5a7;--green:#71806a;
+  --glass:#86a8a6;--wood:#b48560;--teal:#3e7c8c;--pink:#f2b5c6;--sea:#58a6a6;--indigo:#6f7fb5;
+  --panel:rgba(255,250,245,.82);--line:rgba(33,29,29,.1);--muted:#6d625c;
+  --shadow:0 1px 2px rgba(74,42,20,.06),0 6px 16px rgba(74,42,20,.08),0 22px 48px rgba(74,42,20,.12);
+  --font:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#fffdf9,#edddcf);color:var(--ink);font-family:var(--font);-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;color:inherit}
+#stage{position:fixed;inset:0;touch-action:none}
+#stage canvas{display:block;outline:none}
+#labels{position:fixed;inset:0;pointer-events:none}
+#labels>div{pointer-events:none}
+.eyebrow{font:700 10px/1.2 var(--mono);letter-spacing:2px;text-transform:uppercase;color:var(--coral)}
+.big{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:700}
+.btn{min-height:44px;min-width:44px;border:0;border-radius:9px;background:rgba(255,255,255,.7);padding:6px 10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px;transition:background .15s,transform .1s}
+.btn:hover{background:var(--yellow)}
+.btn[aria-pressed="true"],.btn.on{background:var(--ink);color:#fff}
+.btn:focus-visible,.chip:focus-visible,input:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid var(--coral);outline-offset:2px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;background:#fff;padding:6px 12px;font-size:13px;box-shadow:0 2px 8px #4a2a1414;cursor:pointer;min-height:32px}
+.chip.cream{background:var(--cream)}
+.chip:hover{background:var(--yellow)}
+.glass{background:var(--panel);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.6);box-shadow:var(--shadow)}
+.hidden{display:none!important}
+
+/* loading */
+#loader{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(circle at 50% 40%,#fffdf9,#edddcf);transition:opacity .5s}
+#loader h1{margin:0;font-size:clamp(30px,6vw,54px);letter-spacing:2px}
+#loader h1 span{color:var(--coral)}
+#loader p{margin:0;color:var(--muted)}
+#loader .hexspin{width:54px;height:54px;background:var(--coral);clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);animation:spin 1.6s ease-in-out infinite}
+#loader .err{max-width:min(520px,90vw);background:#fff;border-radius:14px;padding:14px 16px;color:#8a2d14;box-shadow:var(--shadow);font-size:14px;white-space:pre-wrap}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* brand + toolbar */
+#brand{position:fixed;left:16px;top:16px;z-index:10;border-radius:18px;padding:12px 16px 12px 12px;display:flex;align-items:center;gap:12px;max-width:340px}
+#brand img{width:46px;height:46px;object-fit:contain;border-radius:10px;background:#fff}
+#brand .logoFallback{width:46px;height:46px;border-radius:10px;background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900}
+#brand h1{margin:0;font-size:19px;line-height:1.2}
+#brand .sub{font-size:12px;color:var(--muted)}
+#toolbar{position:fixed;left:16px;top:96px;z-index:10;display:flex;gap:8px;border-radius:14px;padding:6px}
+#toolbar .btn{flex-direction:column;gap:0;font-size:11px;padding:4px 8px}
+#toolbar .btn b{font-size:17px;line-height:1.1}
+
+/* side list */
+#side{position:fixed;right:16px;top:16px;bottom:96px;width:318px;z-index:10;border-radius:22px;display:flex;flex-direction:column;overflow:hidden;transition:transform .3s,opacity .3s}
+#side.closed{transform:translateX(120%);opacity:0;pointer-events:none}
+#side header{padding:14px 14px 8px}
+#side input{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);padding:0 12px;font:inherit;background:#fffffff0}
+.tabs{display:flex;gap:6px;margin-top:10px}
+.tabs .btn{flex:1;font-size:13px}
+#sideBody{overflow:auto;padding:4px 10px 14px;flex:1}
+#sideBody details{background:rgba(255,255,255,.6);border-radius:14px;margin:6px 0;overflow:hidden}
+#sideBody summary{cursor:pointer;padding:10px 12px;display:flex;align-items:center;gap:8px;list-style:none;min-height:44px}
+#sideBody summary::-webkit-details-marker{display:none}
+#sideBody summary .sw{width:14px;height:14px;border-radius:4px;flex:none}
+#sideBody summary .no{font:700 11px var(--mono);color:var(--muted)}
+#sideBody summary .ttl{flex:1;font-weight:700}
+#sideBody summary .cnt{font-size:12px;color:var(--muted)}
+#sideBody .row{display:flex;gap:8px;align-items:center;width:100%;border:0;background:none;text-align:left;padding:8px 12px;cursor:pointer;font-size:14px;min-height:40px;border-top:1px solid var(--line)}
+#sideBody .row:hover{background:var(--yellow)}
+#sideBody .row .n{font:700 12px var(--mono);color:var(--coral);width:22px}
+#sideBody .row img{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#eee}
+#sideBody .sec{font:700 10px var(--mono);letter-spacing:2px;color:var(--muted);margin:14px 6px 4px}
+
+/* detail card */
+#card{position:fixed;left:16px;top:176px;bottom:96px;width:340px;z-index:11;border-radius:22px;overflow:hidden;display:flex;flex-direction:column;transition:transform .3s,opacity .3s}
+#card.closed{transform:translateX(-120%);opacity:0;pointer-events:none}
+#card .cardTop{display:flex;align-items:center;justify-content:space-between;padding:10px 10px 0 16px}
+#cardBody{overflow:auto;padding:4px 18px 18px;flex:1}
+#cardBody h2{margin:6px 0 4px;font-size:22px;line-height:1.25}
+#cardBody p{line-height:1.65;margin:8px 0;font-size:14.5px}
+#cardBody .icon{font-size:30px}
+#cardBody .thumb{width:160px;height:160px;border-radius:18px;background:linear-gradient(#fff,#f3e8dc);display:block;margin:8px auto}
+#cardBody ul{padding-left:18px;margin:6px 0}
+#cardBody li{margin:4px 0;line-height:1.55;font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.tile{background:#fff;border-radius:14px;padding:10px 8px;text-align:center;box-shadow:0 2px 8px #4a2a1410}
+.tile .big{font-size:24px;color:var(--coral);display:block;line-height:1.1}
+.tile small{font-size:11px;color:var(--muted)}
+.timeline{display:flex;gap:4px;margin:8px 0 4px}
+.timeline span{flex:1;text-align:center;font-size:12px;padding:6px 0;border-radius:8px;background:#fff;color:var(--muted)}
+.timeline span.on{background:var(--coral);color:#fff;font-weight:700}
+.list{display:flex;flex-direction:column;gap:2px;margin:6px 0}
+.list button{display:flex;gap:8px;text-align:left;border:0;background:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;font-size:14px;min-height:40px;align-items:center}
+.list button:hover{background:var(--yellow)}
+.list .n{font:700 12px var(--mono);color:var(--coral)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.teacherHead{display:flex;gap:14px;align-items:center;margin-top:6px}
+.teacherHead img,.teacherHead .ava{width:84px;height:84px;border-radius:20px;object-fit:cover;background:#f3e8dc;flex:none;box-shadow:0 4px 12px #4a2a1420}
+.teacherHead .ava{display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:#fff;background:var(--coral)}
+.speech{background:#fff;border-radius:16px;padding:12px 14px;position:relative;margin:12px 0;line-height:1.7;font-size:14.5px;box-shadow:0 2px 8px #4a2a1414}
+.speech:before{content:"";position:absolute;left:26px;top:-8px;border:8px solid transparent;border-top:0;border-bottom-color:#fff}
+.src{font-size:12px;color:var(--muted);margin-top:14px}
+.src a{color:var(--teal)}
+.flowHead{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;flex-wrap:wrap}
+
+/* hud */
+#hud{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:10;border-radius:999px;padding:6px 10px;display:flex;align-items:center;gap:4px}
+#hud .btn{flex-direction:column;gap:0;font-size:11px;padding:2px 8px;border-radius:14px;min-width:50px}
+#hud .btn b{font-size:16px;line-height:1.15}
+#hud .sep{width:1px;height:30px;background:var(--line);margin:0 4px}
+#clock{font:700 18px var(--mono);min-width:66px;text-align:center}
+#slotName{font-size:11px;color:var(--muted);text-align:center;max-width:110px;line-height:1.2}
+#timeBtn{display:none}
+
+/* journal */
+#journal{position:fixed;right:350px;top:16px;width:290px;max-height:44vh;z-index:10;border-radius:18px;display:flex;flex-direction:column;overflow:hidden}
+#journal header{display:flex;align-items:center;gap:8px;padding:10px 12px}
+#journal .live{width:8px;height:8px;border-radius:50%;background:#3fbf6a;box-shadow:0 0 0 3px #3fbf6a33;animation:pulse 1.6s infinite}
+#journal select{flex:1;min-height:34px;border-radius:9px;border:1px solid var(--line);font:inherit;font-size:12px;background:#fff}
+#journalList{overflow:auto;padding:0 12px 10px;font-size:12.5px;line-height:1.5}
+#journalList div{padding:5px 0;border-top:1px solid var(--line)}
+#journalList time{font:700 11px var(--mono);color:var(--coral);margin-right:6px}
+@keyframes pulse{50%{opacity:.4}}
+
+/* legend */
+#legend{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:9;border-radius:14px;padding:8px 14px;display:flex;gap:16px;font-size:12px;align-items:center}
+#legend i{display:inline-block;width:34px;height:0;border-top:3px solid var(--coral);vertical-align:middle;margin-right:6px}
+#legend .th i{border-top-style:dashed}
+#legend .pe i{border-top-style:dotted}
+
+/* labels */
+.ilabel{pointer-events:auto;cursor:pointer;background:#fff;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px #4a2a1420;display:flex;gap:6px;align-items:center;transition:opacity .2s,background .2s;user-select:none}
+.ilabel .no{font:700 11px var(--mono);color:var(--coral)}
+.ilabel.sel{background:var(--ink);color:#fff}
+.ilabel.sel .no{color:var(--yellow)}
+.ilabel.dim{opacity:.45}
+.ilabel.compact .nm{display:none}
+.pin{pointer-events:auto;cursor:pointer;width:24px;height:24px;border-radius:50%;background:var(--coral);color:#fff;font:700 12px var(--font);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px #0003;border:2px solid #fff}
+.pin.lit{background:#e8b600}
+.tag{pointer-events:auto;cursor:pointer;background:#fff;border:2px solid var(--coral);border-radius:9px;padding:2px 7px;font-size:11.5px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px #4a2a1425;user-select:none}
+.tag small{font-weight:400;color:var(--muted);margin-left:2px}
+.tag:hover,.tag.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tag.sel small,.tag:hover small{color:#ddd}
+.bubble{background:#fff;border-radius:10px;padding:3px 8px;font-size:11px;white-space:nowrap;box-shadow:0 2px 6px #4a2a1420;color:var(--ink)}
+.say{pointer-events:auto;background:#fff;border-radius:14px;padding:8px 12px;font-size:13px;line-height:1.5;width:240px;white-space:normal;box-shadow:0 6px 18px #4a2a1430;border:2px solid var(--coral)}
+
+/* modal */
+#modal{position:fixed;inset:0;z-index:40;background:rgba(33,29,29,.35);display:flex;align-items:center;justify-content:center;padding:16px}
+#modal .box{width:min(560px,100%);max-height:90vh;overflow:auto;border-radius:22px;background:var(--cream);box-shadow:var(--shadow);padding:20px 22px}
+#modal h2{margin:4px 0 10px}
+#modal ol{padding-left:22px;line-height:1.8}
+#modal .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+.stat{background:#fff;border-radius:16px;padding:12px 14px}
+.stat .big{font-size:30px;color:var(--coral);display:block}
+.stat small{color:var(--muted);font-size:12px}
+.bars{display:flex;align-items:flex-end;gap:3px;height:140px;padding:8px 4px 0;background:#fff;border-radius:16px;overflow-x:auto}
+.bars .b{flex:1;min-width:10px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative}
+.bars .b i{display:block;width:100%;background:var(--coral);border-radius:4px 4px 0 0;min-height:2px}
+.bars .b u{display:block;width:100%;background:var(--sea);border-radius:4px 4px 0 0;position:absolute;bottom:18px;min-height:0;opacity:.9}
+.bars .b span{font:10px var(--mono);color:var(--muted);height:18px;line-height:18px}
+.dayTable{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+.dayTable th,.dayTable td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}
+.dayTable th:first-child,.dayTable td:first-child{text-align:left}
+.keys{font-size:12px;color:var(--muted);display:flex;gap:14px;margin-top:6px}
+.keys i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+
+/* handles (mobile sheets) */
+.handle{display:none}
+
+@media (max-width:800px){
+  #brand{left:10px;top:10px;padding:8px 12px 8px 8px;max-width:calc(100vw - 84px)}
+  #brand img,#brand .logoFallback{width:36px;height:36px}
+  #brand h1{font-size:15px}
+  #brand .sub{font-size:11px}
+  #toolbar{left:auto;right:10px;top:10px;flex-direction:column;padding:4px}
+  #side,#card{left:0;right:0;top:auto;bottom:0;width:auto;border-radius:22px 22px 0 0;transition:transform .3s,opacity .3s,height .2s}
+  #side{height:52vh}
+  #card{height:34vh}
+  #side.closed,#card.closed{transform:translateY(110%)}
+  #side.full,#card.full{height:calc(100vh - 70px)}
+  .handle{display:block;height:24px;cursor:grab;touch-action:none;flex:none;position:relative}
+  .handle:after{content:"";position:absolute;left:50%;top:9px;width:44px;height:5px;border-radius:3px;background:#0002;transform:translateX(-50%)}
+  #hud{left:10px;right:auto;bottom:max(10px,env(safe-area-inset-bottom));transform:none;border-radius:16px;flex-wrap:wrap;max-width:calc(100vw - 20px);gap:2px}
+  #hud.collapsed>*:not(#timeBtn){display:none}
+  #timeBtn{display:inline-flex}
+  #journal{right:10px;left:10px;width:auto;top:auto;bottom:150px;max-height:30vh}
+  #legend{bottom:70px;font-size:11px;gap:10px;flex-wrap:wrap;max-width:calc(100vw - 20px)}
+  .say{width:200px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="stage" aria-label="3D 資工系特色島場景"></div>
+<div id="labels"></div>
+
+<div id="loader" role="status">
+  <div class="hexspin"></div>
+  <h1>虎尾科大 <span>資工島</span></h1>
+  <p id="loadMsg" data-en="Assembling the CSIE island…">正在組合資工系特色島…</p>
+</div>
+
+<div id="brand" class="glass">
+  <img id="logo" alt="虎尾科大資工系 logo" referrerpolicy="no-referrer" src="https://csie.nfu.edu.tw/uploads/site/site_logo/68512a24085777d42a51b3db/%25E8%2599%258E%25E7%25A7%2591%25E5%25A4%25A7-%25E8%25B3%2587%25E5%25B7%25A5%25E7%25B3%25BB-t-w-LOGO-x.png">
+  <div>
+    <h1 data-en="NFU CSIE Island">虎尾科大資工系特色島</h1>
+    <div class="sub" data-en="National Formosa University · Computer Science and Information Engineering">國立虎尾科技大學 · 資訊工程系</div>
+  </div>
+</div>
+
+<div id="toolbar" class="glass" role="toolbar" aria-label="檢視">
+  <button class="btn" id="btnHome" title="全景" data-en-title="Overview"><b>⌂</b><span data-en="Overview">全景</span></button>
+  <button class="btn" id="btnList" aria-pressed="true" title="清單" data-en-title="List"><b>☰</b><span data-en="List">清單</span></button>
+  <button class="btn" id="btnHelp" title="說明" data-en-title="Help"><b>?</b><span data-en="Help">說明</span></button>
+</div>
+
+<aside id="side" class="glass" aria-label="清單">
+  <div class="handle" data-sheet="side"></div>
+  <header>
+    <input id="search" type="search" placeholder="搜尋年級、課程、老師…" data-en-ph="Search cohorts, courses, teachers…" aria-label="搜尋">
+    <div class="tabs" role="tablist">
+      <button class="btn on" id="tabIslands" role="tab" data-en="Islands">年級島</button>
+      <button class="btn" id="tabTeachers" role="tab" data-en="Teachers">老師</button>
+      <button class="btn" id="tabFlows" role="tab" data-en="Links">交流線</button>
+    </div>
+  </header>
+  <div id="sideBody"></div>
+</aside>
+
+<section id="card" class="glass closed" aria-live="polite">
+  <div class="handle" data-sheet="card"></div>
+  <div class="cardTop"><span class="eyebrow" id="cardEyebrow"></span><button class="btn" id="cardClose" aria-label="關閉">✕</button></div>
+  <div id="cardBody"></div>
+</section>
+
+<section id="journal" class="glass hidden" aria-label="島嶼日誌">
+  <header><span class="live"></span><span class="eyebrow" style="color:var(--ink)">LIVE</span><b style="font-size:14px" data-en="Island log">島嶼日誌</b>
+    <select id="journalFilter" aria-label="篩選交流線"></select></header>
+  <div id="journalList"></div>
+</section>
+
+<div id="legend" class="glass hidden">
+  <span><i></i><span data-en="Official program">正式制度</span></span>
+  <span class="th"><i></i><span data-en="Community">社群交流</span></span>
+  <span class="pe"><i></i><span data-en="In preparation">籌備進行中</span></span>
+</div>
+
+<nav id="hud" class="glass" aria-label="時間與開關">
+  <button class="btn" id="timeBtn"><b>◷</b><span data-en="Time">時間</span></button>
+  <div><div id="clock">10:00</div><div id="slotName"></div></div>
+  <span class="sep"></span>
+  <button class="btn" data-time="360"><b>🌅</b><span data-en="Dawn 06">清晨 06</span></button>
+  <button class="btn" data-time="720"><b>☀️</b><span data-en="Day 12">白天 12</span></button>
+  <button class="btn" data-time="1080"><b>🌇</b><span data-en="Dusk 18">黃昏 18</span></button>
+  <button class="btn" data-time="1260"><b>🌙</b><span data-en="Night 21">夜晚 21</span></button>
+  <span class="sep"></span>
+  <button class="btn" data-tog="names" aria-pressed="true"><b>🏷</b><span data-en="Tags">名牌</span></button>
+  <button class="btn" data-tog="carry" aria-pressed="true"><b>🎒</b><span data-en="Carry">搬運</span></button>
+  <button class="btn" data-tog="flows" aria-pressed="false"><b>〰</b><span data-en="Links">交流線</span></button>
+  <button class="btn" data-tog="pause" aria-pressed="false"><b>⏸</b><span data-en="Pause">暫停</span></button>
+  <button class="btn" data-tog="bird" aria-pressed="false"><b>🛰</b><span data-en="Bird">鳥瞰</span></button>
+  <button class="btn" data-tog="log" aria-pressed="false"><b>📜</b><span data-en="Log">日誌</span></button>
+</nav>
+
+<div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="box" id="modalBox"></div></div>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+// ═══════════════════════════════════════════════════════════════════════════
+//  DATA — 所有內容由此驅動。資料與圖片來源：https://csie.nfu.edu.tw/
+//  （系所簡介、本系成員、實驗室介紹、課程規劃、五專專區、最新消息，擷取於 2026-10）
+// ═══════════════════════════════════════════════════════════════════════════
+const SRC = 'https://csie.nfu.edu.tw';
+const DATA = {
+  city: { name: '虎尾科大資工系', en: 'NFU CSIE', source: SRC },
+  dept: {
+    logo: SRC + '/uploads/site/site_logo/68512a24085777d42a51b3db/%25E8%2599%258E%25E7%25A7%2591%25E5%25A4%25A7-%25E8%25B3%2587%25E5%25B7%25A5%25E7%25B3%25BB-t-w-LOGO-x.png',
+    banner: SRC + '/uploads/banner_image/file/691b8ad6085777bcbf01a43d/20221012093828456l.jpg',
+    ieet: SRC + '/uploads/asset/data/68c2572c085777f6aa0ef286/IEET_Accredited-Logo_EAC_bg.png',
+    intro: '教育部於民國 91 年 8 月核准成立資訊工程系，97 年 8 月增設碩士班，109 年 8 月增設五專資訊工程科。目前學制有日間部四技八班、碩士班二班、專科部五班，合計十五班。強調理論與技術並重，重視學生獨立思考與創造能力之培養。',
+    introEn: 'Approved by the Ministry of Education in Aug 2002; the master program was added in 2008 and the five-year junior college program in 2020. Today: 8 undergraduate classes, 2 master classes and 5 junior-college classes — 15 in total.'
+  },
+  // 島：q,r 為 axial 座標；pattern：brick | speckle | stripe；tree：該島外圈樹種
+  islands: [
+    { id:'j1', no:'01', name:'專一', en:'JC Year 1', full:'五專一年級', fullEn:'Junior college · year 1', q:-3, r:2, color:'#f2b5c6', pattern:'speckle', tree:'sakura', icon:'🌱', kind:'jc',
+      summary:'剛進五專資訊工程科的新生島。專一到專三以通識與資訊基礎課程為主，特別加強英文與數學，也開始接觸程式設計。',
+      summaryEn:'Freshmen of the five-year program. Years 1–3 focus on general and IT foundations with extra English and math, plus first programming.',
+      items:[
+        { id:'j1a', name:'資工科普通教室', en:'JC homeroom', model:'school', when:'year', desc:'五專新生的主場教室，班級課程從這裡開始。', descEn:'Home classroom of the JC freshmen.', facts:['五專資訊工程科於民國 109 年（2020）8 月成立','專科部目前共 5 班'], factsEn:['JC program founded Aug 2020','5 junior-college classes'] },
+        { id:'j1b', name:'英文與數學加強', en:'English & math boost', model:'book', when:'year', activity:'study', desc:'專一至專三特別加強英文與數學，打好升學與專業的底子。', descEn:'Years 1–3 put extra weight on English and math.', facts:['專一～專三共 3 個年級加強英數','搭配通識與資訊基礎課程'], factsEn:['Extra English & math in years 1–3','Alongside general & IT basics'] },
+        { id:'j1c', name:'計算機概論', en:'Intro to computing', model:'classroom', when:'fall', activity:'study', desc:'認識電腦怎麼運作，資工路的第一堂課。', descEn:'How computers work — the very first class.', facts:['屬專一～專三的資訊基礎課程','為數位邏輯與程式設計鋪路'], factsEn:['Part of years 1–3 IT basics','Leads into logic & programming'] },
+        { id:'j1d', name:'新生班際球賽', en:'Freshman ball games', model:'court', when:'spring', activity:'leisure', desc:'下課後到球場流流汗，和同班同學培養默契。', descEn:'Sweat it out on the court after class.', facts:['休閒娛樂是島民日常的一部分','黃昏 16:00 時段最熱鬧'], factsEn:['Leisure is part of daily life','Busiest around 16:00'] }
+      ]},
+    { id:'j2', no:'02', name:'專二', en:'JC Year 2', full:'五專二年級', fullEn:'Junior college · year 2', q:-2, r:2, color:'#fcea8b', pattern:'brick', tree:'round', icon:'🔌', kind:'jc',
+      summary:'專二開始進入數位邏輯與程式設計，並準備程式能力檢定。',
+      summaryEn:'Digital logic, programming and the programming proficiency test.',
+      items:[
+        { id:'j2a', name:'數位邏輯實驗室', en:'Digital logic lab', model:'school', when:'year', desc:'用邏輯閘與電路板認識電腦最底層的 0 與 1。', descEn:'Logic gates and boards — the 0s and 1s.', facts:['系上 8 間教學實驗室之一','數位邏輯是專一～專三的重點課程'], factsEn:['One of 8 teaching labs','Core course in years 1–3'] },
+        { id:'j2b', name:'程式設計', en:'Programming', model:'lab', when:'year', activity:'study', desc:'一行一行寫出自己的第一個程式。', descEn:'Write your first programs line by line.', facts:['專一～專三培養程式設計基礎','銜接程式能力檢定'], factsEn:['Programming basics in years 1–3','Prepares for the proficiency test'] },
+        { id:'j2c', name:'程式能力檢定 CPE', en:'CPE test', model:'cert', when:'spring', activity:'study', desc:'參加大學程式能力檢定，檢驗解題實力。', descEn:'Take the Collegiate Programming Examination.', facts:['2026-05-26 CPE 通過名單已公告','網站「程式能力檢定」專區提供資料下載'], factsEn:['CPE pass list posted 2026-05-26','Materials in the downloads area'] },
+        { id:'j2d', name:'社團成果表演', en:'Club show', model:'stage', when:'spring', activity:'leisure', desc:'熱舞、樂團、魔術，舞台上看見同學的另一面。', descEn:'Dance, bands, magic — another side of classmates.', facts:['休閒娛樂時段 16:00','和專一學弟妹一起看表演'], factsEn:['Leisure slot 16:00','Shared with year-1 juniors'] }
+      ]},
+    { id:'j3', no:'03', name:'專三', en:'JC Year 3', full:'五專三年級', fullEn:'Junior college · year 3', q:-2, r:1, color:'#58a6a6', pattern:'stripe', tree:'conifer', icon:'📜', kind:'jc',
+      summary:'專三是證照年，系上輔導考取基礎資訊證照，英文表現也很亮眼。',
+      summaryEn:'Certificate year — basic IT certificates and strong English results.',
+      items:[
+        { id:'j3a', name:'基本電學與證照實驗室', en:'Electricity & cert lab', model:'school', when:'year', desc:'基本電學實作與證照練習都在這裡。', descEn:'Basic electricity and certificate practice.', facts:['系上 8 間教學實驗室之一','五專專區設有「證照輔導」'], factsEn:['One of 8 teaching labs','Certificate counseling program'] },
+        { id:'j3b', name:'基礎資訊證照', en:'Basic IT certificates', model:'cert', when:'year', activity:'study', desc:'在老師輔導下考取基礎資訊相關證照。', descEn:'Earn basic IT certificates with faculty coaching.', facts:['專一～專三輔導考取基礎資訊證照','專四、專五再挑戰進階證照'], factsEn:['Basic certs in years 1–3','Advanced certs in years 4–5'] },
+        { id:'j3c', name:'Cool English', en:'Cool English', model:'globe', when:'spring', activity:'award', desc:'線上英語學習平台競賽，資工科表現亮眼。', descEn:'Online English contest — the JC program shone.', facts:['2025 Cool English 資訊工程科表現亮眼','列於 113 學年第 2 學期競賽成績'], factsEn:['Strong results in Cool English 2025','Listed for semester 113-2'] },
+        { id:'j3d', name:'園遊會攤位', en:'Fair booth', model:'stall', when:'fall', activity:'leisure', desc:'班上一起擺攤，賣飲料也賣創意。', descEn:'Run a class booth at the fair.', facts:['午餐時段 12:00 最熱鬧','全班分工合作'], factsEn:['Busiest at noon','Whole class teamwork'] }
+      ]},
+    { id:'j4', no:'04', name:'專四', en:'JC Year 4', full:'五專四年級', fullEn:'Junior college · year 4', q:-1, r:1, color:'#6f7fb5', pattern:'speckle', tree:'maple', icon:'🤖', kind:'jc',
+      summary:'專四進入進階專業課程與專題製作，作品已經能拿去國際發明展得獎。',
+      summaryEn:'Advanced courses and capstone projects — already winning invention awards.',
+      items:[
+        { id:'j4a', name:'進階專業課程', en:'Advanced courses', model:'school', when:'year', desc:'專四、專五修習進階專業課程。', descEn:'Advanced professional courses in years 4–5.', facts:['專四與專五為進階專業課程階段','鼓勵考取進階資訊證照'], factsEn:['Years 4–5: advanced courses','Advanced IT certs encouraged'] },
+        { id:'j4b', name:'五專專題製作', en:'JC capstone', model:'robot', when:'year', activity:'project', desc:'組隊做專題，從構想、實作到成果發表。', descEn:'Team capstone projects from idea to demo.', facts:['專四、專五進行專題製作','網站設有「五專部專題」下載專區'], factsEn:['Capstones in years 4–5','JC project downloads area'] },
+        { id:'j4c', name:'綠點子國際發明競賽', en:'Green Idea invention award', model:'trophy', when:'spring', activity:'award', desc:'第七屆綠點子國際發明暨設計競賽，資工科奪下多項大獎。', descEn:'7th Green Idea International Invention & Design Competition.', facts:['第 7 屆綠點子國際發明暨設計競賽','資工科獲鈦金獎、銀牌獎與評審團特別獎'], factsEn:['7th edition','Titanium, silver and jury special awards'] },
+        { id:'j4d', name:'騎車逛校園', en:'Campus bike ride', model:'bikes', when:'fall', activity:'leisure', desc:'虎尾校區騎腳踏車最方便，下課一起去吃東西。', descEn:'Bikes are the easiest way around campus.', facts:['休閒時段 16:00','腳踏車是校園通勤主力'], factsEn:['Leisure 16:00','Bikes rule campus commuting'] },
+        { id:'j4e', name:'進階資訊證照', en:'Advanced certificates', model:'cert', when:'year', activity:'study', desc:'在基礎證照之上，挑戰更進階的資訊證照。', descEn:'Level up to advanced IT certificates.', facts:['專四、專五鼓勵考取進階證照','延續專三的證照輔導'], factsEn:['Encouraged in years 4–5','Builds on year-3 coaching'] }
+      ]},
+    { id:'j5', no:'05', name:'專五', en:'JC Year 5', full:'五專五年級', fullEn:'Junior college · year 5', q:-1, r:0, color:'#db6a41', pattern:'brick', tree:'fruit', icon:'🎓', kind:'jc',
+      summary:'專五是畢業年：到合作企業校外實習、完成專題、準備升學。',
+      summaryEn:'Graduation year: internships, finishing capstones, and further study.',
+      items:[
+        { id:'j5a', name:'畢業班教室', en:'Senior homeroom', model:'school', when:'year', desc:'專五的最後一年，升學與就業都在這裡討論。', descEn:'Final-year homeroom.', facts:['五專修業 5 年','可選擇升學或實習就業'], factsEn:['5-year program','Further study or internship'] },
+        { id:'j5b', name:'校外實習', en:'Off-campus internship', model:'busstop', when:'year', activity:'project', desc:'專五鼓勵到合作企業實習，有一學期或一學年的方案。', descEn:'Internships with partner companies, one semester or a full year.', facts:['專五鼓勵至企業校外實習','實習期間可為 1 學期或 1 學年'], factsEn:['Encouraged in year 5','One semester or one year'] },
+        { id:'j5c', name:'計網中心專案實習', en:'Computing center internship', model:'server', when:'summer', activity:'project', desc:'暑假到學校計網中心參與資訊專案實務。', descEn:'Summer IT projects with the campus computing center.', facts:['專四或專五暑假可參加','資訊專案實習 1 學分、至少 160 小時'], factsEn:['Summer of year 4 or 5','1 credit, at least 160 hours'] },
+        { id:'j5d', name:'升學榜單', en:'Admissions list', model:'cap', when:'spring', activity:'award', desc:'畢業前放榜，學長姐的升學成果都在榜單上。', descEn:'Further-study results of the graduates.', facts:['115 年資訊工程科升學榜單已公告','五專專區設有「升學集錦」'], factsEn:['2026 admissions list posted','“Highlights” page in the JC area'] },
+        { id:'j5e', name:'專題成果發表', en:'Capstone showcase', model:'book', when:'spring', activity:'project', desc:'把兩年的專題整理成報告與海報。', descEn:'Two years of capstone work, wrapped up.', facts:['專四～專五共 2 年專題製作','成果收錄於五專部專題專區'], factsEn:['2 years of capstone','Archived in JC project area'] }
+      ]},
+    { id:'b1', no:'06', name:'大一', en:'Year 1', full:'四技一年級', fullEn:'Undergraduate · year 1', q:1, r:0, color:'#9cc27a', pattern:'stripe', tree:'palm', icon:'💻', kind:'ug',
+      summary:'四技新生島：計算機概論、程式設計與數學基礎，還有迎新與宿舍生活。',
+      summaryEn:'Undergraduate freshmen: intro computing, programming, math, and dorm life.',
+      items:[
+        { id:'b1a', name:'多功能教學實驗室', en:'Multi-purpose lab', model:'school', when:'year', desc:'大一的程式課與上機實作多在教學實驗室進行。', descEn:'Hands-on computer classes.', facts:['系上 8 間教學實驗室之一','日間部四技共 8 班'], factsEn:['One of 8 teaching labs','8 undergraduate classes'] },
+        { id:'b1b', name:'計算機概論與程式設計', en:'Intro & programming', model:'classroom', when:'fall', activity:'study', desc:'從變數、迴圈到函式，打好寫程式的基本功。', descEn:'Variables, loops, functions — the fundamentals.', facts:['資工系於民國 91 年（2002）成立','理論與技術並重'], factsEn:['Founded 2002','Theory and practice together'] },
+        { id:'b1c', name:'微積分與線性代數', en:'Calculus & linear algebra', model:'book', when:'year', activity:'study', desc:'數學是 AI、影像處理與演算法的共同語言。', descEn:'Math: the language of AI and algorithms.', facts:['為三大發展方向打底','早八 08:00 時段亮起'], factsEn:['Foundation for all three tracks','Lit at 08:00'] },
+        { id:'b1d', name:'宿舍生活', en:'Dorm life', model:'house', when:'year', activity:'leisure', desc:'第一次住宿，認識來自各地的室友。', descEn:'First time in the dorms.', facts:['系所簡介附有學校住宿資訊','01:00 宿舍熄燈'], factsEn:['Dorm info linked from the dept site','Lights out at 01:00'] },
+        { id:'b1e', name:'迎新與系學會', en:'Orientation & student association', model:'stage', when:'fall', activity:'leisure', desc:'迎新宿營、系學會活動，認識學長姐的第一站。', descEn:'Orientation camp and student association events.', facts:['學長姐帶新生認識系上','16:00 社團時段'], factsEn:['Seniors guide freshmen','Club slot 16:00'] }
+      ]},
+    { id:'b2', no:'07', name:'大二', en:'Year 2', full:'四技二年級', fullEn:'Undergraduate · year 2', q:2, r:0, color:'#f6c7a4', pattern:'brick', tree:'willow', icon:'🧩', kind:'ug',
+      summary:'大二是資料結構與計算機組織之年，也開始在系統設計實驗室動手做硬體。',
+      summaryEn:'Data structures, computer organization and system-design labs.',
+      items:[
+        { id:'b2a', name:'系統設計實驗室', en:'System design lab', model:'school', when:'year', desc:'嵌入式系統、FPGA 與高速介面的實作基地。', descEn:'Embedded systems, FPGA and high-speed interfaces.', facts:['三大方向之一「系統設計」','涵蓋嵌入式、高速介面、FPGA、生物晶片'], factsEn:['One of 3 tracks: System Design','Embedded, FPGA, biochips'] },
+        { id:'b2b', name:'資料結構', en:'Data structures', model:'lab', when:'fall', activity:'study', desc:'陣列、串列、樹與圖——寫出有效率程式的關鍵。', descEn:'Arrays, lists, trees and graphs.', facts:['資訊系統方向的核心基礎','早八 08:00 時段亮起'], factsEn:['Core of the Information Systems track','Lit at 08:00'] },
+        { id:'b2c', name:'計算機組織與微處理機', en:'Computer organization', model:'chip', when:'spring', activity:'study', desc:'拆開 CPU 看看裡面怎麼運作。', descEn:'Open up the CPU.', facts:['銜接 FPGA 與微處理器系統設計','10:00 實驗課時段'], factsEn:['Leads to FPGA & µP design','Lab slot 10:00'] },
+        { id:'b2d', name:'宵夜街', en:'Late-night snacks', model:'stall', when:'year', activity:'leisure', desc:'寫完作業來一份雞排，虎尾的夜晚最療癒。', descEn:'Fried chicken after homework.', facts:['12:00 與 22:00 兩個時段亮起','趕專題的能量補給站'], factsEn:['Lit at 12:00 and 22:00','Project fuel'] },
+        { id:'b2e', name:'系際盃籃球', en:'Inter-dept basketball', model:'court', when:'spring', activity:'leisure', desc:'系隊練球，為系際盃拚一座冠軍。', descEn:'Dept team practice.', facts:['16:00 運動時段','大一到大四都能報名'], factsEn:['Sports slot 16:00','Open to all years'] }
+      ]},
+    { id:'b3', no:'08', name:'大三', en:'Year 3', full:'四技三年級', fullEn:'Undergraduate · year 3', q:1, r:1, color:'#a9cfe0', pattern:'speckle', tree:'conifer', icon:'🛠', kind:'ug',
+      summary:'大三開始實務專題、選定方向，暑假還能去企業實習。',
+      summaryEn:'Capstone begins, tracks are chosen, and summer internships start.',
+      items:[
+        { id:'b3a', name:'人工智慧創新實驗室', en:'AI innovation lab', model:'school', when:'year', desc:'機器學習與 AI 應用的教學實驗室。', descEn:'Teaching lab for machine learning and AI.', facts:['系上 8 間教學實驗室之一','資訊系統方向含機器學習、AI'], factsEn:['One of 8 teaching labs','ML & AI in the Info Systems track'] },
+        { id:'b3b', name:'實務專題（一）', en:'Capstone I', model:'robot', when:'fall', activity:'project', desc:'找指導老師、組隊、做出第一版成果並口頭報告。', descEn:'Find an advisor, form a team, present a first version.', facts:['115-1 實務專題（一）期末口頭報告','網站設有「大學部專題」下載專區'], factsEn:['Capstone I final presentations 115-1','Undergrad project downloads area'] },
+        { id:'b3c', name:'計算機網路', en:'Computer networks', model:'antenna', when:'fall', activity:'study', desc:'從封包到無線感測網路，網路多媒體方向的入口。', descEn:'Packets to wireless sensor networks.', facts:['三大方向之一「網路多媒體」','涵蓋行動網路、無線感測網路與 IoT'], factsEn:['Track: Network Multimedia','Mobile, WSN and IoT'] },
+        { id:'b3d', name:'雲端與資料庫', en:'Cloud & databases', model:'server', when:'spring', activity:'study', desc:'資料庫設計、雲端運算與大數據。', descEn:'Databases, cloud and big data.', facts:['資訊系統方向：雲端運算、大數據','也涵蓋網路技術與資訊安全'], factsEn:['Info Systems: cloud & big data','Plus web and security'] },
+        { id:'b3e', name:'暑期實習', en:'Summer internship', model:'clock', when:'summer', activity:'project', desc:'暑假到企業實習，第一次體驗職場。', descEn:'First taste of industry over the summer.', facts:['暑期實習 2 學分','連續 8 週、至少 320 小時'], factsEn:['2 credits','8 straight weeks, ≥320 hours'] },
+        { id:'b3f', name:'程式設計節大黑客松', en:'Hackathon', model:'trophy', when:'fall', activity:'award', desc:'2026 臺北秋季程式設計節大黑客松，組隊挑戰中。', descEn:'2026 Taipei autumn coding festival hackathon.', facts:['2026 臺北秋季程式設計節','系網最新消息公告參賽資訊'], factsEn:['2026 Taipei coding festival','Posted in dept news'] }
+      ]},
+    { id:'b4', no:'09', name:'大四', en:'Year 4', full:'四技四年級', fullEn:'Undergraduate · year 4', q:2, r:-1, color:'#c9b6e4', pattern:'stripe', tree:'poplar', icon:'🎓', kind:'ug',
+      summary:'大四完成實務專題（二）、校外實習，準備畢業、甄試或就業。',
+      summaryEn:'Capstone II, long internships, graduation and grad-school applications.',
+      items:[
+        { id:'b4a', name:'智慧運算與資訊安全實驗室', en:'Smart computing & security lab', model:'school', when:'year', desc:'資安與智慧運算的實作課程。', descEn:'Security and smart computing.', facts:['系上 8 間教學實驗室之一','資訊系統方向含資訊安全'], factsEn:['One of 8 teaching labs','Security in Info Systems track'] },
+        { id:'b4b', name:'實務專題（二）', en:'Capstone II', model:'robot', when:'year', activity:'project', desc:'把專題做到可以展示、驗收、參賽。', descEn:'Finish, demo and compete.', facts:['實務專題（二）成果驗收','14:00 與 22:00 時段亮起'], factsEn:['Capstone II final review','Lit at 14:00 and 22:00'] },
+        { id:'b4c', name:'學期／學年實習', en:'Semester / year internship', model:'busstop', when:'year', activity:'project', desc:'到台積電、聯電、力積電等企業長期實習。', descEn:'Long internships at partner companies.', facts:['學期實習 9 學分、至少 18 週','學年實習 18 學分、至少 36 週'], factsEn:['Semester: 9 credits, ≥18 weeks','Year: 18 credits, ≥36 weeks'] },
+        { id:'b4d', name:'錦德鋼鐵獎學金', en:'Scholarship', model:'coin', when:'fall', activity:'award', desc:'企業獎學金開放申請，鼓勵優秀學生。', descEn:'Industry scholarship applications.', facts:['申請至 115 年 11 月 21 日截止','網站設有「獎助學金」專區'], factsEn:['Deadline 2026-11-21','Scholarship info page'] },
+        { id:'b4e', name:'碩士班甄試', en:'Master admission', model:'cap', when:'fall', activity:'study', desc:'準備甄試，升上碩士班繼續做研究。', descEn:'Apply to stay on for the master program.', facts:['116 學年度碩士班甄試招生','碩士班目前 2 班'], factsEn:['2027 master admissions','2 master classes'] }
+      ]},
+    { id:'g', no:'10', name:'碩士班', en:'Master', full:'資訊工程系碩士班', fullEn:'Graduate (MS)', q:1, r:-1, color:'#e4d6c3', pattern:'brick', tree:'round', icon:'🔬', kind:'grad',
+      summary:'研究生島：在綜三館 3 樓的研究實驗室做研究、寫論文、帶學弟妹實驗。',
+      summaryEn:'Graduate students: research labs, theses and TA work.',
+      items:[
+        { id:'ga', name:'研究實驗室群', en:'Research labs', model:'school', when:'year', desc:'各研究實驗室集中在綜三館 3 樓。', descEn:'Research labs on the 3rd floor of Building 3.', facts:['碩士班於民國 97 年（2008）增設','研究實驗室位於綜三館 3 樓'], factsEn:['Master program since 2008','Labs on 3F'] },
+        { id:'gb', name:'雲端智慧型系統', en:'Cloud intelligent systems', model:'server', when:'year', activity:'project', desc:'開源雲端、容器服務與 AI 數據應用。', descEn:'Open-source cloud, containers and AI data services.', facts:['雲端智慧型系統實驗室','研究實驗室列表共 3 頁'], factsEn:['Cloud Intelligent Systems Lab','3 pages of research labs'] },
+        { id:'gc', name:'無人機與行動通訊', en:'Drones & mobile networks', model:'drone', when:'year', activity:'project', desc:'自主無人機、無線感測與行動通訊網路。', descEn:'Autonomous drones and mobile networks.', facts:['行動通訊網路實驗室','無人機控制與應用研究'], factsEn:['Mobile Communication Network Lab','Drone control research'] },
+        { id:'gd', name:'機器人實驗室', en:'Robotics lab', model:'robot', when:'year', activity:'project', desc:'機器人學、機器視覺與人機協作。', descEn:'Robotics, machine vision, human–robot collaboration.', facts:['Robotics Lab（綜三館 3F）','2027 第一屆台灣機器人競賽'], factsEn:['Robotics Lab, 3F','2027 Taiwan Robot Competition'] },
+        { id:'ge', name:'碩士論文', en:'Thesis', model:'book', when:'year', activity:'study', desc:'深夜的實驗室，論文一頁一頁長出來。', descEn:'Thesis pages at midnight.', facts:['22:00 宵夜趕工時段','網站設有「碩士班相關」下載區'], factsEn:['Lit at 22:00','Master downloads area'] },
+        { id:'gf', name:'產學創新最佳實作獎', en:'Best implementation award', model:'trophy', when:'fall', activity:'award', desc:'陳國益教授團隊奪下 2025 全國大專院校產學創新實作競賽最佳實作獎。', descEn:'Prof. Kuo-Yi Chen’s team won the 2025 best implementation award.', facts:['2025 全國大專院校產學創新實作競賽','榮獲最佳實作獎'], factsEn:['2025 national industry–academia contest','Best Implementation Award'] }
+      ]},
+    { id:'t', no:'11', name:'綜三館', en:'Building 3', full:'綜三館 · 師資與系辦', fullEn:'Faculty & office', q:0, r:0, color:'#fff1de', pattern:'brick', tree:'conifer', icon:'🏛', kind:'staff',
+      summary:'系辦與 20 位專任教師的研究室都在綜三館。老師們從這裡出發，到各年級島上課與交流。',
+      summaryEn:'Home of the office and 20 full-time faculty, who walk out to every cohort island.',
+      items:[
+        { id:'ta', name:'綜三館', en:'Building 3', model:'hall', when:'year', desc:'資工系的大本營，教師研究室分布在 4～6 樓。', descEn:'Dept home; faculty offices on floors 4–6.', facts:['20 位專任教師','教師全部為學業界經驗豐富的博士'], factsEn:['20 full-time faculty','All hold PhDs with industry experience'] },
+        { id:'tb', name:'系辦公室', en:'Dept office', model:'house', when:'year', desc:'教室借用、設備報修、各種行政大小事。', descEn:'Room booking, repairs and admin.', facts:['線上教室借用與設備報修系統','電話 (05)631-5571'], factsEn:['Online room & repair systems','Tel (05)631-5571'] },
+        { id:'tc', name:'IEET 工程教育認證', en:'IEET accreditation', model:'cert', when:'year', desc:'通過 IEET 工程教育認證（EAC）。', descEn:'IEET EAC accredited.', facts:['115 學年工程及科技教育認證說明暨師生座談會','IEET EAC 認證標章'], factsEn:['2026 accreditation briefing','IEET EAC badge'] },
+        { id:'td', name:'46 週年校慶系友回娘家', en:'Alumni homecoming', model:'stage', when:'spring', activity:'leisure', desc:'2026 年 46 週年校慶，系友回娘家暨系友大會。', descEn:'46th anniversary alumni homecoming.', facts:['2026 年 46 週年校慶','系友大會同步舉行'], factsEn:['46th anniversary, 2026','Alumni assembly'] },
+        { id:'te', name:'三大發展方向', en:'Three tracks', model:'globe', when:'year', desc:'系統設計、資訊系統、網路多媒體三大方向。', descEn:'System design, information systems, network multimedia.', facts:['3 大中長期發展方向','四技 8 班＋碩士 2 班＋五專 5 班＝15 班'], factsEn:['3 long-term tracks','8+2+5 = 15 classes'] }
+      ]},
+    { id:'h', no:'12', name:'榮譽殿堂', en:'Hall of Fame', full:'競賽榮譽', fullEn:'Competition awards', q:0, r:-1, color:'#ffd66b', pattern:'stripe', tree:'sakura', icon:'🏆', kind:'award',
+      summary:'各年級島民把專題帶到這裡參賽，近年的得獎紀錄都豎立在榮譽殿堂。',
+      summaryEn:'Where projects go to compete — recent awards stand here.',
+      items:[
+        { id:'ha', name:'Best AI Awards 智慧創新大賞', en:'Best AI Awards', model:'trophy', when:'year', activity:'award', desc:'虎尾科大勇奪智慧創新大賞 Best AI Awards 多項大獎，展現 AI 實作實力。', descEn:'Multiple prizes at the Best AI Awards.', facts:['Best AI Awards 多項大獎','展現 AI 實作實力'], factsEn:['Multiple Best AI Awards','AI implementation strength'] },
+        { id:'hb', name:'盛群盃 HOLTEK MCU 創意大賽', en:'Holtek MCU contest', model:'chip', when:'spring', activity:'award', desc:'跨域團隊包辦金牌等大獎。', descEn:'Cross-disciplinary teams swept the awards.', facts:['第 20 屆盛群盃 HOLTEK MCU 創意大賽','包辦金牌等 10 大獎'], factsEn:['20th Holtek MCU contest','Gold and 10 awards in total'] },
+        { id:'hc', name:'晶心盃 RISC-V 創意大賽', en:'Andes RISC-V contest', model:'chip', when:'spring', activity:'award', desc:'資工系與應外系跨域團隊囊括大獎。', descEn:'CSIE × Applied Foreign Languages teams.', facts:['第 4 屆晶心盃 RISC-V 創意大賽','跨域團隊囊括 8 大獎'], factsEn:['4th Andes RISC-V contest','8 awards'] },
+        { id:'hd', name:'毫米波雷達 AI 創意應用賽', en:'mmWave radar AI contest', model:'antenna', when:'fall', activity:'award', desc:'資工系與長庚科大護理系團隊榮獲第二名。', descEn:'2nd place with a Chang Gung nursing team.', facts:['第 2 屆毫米波雷達 AI 創意應用賽','榮獲第 2 名'], factsEn:['2nd mmWave radar AI contest','2nd place'] },
+        { id:'he', name:'數位訊號處理創思設計競賽', en:'DSP design contest', model:'lab', when:'spring', activity:'award', desc:'資工系榮獲第 2 名及 3 組佳作。', descEn:'2nd place plus 3 honorable mentions.', facts:['第 21 屆數位訊號處理創思設計競賽','第 2 名及 3 組佳作'], factsEn:['21st DSP design contest','2nd place + 3 mentions'] },
+        { id:'hf', name:'EE Awards Asia 創新獎', en:'EE Awards Asia', model:'globe', when:'fall', activity:'award', desc:'2025 亞洲金選獎，虎科大榮獲創新獎 Innovation Award。', descEn:'2025 EE Awards Asia Innovation Award.', facts:['2025 亞洲金選獎 EE Awards Asia','Innovation Award 創新獎'], factsEn:['EE Awards Asia 2025','Innovation Award'] },
+        { id:'hg', name:'InnoServe 資訊應用服務創新競賽', en:'InnoServe', model:'server', when:'fall', activity:'award', desc:'三支團隊勇奪多項冠軍，展現 AI、資安與智慧應用研發能量。', descEn:'Three teams won multiple first places.', facts:['第 30 屆大專校院資訊應用服務創新競賽','3 支團隊勇奪多項冠軍'], factsEn:['30th InnoServe','3 teams, multiple firsts'] }
+      ]}
+  ],
+  // 交流線：from 島 → to 島，carry 搬運物，role 走路角色，evidence 樣式
+  flows: [
+    { id:'f1', from:'j4', to:'h',  name:'發明作品參賽', en:'Inventions to competition', carry:'trophy', role:'jc',   evidence:'official', count:7 },
+    { id:'f2', from:'b4', to:'g',  name:'碩士班甄試',   en:'Master admission',          carry:'paper',  role:'cap',  evidence:'official', count:6 },
+    { id:'f3', from:'g',  to:'b2', name:'研究生助教帶實驗', en:'Grad TAs run labs',     carry:'laptop', role:'grad', evidence:'thematic', count:6 },
+    { id:'f4', from:'b3', to:'b4', name:'專題經驗傳承', en:'Capstone know-how',          carry:'robot',  role:'maker',evidence:'thematic', count:6 },
+    { id:'f5', from:'j3', to:'t',  name:'證照輔導',     en:'Certificate coaching',      carry:'cert',   role:'jc',   evidence:'official', count:6 },
+    { id:'f6', from:'b3', to:'h',  name:'黑客松組隊',   en:'Hackathon teams',           carry:'laptop', role:'bike', evidence:'pending',  count:5 },
+    { id:'f7', from:'j1', to:'j2', name:'學長姐筆記',   en:'Notes from seniors',        carry:'book',   role:'fresh',evidence:'thematic', count:6 },
+    { id:'f8', from:'g',  to:'h',  name:'產學實作競賽', en:'Industry contest',          carry:'chip',   role:'grad', evidence:'official', count:5 },
+    { id:'f9', from:'j5', to:'b4', name:'校外實習出發', en:'Off to internships',        carry:'paper',  role:'intern',evidence:'official', count:6 }
+  ],
+  carries: { book:'筆記', paper:'書面資料', laptop:'筆電', robot:'專題機器人', cert:'證照', trophy:'獎盃', chip:'晶片' },
+  carriesEn: { book:'notes', paper:'documents', laptop:'a laptop', robot:'a project robot', cert:'a certificate', trophy:'a trophy', chip:'a chip' },
+  // 一天時段：哪些細項亮起
+  dayCycle: [
+    { min:60,   label:'01:00 宿舍熄燈',   en:'01:00 Lights out',      items:['b1d'] },
+    { min:480,  label:'08:00 早八上課',   en:'08:00 Morning class',   items:['j1b','j1c','b1b','b1c','b2b','b3c'] },
+    { min:600,  label:'10:00 實驗課',     en:'10:00 Lab session',     items:['j2a','j2b','j3a','b1a','b2a','b2c','b3a','b4a'] },
+    { min:720,  label:'12:00 午餐時光',   en:'12:00 Lunch',           items:['b2d','j3d','b1d'] },
+    { min:840,  label:'14:00 專題討論',   en:'14:00 Capstone time',   items:['j4b','b3b','b4b','ga','gb','gc','gd'] },
+    { min:960,  label:'16:00 運動與社團', en:'16:00 Sports & clubs',  items:['j1d','j2d','b1e','b2e','j4d'] },
+    { min:1140, label:'19:00 競賽衝刺',   en:'19:00 Contest prep',    items:['ha','hb','hc','hd','he','j4c','b3f','gf'] },
+    { min:1320, label:'22:00 宵夜趕專題', en:'22:00 Late-night push', items:['b2d','b3b','b4b','ge'] }
+  ],
+  // 專任教師（本系成員 › 專任教師）。home = 綜三館；visit = 常去交流的島
+  teachers: [
+    { name:'江季翰', en:'Ji-Han Jiang', title:'副教授兼系主任', titleEn:'Associate Professor & Chair', lab:'行動應用與軟體工程實驗室', office:'綜三館 5F 504', photo:'692302d208577729cc5e9239/thumb_%E6%B1%9F%E5%AD%A3%E7%BF%B0.jpg', visit:'b3',
+      skills:[['雲端運算與應用','Cloud computing'],['資料庫系統設計','Database system design'],['大數據分析與安全','Big data analysis & security'],['智慧物聯網與安全','AIoT & security'],['資通訊安全','ICT security']] },
+    { name:'許永和', en:'Young-Huh Sheu', title:'特聘教授兼電資學院院長', titleEn:'Distinguished Professor & Dean', lab:'嵌入式異質系統應用設計實驗室', office:'綜三館 5F 506', photo:'692302d308577729cc5e9243/thumb_%E8%A8%B1%E6%B0%B8%E5%92%8C.jpg', visit:'b2',
+      skills:[['嵌入式系統設計','Embedded system design'],['車載通訊電子網路設計','In-vehicle network design'],['智慧農業應用設計','Smart agriculture'],['智慧機械感測應用設計','Smart machinery sensing'],['醫學電子設計','Medical electronics']] },
+    { name:'林易泉', en:'Yih-Chuan Lin', title:'教授兼學務長', titleEn:'Professor & Dean of Student Affairs', lab:'多媒體網路實驗室', office:'綜三館 6F 611', photo:'692302d408577729cc5e924c/thumb_%E6%9E%97%E6%98%93%E6%B3%89.jpg', visit:'b1',
+      skills:[['行動計算','Mobile computing'],['無線通訊','Wireless communication'],['網路多媒體','Network multimedia']] },
+    { name:'鄭錦聰', en:'Jin-Tsong Jeng', title:'教授', titleEn:'Professor', lab:'基因體計算與計算智慧實驗室', office:'綜三館 6F 604', photo:'692302d408577729cc5e9254/thumb_%E9%84%AD%E9%8C%A6%E8%81%B0.jpg', visit:'g',
+      skills:[['人工智慧與類神經網路','AI & neural networks'],['自然語言與語音大語言模型','NLP & speech LLMs'],['AI 邏輯與模糊計算','AI logic & fuzzy computing'],['深度學習','Deep learning'],['生物晶片與半導體元件','Microarrays & semiconductors'],['智慧型控制與工業 4.0','Intelligent control & Industry 4.0'],['大數據分析與 Web Service','Big data & web services'],['智慧型網路控制與機器人','Network control & robots'],['短距離無線通訊與車載應用','Short-range wireless & vehicles'],['智慧型手機程式開發','Smartphone apps'],['生物資訊與文字資料探勘','Bioinformatics & text mining']] },
+    { name:'黃建宏', en:'Chien-Hung Huang', title:'教授', titleEn:'Professor', lab:'計算生物學與演算法實驗室', office:'綜三館 5F 505', photo:'692302d508577729cc5e925d/thumb_%E9%BB%83%E5%BB%BA%E5%AE%8F.jpg', visit:'b2',
+      skills:[['演算法','Algorithms'],['生物資訊','Bioinformatics'],['平行計算','Parallel computation'],['機器學習','Machine learning']] },
+    { name:'黃惠俞', en:'Hui-Yu Huang', title:'教授', titleEn:'Professor', lab:'視覺認知實驗室', office:'綜三館 6F 608', photo:'692302d608577729cc5e9267/thumb_%E9%BB%83%E6%83%A0%E4%BF%9E.jpg', visit:'g',
+      skills:[['電腦視覺','Computer vision'],['人類視覺認知系統','Human cognition systems'],['多媒體安全及應用','Multimedia security'],['模糊類神經網路與深度學習','Fuzzy neural nets & deep learning']] },
+    { name:'張朝陽', en:'Jau-Yang Chang', title:'教授', titleEn:'Professor', lab:'行動通訊網路實驗室', office:'綜三館 4F 406', photo:'692302d608577729cc5e9270/thumb_%E5%BC%B5%E6%9C%9D%E9%99%BD.jpg', visit:'b3',
+      skills:[['人工智慧系統整合應用','Integrated AI systems'],['自主無人機應用系統設計','Autonomous drone systems'],['物聯網系統','IoT systems'],['無線感測網路','Wireless sensor networks'],['行動通訊網路','Mobile networks']] },
+    { name:'黃世昌', en:'Shih-Chang Huang', title:'教授', titleEn:'Professor', lab:'無線與感測網路實驗室', office:'綜三館 5F 510', photo:'692302d708577729cc5e9279/thumb_%E9%BB%83%E4%B8%96%E6%98%8C.jpg', visit:'b4',
+      skills:[['無線區域網路與智慧型物聯網','WLAN, WSN & IoT'],['無線網路定位','Wireless positioning'],['智能型系統開發','Intelligent systems'],['銀髮族輔具設計','Assistive design for seniors'],['智慧農業系統','Smart agriculture'],['資訊金融系統分析','Financial information systems'],['人工智能辨識系統','AI recognition']] },
+    { name:'陳國益', en:'Kuo-Yi Chen', title:'教授', titleEn:'Professor', lab:'行動運算與人機介面實驗室', office:'綜三館 5F 509', photo:'692302d808577729cc5e9282/thumb_%E9%99%B3%E5%9C%8B%E7%9B%8A.jpg', visit:'h',
+      skills:[['生成式 AI 運用與實作','Generative AI'],['行動平台應用','Mobile platforms'],['虛擬實境／3D 互動應用','VR / 3D interaction'],['嵌入式平台應用','Embedded platforms'],['人機互動與介面設計','HCI & interface design']] },
+    { name:'許乙清', en:'I-Ching Hsu', title:'教授', titleEn:'Professor', lab:'雲端軟體實驗室', office:'綜三館 6F 609', photo:'692302d808577729cc5e928b/thumb_%E8%A8%B1%E4%B9%99%E6%B8%85.jpg', visit:'b3',
+      skills:[['深度學習','Deep learning'],['機器學習','Machine learning'],['雲端運算','Cloud computing'],['軟體工程','Software engineering'],['Web 技術與 AI 應用','Web technology & AI']] },
+    { name:'謝仕杰', en:'Shih-Chieh Shie', title:'副教授', titleEn:'Associate Professor', lab:'影像處理與識別實驗室', office:'綜三館 4F 405', photo:'692302da08577729cc5e929e/thumb_%E8%AC%9D%E4%BB%95%E6%9D%B0.jpg', visit:'j4',
+      skills:[['影像處理','Image processing'],['資訊隱藏','Data hiding'],['影像資料庫檢索','Image retrieval'],['影像／視訊編碼','Image / video coding']] },
+    { name:'林武杰', en:'Wu-Ja Lin', title:'副教授', titleEn:'Associate Professor', lab:'電腦視覺實驗室', office:'綜三館 6F 606', photo:'692302db08577729cc5e92a7/thumb_%E6%9E%97%E6%AD%A6%E6%9D%B0.jpg', visit:'j5',
+      skills:[['機器學習','Machine learning'],['圖形識別','Pattern recognition'],['影像處理','Image processing'],['視訊分析','Video analysis'],['自動光學檢測','Automatic optical inspection']] },
+    { name:'簡銘伸', en:'Ming-Shen Jian', title:'副教授', titleEn:'Associate Professor', lab:'雲端智慧型系統實驗室', office:'綜三館 6F 610', photo:'692302db08577729cc5e92b0/thumb_C2IS.png', visit:'g',
+      skills:[['開源雲端運算與容器服務','Open-source cloud & containers'],['人工智慧跨領域應用與數據服務','Cross-domain AI & data services'],['智慧型物聯網系統開發','AIoT systems'],['XR 與數位孿生','XR & digital twins'],['遊戲式教學','Game-based learning'],['模組化基因演算法','Modular genetic algorithms']] },
+    { name:'蔡柏祥', en:'Po-Hsiang Tsai', title:'副教授', titleEn:'Associate Professor', lab:'人機智能及多媒體實驗室', office:'綜三館 4F 407', photo:'692302dc08577729cc5e92b8/thumb_%E8%94%A1%E6%9F%8F%E7%A5%A5.jpg', visit:'j1',
+      skills:[['智慧科技生活應用','Smart-technology living'],['智慧物聯網 AIoT','AIoT'],['智慧教育','Educational technology']] },
+    { name:'游允帥', en:'Yun-Shuai Yu', title:'副教授兼產學合作及服務處副處長、創新育成中心主任', titleEn:'Associate Professor & Director, Incubation Center', lab:'智慧物聯網實驗室', office:'綜三館 6F 605', photo:'692302dd08577729cc5e92c2/thumb__%E6%B8%B8%E5%85%81%E5%B8%A5.jpg', visit:'b4',
+      skills:[['機器人作業系統 ROS','Robot Operating System'],['物聯網','Internet of Things'],['人工智慧','Artificial intelligence'],['資通訊安全','ICT security']] },
+    { name:'蕭志清', en:'Chih-Ching Hsiao', title:'副教授', titleEn:'Associate Professor', lab:'智慧型控制與計算實驗室', office:'綜三館 6F 607', photo:'692302de08577729cc5e92cb/thumb_%E8%95%AD%E5%BF%97%E6%B8%85.jpg', visit:'j2',
+      skills:[['智慧型計算','Intelligent computing'],['模糊理論','Fuzzy theory'],['人工智慧應用','AI applications'],['智慧型控制','Intelligent control'],['強健塑模','Robust modeling']] },
+    { name:'莊文河', en:'Wen-Ho Juang', title:'副教授兼副系主任', titleEn:'Associate Professor & Deputy Chair', lab:'智慧終端應用實驗室', office:'綜三館 5F 507', photo:'692302de08577729cc5e92d4/thumb_%E8%8E%8A%E6%96%87%E6%B2%B3.jpg', visit:'j3',
+      skills:[['演算法加速器設計','Algorithm & accelerator design'],['數位晶片設計','Digital IC design'],['FPGA 系統設計與應用','FPGA systems'],['微處理器系統設計','Microprocessor systems'],['智慧終端物聯網應用','On-device AIoT'],['機器學習','Machine learning']] },
+    { name:'詹竣傑', en:'Chun-Chieh Chan', title:'助理教授', titleEn:'Assistant Professor', lab:'機器人實驗室', office:'綜三館 4F 412', photo:'692302e008577729cc5e92de/thumb_%E8%A9%B9%E7%AB%A3%E5%82%91.jpg', visit:'g',
+      skills:[['機器人學','Robotics'],['自動控制','Automatic control'],['機器視覺','Machine vision'],['醫學工程','Medical engineering'],['能源管理','Energy management'],['系統識別','System identification'],['人機協作','Human–machine collaboration'],['人工智慧與深度學習','AI & deep learning']] },
+    { name:'杜俊育', en:'Jiun-Yu Tu', title:'助理教授兼電資學院特別助理', titleEn:'Assistant Professor & Special Assistant to the Dean', lab:'', office:'綜三館 4F 409', photo:'692302e008577729cc5e92e8/thumb_%E6%9D%9C%E4%BF%8A%E8%82%B2.jpg', visit:'j5',
+      skills:[['無人機控制與應用','Drone control'],['無線通訊網路','Wireless networks'],['智慧物聯網','Smart IoT'],['行動通訊網路','Mobile networks'],['深度學習影像辨識','Deep-learning image recognition'],['異質性網路整合','Heterogeneous networks']] },
+    { name:'吳祥維', en:'Hsiang-Wei Wu', title:'助理教授', titleEn:'Assistant Professor', lab:'智慧網路應用實驗室', office:'綜三館 4F 411', photo:'692302e108577729cc5e92f1/thumb_%E5%90%B3%E7%A5%A5%E7%B6%AD.jpg', visit:'b1',
+      skills:[['網際網路與網頁系統（全端）開發','Internet & full-stack web'],['資料庫管理 SQL','SQL databases'],['地理資訊系統','GIS'],['無線感測網路','Wireless sensor networks'],['大型語言模型','Large language models'],['物件偵測','Object detection']] }
+  ],
+  photoBase: SRC + '/uploads/member_profile/avatar/',
+  facultyPage: SRC + '/zh_tw/team/faculty'
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  基本工具
+// ═══════════════════════════════════════════════════════════════════════════
+let THREE, OrbitControls, CSS2DRenderer, CSS2DObject, RoundedBoxGeometry, BufferGeometryUtils, SimplexNoise;
+const $ = s => document.querySelector(s);
+const LANG = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'zh';
+const tr = (zh, en) => (LANG === 'en' && en) ? en : zh;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* 無法寫入時略過 */ } }
+};
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rand = mulberry32(20021001);
+const rr = (a, b) => a + (b - a) * rand();
+const pick = arr => arr[Math.floor(rand() * arr.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const easeInOutCubic = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// 世界常數（照規格）
+const R = 2.02, SPACING = 2.28, TOP = 0.65, WATER_Y = -0.18;
+const RING_R = 1.8, RING_MID = RING_R * Math.cos(Math.PI / 6);
+const IS_MOBILE = matchMedia('(max-width:800px)').matches || matchMedia('(pointer:coarse)').matches && Math.min(innerWidth, innerHeight) < 820;
+const PAL = {
+  coral: '#db6a41', ink: '#211d1d', cream: '#fff8f4', yellow: '#fcea8b', stone: '#c5b5a7', green: '#71806a',
+  glass: '#86a8a6', wood: '#b48560', teal: '#3e7c8c', plant: ['#9cc27a', '#8db86f', '#728f5f'],
+  pink: '#f2b5c6', sea: '#58a6a6', indigo: '#6f7fb5', wall: '#f4ebdd', eave: '#a34e34', window: '#a8c4c2'
+};
+const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
+let REDUCED = reduceMQ.matches;
+
+// 執行期狀態
+let renderer, scene, camera, controls, labelRenderer, clockStart = performance.now();
+let hemi, sun, fill, sky, water, fog;
+let CENTER;
+const ISL = {};            // id -> island runtime
+const ITEM = {};           // id -> item runtime
+const state = {
+  minute: 600, paused: false, toggles: { names: true, carry: true, flows: false, bird: false, log: false },
+  sel: null, dirty: true, time: 0, night: 0, flight: null, camDist: 30
+};
+const markDirty = () => { state.dirty = true; };
+const col = c => (c && c.isColor) ? c.clone() : new THREE.Color(c);
+
+function axialToWorld(q, r) { return { x: Math.sqrt(3) * SPACING * (q + r / 2), z: 1.5 * SPACING * r }; }
+// pointy-top 六角形角點：i=0..5（角度 π/6 + iπ/3；世界座標 z = -y）
+function hexCorner(r, i, cx = 0, cz = 0) { const a = Math.PI / 6 + i * Math.PI / 3; return [cx + r * Math.cos(a), cz - r * Math.sin(a)]; }
+function hexMid(r, i, cx = 0, cz = 0) { const a = (i + 1) * Math.PI / 3; const m = r * Math.cos(Math.PI / 6); return [cx + m * Math.cos(a), cz - m * Math.sin(a)]; }
+function hexDist(x, z) { // 點到 pointy-top 六角中心的「六角距離」（以內切半徑計）
+  let d = 0; for (let i = 0; i < 6; i++) { const a = (i + 1) * Math.PI / 3; d = Math.max(d, x * Math.cos(a) - z * Math.sin(a)); } return d;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Renderer / 相機 / 控制
+// ═══════════════════════════════════════════════════════════════════════════
+function initRenderer() {
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, IS_MOBILE ? 1.4 : 1.75));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1;
+  const host = $('#stage');
+  host.appendChild(renderer.domElement);
+  renderer.domElement.setAttribute('tabindex', '0');
+
+  scene = new THREE.Scene();
+  fog = new THREE.Fog(0xf4eee3, 42, 150);
+  scene.fog = fog;
+  camera = new THREE.PerspectiveCamera(32, 1, 0.3, 320);
+
+  labelRenderer = new CSS2DRenderer();
+  labelRenderer.domElement.style.position = 'absolute';
+  labelRenderer.domElement.style.inset = '0';
+  labelRenderer.domElement.style.pointerEvents = 'none';
+  $('#labels').appendChild(labelRenderer.domElement);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.07;
+  controls.minPolarAngle = THREE.MathUtils.degToRad(25);
+  controls.maxPolarAngle = THREE.MathUtils.degToRad(70);
+  controls.minDistance = 3;
+  controls.maxDistance = 70;
+  controls.screenSpacePanning = false;
+  // 桌面：照規格不平移；觸控：一指平移、兩指旋轉（與縮放）
+  controls.enablePan = true;
+  controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+  controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
+  controls.panSpeed = 1.1;
+  controls.addEventListener('change', () => { clampTarget(); markDirty(); });
+  addTwistRotate(renderer.domElement);
+
+  const ro = new ResizeObserver(onResize);
+  ro.observe(host);
+  onResize();
+}
+function clampTarget() {
+  if (!CENTER) return;
+  const t = controls.target, dx = t.x - CENTER.x, dz = t.z - CENTER.z, d = Math.hypot(dx, dz), max = 15;
+  if (d > max) { const k = max / d; const nx = CENTER.x + dx * k, nz = CENTER.z + dz * k; camera.position.x += nx - t.x; camera.position.z += nz - t.z; t.x = nx; t.z = nz; }
+}
+// 兩指「扭轉」也能旋轉：依兩指連線角度變化繞 y 軸轉動鏡頭
+function addTwistRotate(el) {
+  let lastAng = null;
+  const ang = e => Math.atan2(e.touches[1].clientY - e.touches[0].clientY, e.touches[1].clientX - e.touches[0].clientX);
+  el.addEventListener('touchstart', e => { lastAng = e.touches.length === 2 ? ang(e) : null; }, { passive: true });
+  el.addEventListener('touchmove', e => {
+    if (e.touches.length !== 2 || lastAng == null) return;
+    const a = ang(e); let d = a - lastAng; lastAng = a;
+    if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2;
+    if (Math.abs(d) < 1e-4) return;
+    orbitYaw(-d);
+  }, { passive: true });
+  el.addEventListener('touchend', e => { lastAng = e.touches.length === 2 ? ang(e) : null; }, { passive: true });
+}
+function orbitYaw(a) {
+  const off = camera.position.clone().sub(controls.target);
+  off.applyAxisAngle(new THREE.Vector3(0, 1, 0), a);
+  camera.position.copy(controls.target).add(off);
+  controls.update(); markDirty();
+}
+function orbitPitch(a) {
+  const off = camera.position.clone().sub(controls.target);
+  const sph = new THREE.Spherical().setFromVector3(off);
+  sph.phi = clamp(sph.phi + a, controls.minPolarAngle, controls.maxPolarAngle);
+  off.setFromSpherical(sph); camera.position.copy(controls.target).add(off);
+  controls.update(); markDirty();
+}
+function onResize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  renderer.domElement.style.width = w + 'px'; renderer.domElement.style.height = h + 'px';
+  labelRenderer.setSize(w, h);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  markDirty();
+}
+const OVERVIEW_DIR = () => new THREE.Vector3(.24, .33, .87).normalize();
+function overviewDistance() { const a = innerWidth / innerHeight; return a > 1.3 ? 28.5 : a > 0.8 ? 38 : 56; }
+function overviewPose() {
+  const target = new THREE.Vector3(CENTER.x, TOP, CENTER.z);
+  return { target, pos: target.clone().add(OVERVIEW_DIR().multiplyScalar(overviewDistance())) };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  天空、水、光、霧、日夜
+// ═══════════════════════════════════════════════════════════════════════════
+const KEYS = [
+  [0, '1e2c58', '3f4f80', 'b4c2ff', 1.15, '94a2d8', '64566a', 1.85, 1, '5a88b2'],
+  [300, '26365f', '4c5688', 'b8c4ff', 1.0, '96a4da', '66586c', 1.85, 1, '5c8ab4'],
+  [360, '7f8fc4', 'f6c3a6', 'ffb48a', 1.3, 'f3c6b5', '6b5a5a', 1.1, .55, '8fb7c4'],
+  [450, 'a9d1ea', 'fbe6d3', 'ffe2c4', 2.4, 'eaf2f6', '8a7a68', 1.25, 0, '9fcfd6'],
+  [720, '9fd0ec', 'f4eee3', 'fff1de', 2.9, 'eef6fa', '8f8270', 1.35, 0, 'a9d8db'],
+  [960, 'a6cfe6', 'f8e7d2', 'ffe3c0', 2.5, 'f1efe8', '8a7a66', 1.25, 0, '9fcbd2'],
+  [1065, '8b8fc4', 'f7b98f', 'ff9f6a', 1.8, 'f6d2bc', '7d6660', 1.2, .3, '93a9bd'],
+  [1140, '5a5e9e', 'd99aa6', 'ff9a7a', 1.3, 'c0b2e0', '655868', 1.35, .75, '6a7cab'],
+  [1260, '22325f', '445488', 'c0ccff', 1.2, '98a8dc', '685a6e', 1.9, 1, '5a88b2'],
+  [1440, '1e2c58', '3f4f80', 'b4c2ff', 1.15, '94a2d8', '64566a', 1.85, 1, '5a88b2']
+];
+let KF;
+function parseKeys() {
+  KF = KEYS.map(k => ({ m: k[0], top: col('#' + k[1]), hor: col('#' + k[2]), sun: col('#' + k[3]), sunI: k[4], hs: col('#' + k[5]), hg: col('#' + k[6]), hi: k[7], night: k[8], water: col('#' + k[9]) }));
+}
+const ENV = { top: null, hor: null, sun: null, hs: null, hg: null, water: null, sunI: 0, hi: 0, night: 0 };
+function sampleKeys(min) {
+  min = ((min % 1440) + 1440) % 1440;
+  let i = 0; while (i < KF.length - 2 && KF[i + 1].m <= min) i++;
+  const a = KF[i], b = KF[i + 1], t = (min - a.m) / Math.max(1, b.m - a.m);
+  for (const k of ['top', 'hor', 'sun', 'hs', 'hg', 'water']) { ENV[k] = (ENV[k] || new THREE.Color()).copy(a[k]).lerp(b[k], t); }
+  ENV.sunI = lerp(a.sunI, b.sunI, t); ENV.hi = lerp(a.hi, b.hi, t); ENV.night = lerp(a.night, b.night, t);
+  return ENV;
+}
+function sunDirFor(min) {
+  const q = Math.round(min / 10) * 10;
+  const t = clamp((q - 360) / 720, 0, 1);
+  const az = Math.PI * (.15 + .7 * t), el = .35 + Math.sin(t * Math.PI) * .75;
+  return new THREE.Vector3(Math.cos(az) * Math.cos(el), Math.sin(el), .55 * Math.cos(el) + .35).normalize();
+}
+
+const SKY_VS = `varying vec3 vDir; void main(){ vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`;
+const SKY_FS = `uniform vec3 uTop; uniform vec3 uHorizon; uniform vec3 uSun; uniform vec3 uSunDir; uniform float uNight; varying vec3 vDir;
+void main(){
+  vec3 d = normalize(vDir);
+  vec3 c = mix(uHorizon, uTop, smoothstep(-.02, .55, d.y));
+  float s = max(dot(d, normalize(uSunDir)), 0.);
+  c += uSun * pow(s, 18.) * .35 * (1. - uNight * .6);
+  if (uNight > .01 && d.y > .03) {
+    vec3 cell = floor(d * 180.);
+    float h = fract(sin(dot(cell, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
+    if (h > .9965) c += vec3(.9, .92, 1.) * uNight * (.45 + .55 * fract(h * 97.3));
+  }
+  gl_FragColor = vec4(c, 1.);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`;
+const WATER_VS = `#include <fog_pars_vertex>
+varying vec3 vW;
+void main(){ vec4 w = modelMatrix * vec4(position,1.); vW = w.xyz; vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;
+#include <fog_vertex>
+}`;
+const WATER_FS = `#include <fog_pars_fragment>
+uniform vec3 uShallow; uniform vec3 uDeep; uniform float uTime; uniform vec2 uCenter; uniform float uNight; varying vec3 vW;
+void main(){
+  float d = length(vW.xz - uCenter);
+  float w1 = sin(vW.x * .34 + uTime * .42) * sin(vW.z * .29 - uTime * .31);
+  float w2 = sin((vW.x + vW.z) * .17 + uTime * .23) * .6 + sin((vW.x - vW.z) * .41 - uTime * .37) * .4;
+  float depth = smoothstep(9., 46., d);
+  vec3 c = mix(uShallow, uDeep, clamp(depth + (w1 + w2) * .045, 0., 1.));
+  float sp = pow(max(0., sin(vW.x * 2.3 + uTime * 1.3) * sin(vW.z * 2.1 - uTime * 1.05)), 26.) * (1. - depth) * (.22 + uNight * .1);
+  c = c * .8 + sp * .55;
+  gl_FragColor = vec4(c, 1.);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+  #include <fog_fragment>
+}`;
+let waterMat;
+function initEnvironment() {
+  parseKeys();
+  sky = new THREE.Mesh(new THREE.SphereGeometry(170, 48, 24), new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false, fog: false, vertexShader: SKY_VS, fragmentShader: SKY_FS,
+    uniforms: { uTop: { value: new THREE.Color() }, uHorizon: { value: new THREE.Color() }, uSun: { value: new THREE.Color() }, uSunDir: { value: new THREE.Vector3(0, 1, 0) }, uNight: { value: 0 } }
+  }));
+  sky.renderOrder = -10; sky.position.set(CENTER.x, 0, CENTER.z);
+  scene.add(sky);
+
+  waterMat = new THREE.ShaderMaterial({
+    fog: true, vertexShader: WATER_VS, fragmentShader: WATER_FS,
+    uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
+      uShallow: { value: col('#a4d4da') }, uDeep: { value: col('#6fa9b8') }, uTime: { value: 0 }, uCenter: { value: new THREE.Vector2(CENTER.x, CENTER.z) }, uNight: { value: 0 }
+    }])
+  });
+  water = new THREE.Mesh(new THREE.CircleGeometry(160, 64).rotateX(-Math.PI / 2), waterMat);
+  water.position.set(CENTER.x, WATER_Y, CENTER.z);
+  scene.add(water);
+
+  hemi = new THREE.HemisphereLight(0xeef6fa, 0x8f8270, 1.3); scene.add(hemi);
+  sun = new THREE.DirectionalLight(0xfff1de, 2.8);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(IS_MOBILE ? 1024 : 2048, IS_MOBILE ? 1024 : 2048);
+  Object.assign(sun.shadow.camera, { left: -20, right: 20, top: 22, bottom: -22, near: 1, far: 90 });
+  sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.045; sun.shadow.radius = 3;
+  sun.target.position.set(CENTER.x, 0, CENTER.z);
+  scene.add(sun, sun.target);
+  fill = new THREE.DirectionalLight(0xbfd6ff, .35); fill.position.set(CENTER.x - 20, 18, CENTER.z - 14); scene.add(fill);
+}
+const nightHooks = []; // (night, env) => void，供各模組在日夜變化時更新
+let lastSunQ = -1;
+function applyTime(min) {
+  const e = sampleKeys(min);
+  const u = sky.material.uniforms;
+  u.uTop.value.copy(e.top); u.uHorizon.value.copy(e.hor); u.uSun.value.copy(e.sun); u.uNight.value = e.night;
+  fog.color.copy(e.hor);
+  hemi.color.copy(e.hs); hemi.groundColor.copy(e.hg); hemi.intensity = e.hi;
+  sun.color.copy(e.sun); sun.intensity = e.sunI;
+  const q = Math.round(min / 10);
+  if (q !== lastSunQ) {
+    lastSunQ = q;
+    const d = sunDirFor(min);
+    sun.position.set(CENTER.x, 0, CENTER.z).addScaledVector(d, 40);
+    u.uSunDir.value.copy(d);
+  }
+  waterMat.uniforms.uShallow.value.copy(e.water);
+  waterMat.uniforms.uDeep.value.copy(e.water).lerp(col('#4d8597'), .45);
+  waterMat.uniforms.uNight.value = e.night;
+  state.night = e.night;
+  for (const h of nightHooks) h(e.night, e);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  零件庫 kit：建模函式只推 {kind, matrix, color}，最後每種 kind 一個 InstancedMesh
+// ═══════════════════════════════════════════════════════════════════════════
+const KIT = { parts: [], geos: {}, meshes: [], owners: new Map(), solid: null, glow: null };
+let curFrame = null, curOwner = null;
+let _eu, _qu, _vs, _vp, _tc;
+function initKit() {
+  _tc = new THREE.Color(); _eu = new THREE.Euler(); _qu = new THREE.Quaternion(); _vs = new THREE.Vector3(); _vp = new THREE.Vector3();
+  const g = KIT.geos;
+  g.box = new THREE.BoxGeometry(1, 1, 1);
+  g.rbox = new RoundedBoxGeometry(1, 1, 1, 2, 0.12);
+  g.cyl = new THREE.CylinderGeometry(.5, .5, 1, 14);
+  g.cone = new THREE.ConeGeometry(.5, 1, 14);
+  g.sphere = new THREE.SphereGeometry(.5, 16, 12);
+  g.ico = new THREE.IcosahedronGeometry(.5, 1);
+  g.dome = new THREE.SphereGeometry(.5, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2).translate(0, -.25, 0);
+  g.torus = new THREE.TorusGeometry(.4, .1, 8, 20);
+  g.prism = (() => { // 三角柱（山牆屋頂）：截面在 xy，沿 z 擠出
+    const s = new THREE.Shape(); s.moveTo(-.5, -.5); s.lineTo(.5, -.5); s.lineTo(0, .5); s.closePath();
+    return new THREE.ExtrudeGeometry(s, { depth: 1, bevelEnabled: false }).translate(0, 0, -.5);
+  })();
+  g.hip = new THREE.ConeGeometry(Math.SQRT1_2, 1, 4).rotateY(Math.PI / 4);
+  g.glowbox = g.box; g.glowsphere = g.sphere;
+  KIT.solid = new THREE.MeshStandardMaterial({ roughness: .78, metalness: 0 });
+  KIT.glow = new THREE.MeshStandardMaterial({ roughness: .6, metalness: 0, emissive: new THREE.Color('#ffc777'), emissiveIntensity: 0 });
+  nightHooks.push(n => { KIT.glow.emissiveIntensity = n * 3.2; });
+}
+function frameAt(x, y, z, s = 1, ry = 0) {
+  return new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ry), new THREE.Vector3(s, s, s));
+}
+// P(kind, x,y,z（中心）, sx,sy,sz, color, {rx,ry,rz,small,owner})
+function P(kind, x, y, z, sx, sy, sz, color, o) {
+  o = o || {};
+  _eu.set(o.rx || 0, o.ry || 0, o.rz || 0); _qu.setFromEuler(_eu);
+  const j = 1 + (rand() * 2 - 1) * 0.0072;
+  _vs.set(sx * j, sy * j, sz * j); _vp.set(x, y, z);
+  const m = new THREE.Matrix4().compose(_vp, _qu, _vs);
+  if (curFrame) m.premultiply(curFrame);
+  KIT.parts.push({ kind, small: !!o.small, m, color: col(color), owner: o.owner !== undefined ? o.owner : curOwner });
+}
+function buildKit() {
+  const groups = new Map();
+  for (const p of KIT.parts) { const key = p.kind + '|' + (p.small ? 1 : 0); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(p); }
+  for (const [key, list] of groups) {
+    const [kind, small] = key.split('|');
+    const glow = kind.startsWith('glow');
+    const mesh = new THREE.InstancedMesh(KIT.geos[kind], glow ? KIT.glow : KIT.solid, list.length);
+    const owners = new Array(list.length);
+    list.forEach((p, i) => {
+      mesh.setMatrixAt(i, p.m); mesh.setColorAt(i, p.color); owners[i] = p.owner;
+      if (p.owner) { if (!KIT.owners.has(p.owner)) KIT.owners.set(p.owner, []); KIT.owners.get(p.owner).push({ mesh, i }); }
+    });
+    mesh.instanceMatrix.needsUpdate = true; mesh.instanceColor.needsUpdate = true;
+    mesh.castShadow = !glow; mesh.receiveShadow = true;
+    mesh.userData = { owners, base: Float32Array.from(mesh.instanceColor.array), small: small === '1', kit: true };
+    mesh.computeBoundingSphere();
+    scene.add(mesh); KIT.meshes.push(mesh);
+  }
+  KIT.parts.length = 0;
+}
+function tintOwner(owner, target, amt) {
+  const list = KIT.owners.get(owner); if (!list) return;
+  for (const { mesh, i } of list) {
+    const b = mesh.userData.base; _tc.setRGB(b[i * 3], b[i * 3 + 1], b[i * 3 + 2]);
+    if (target) _tc.lerp(target, amt);
+    mesh.setColorAt(i, _tc); mesh.instanceColor.needsUpdate = true;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  六角島、步道、橋、路網
+// ═══════════════════════════════════════════════════════════════════════════
+function canvasTex(w, h, draw, repeat = true) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); draw(g, w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; }
+  t.anisotropy = 4; return t;
+}
+function groundTextures() {
+  const r = mulberry32(77);
+  return {
+    brick: canvasTex(256, 256, (g, w, h) => {
+      g.fillStyle = '#f6efe7'; g.fillRect(0, 0, w, h); g.strokeStyle = '#e6d8ca'; g.lineWidth = 3;
+      for (let y = 0; y < h; y += 32) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); for (let x = (y / 32 % 2) * 32; x < w; x += 64) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 32); g.stroke(); } }
+    }),
+    speckle: canvasTex(256, 256, (g, w, h) => {
+      g.fillStyle = '#f4eee6'; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 900; i++) { g.fillStyle = r() < .5 ? '#e7dccf' : '#fbf7f2'; g.beginPath(); g.arc(r() * w, r() * h, 1 + r() * 2.4, 0, 7); g.fill(); }
+    }),
+    stripe: canvasTex(256, 256, (g, w, h) => {
+      g.fillStyle = '#f5eee5'; g.fillRect(0, 0, w, h); g.strokeStyle = '#e9ddd0'; g.lineWidth = 10;
+      for (let i = -h; i < w * 2; i += 36) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i - h, h); g.stroke(); }
+    })
+  };
+}
+function hexRingGeo(inner, outer, cx, cz, y, color, list) {
+  const pos = [], idx = [], cols = [], c = col(color);
+  for (let i = 0; i < 6; i++) {
+    const [ix, iz] = hexCorner(inner, i, cx, cz), [ox, oz] = hexCorner(outer, i, cx, cz);
+    pos.push(ix, y, iz, ox, y, oz); cols.push(c.r, c.g, c.b, c.r, c.g, c.b);
+  }
+  for (let i = 0; i < 6; i++) { const a = i * 2, b = ((i + 1) % 6) * 2; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(new Array(pos.length).fill(0).map((_, k) => k % 3 === 1 ? 1 : 0), 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  g.setIndex(idx); list.push(g); return g;
+}
+function initIslands() {
+  const tex = groundTextures();
+  const tops = { brick: [], speckle: [], stripe: [] }, sides = [], bands = [], rings = [], shallow = [], foam = [];
+  const cream = col(PAL.cream);
+  DATA.islands.forEach((d, idx) => {
+    const { x, z } = axialToWorld(d.q, d.r);
+    const isl = { d, idx, x, z, items: [], color: col(d.color), nodes: [], label: null };
+    ISL[d.id] = isl;
+    // 島面
+    const top = new THREE.CircleGeometry(R - 0.05, 6).rotateZ(Math.PI / 6).rotateX(-Math.PI / 2).translate(x, TOP, z);
+    const p = top.attributes.position, uv = top.attributes.uv, cs = [];
+    const tint = cream.clone().lerp(isl.color, .32);
+    for (let i = 0; i < p.count; i++) { uv.setXY(i, p.getX(i) / 2.2, p.getZ(i) / 2.2); cs.push(tint.r, tint.g, tint.b); }
+    top.setAttribute('color', new THREE.Float32BufferAttribute(cs, 3));
+    tops[d.pattern].push(top);
+    // 側壁（與水同 shader）
+    const hgt = TOP - (WATER_Y - 0.6);
+    sides.push(new THREE.CylinderGeometry(R, R * 1.015, hgt, 6, 1, true).translate(x, TOP - hgt / 2, z));
+    // 頂緣彩色圖案帶
+    const band = new THREE.CylinderGeometry(R + 0.006, R + 0.006, 0.16, 6, 1, true).translate(x, TOP - 0.08, z);
+    const bu = band.attributes.uv, bc = [];
+    for (let i = 0; i < bu.count; i++) { bu.setX(i, bu.getX(i) * 18); bc.push(isl.color.r, isl.color.g, isl.color.b); }
+    band.setAttribute('color', new THREE.Float32BufferAttribute(bc, 3));
+    bands.push(band);
+    // 路緣、步道環
+    hexRingGeo(R - 0.2, R - 0.04, x, z, TOP + 0.012, '#e4d6c3', rings);
+    hexRingGeo(RING_R - 0.14, RING_R + 0.14, x, z, TOP + 0.008, '#ebcdb2', rings);
+    // 淺水環、泡沫環
+    hexRingGeo(R, R + 0.7, x, z, WATER_Y + 0.012, '#c4e6e3', shallow);
+    hexRingGeo(R, R + 0.16, x, z, WATER_Y + 0.02, '#ffffff', foam);
+  });
+  const merge = BufferGeometryUtils.mergeGeometries;
+  for (const k of Object.keys(tops)) {
+    if (!tops[k].length) continue;
+    const m = new THREE.Mesh(merge(tops[k]), new THREE.MeshStandardMaterial({ map: tex[k], vertexColors: true, roughness: .92, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
+    m.receiveShadow = true; m.userData.ground = true; scene.add(m); GROUND.push(m);
+  }
+  const sideMesh = new THREE.Mesh(merge(sides), waterMat); scene.add(sideMesh);
+  const bandTex = canvasTex(64, 32, (g, w, h) => {
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h); g.fillStyle = '#fff8f4';
+    g.beginPath(); g.moveTo(0, h); g.lineTo(w / 2, 6); g.lineTo(w, h); g.fill();
+    g.fillStyle = 'rgba(33,29,29,.18)'; g.fillRect(0, h - 3, w, 3);
+  });
+  const bandMesh = new THREE.Mesh(merge(bands), new THREE.MeshStandardMaterial({ map: bandTex, vertexColors: true, roughness: .85 }));
+  bandMesh.receiveShadow = true; scene.add(bandMesh);
+  const ringMesh = new THREE.Mesh(merge(rings), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .9, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }));
+  ringMesh.receiveShadow = true; scene.add(ringMesh);
+  scene.add(new THREE.Mesh(merge(shallow), new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, opacity: .55, depthWrite: false, roughness: .4, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })));
+  scene.add(new THREE.Mesh(merge(foam), new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: .55, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })));
+}
+const GROUND = [];
+
+// 路網：每島 12 節點（步道六角 6 角點 + 6 邊中點）成環；橋連接相鄰島
+const NET = { nodes: [], adj: [], bridges: [] };
+function addNode(x, z, island, k) { NET.nodes.push({ x, z, y: TOP + 0.02, island, k }); NET.adj.push([]); return NET.nodes.length - 1; }
+function link(a, b, pts) {
+  const A = NET.nodes[a], B = NET.nodes[b], w = Math.hypot(A.x - B.x, A.z - B.z);
+  NET.adj[a].push({ to: b, w, pts }); NET.adj[b].push({ to: a, w, pts: pts ? pts.slice().reverse() : null });
+}
+function initNetwork() {
+  for (const id in ISL) {
+    const s = ISL[id];
+    for (let k = 0; k < 12; k++) {
+      const c = k >> 1;
+      const [x, z] = (k % 2 === 0) ? hexCorner(RING_R, c, s.x, s.z) : hexMid(RING_R, c, s.x, s.z);
+      s.nodes.push(addNode(x, z, id, k));
+    }
+    for (let k = 0; k < 12; k++) link(s.nodes[k], s.nodes[(k + 1) % 12]);
+  }
+  const ids = Object.keys(ISL);
+  for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) {
+    const a = ISL[ids[i]], b = ISL[ids[j]];
+    const dq = b.d.q - a.d.q, dr = b.d.r - a.d.r;
+    const nb = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, -1], [-1, 1]].some(([q, r]) => q === dq && r === dr);
+    if (!nb) continue;
+    const ka = midNodeToward(a, b.x, b.z), kb = midNodeToward(b, a.x, a.z);
+    const A = NET.nodes[a.nodes[ka]], B = NET.nodes[b.nodes[kb]];
+    const h = rr(.04, .1), pts = [];
+    for (let t = 0; t <= 8; t++) { const u = t / 8; pts.push(new THREE.Vector3(lerp(A.x, B.x, u), TOP + 0.02 + Math.sin(u * Math.PI) * h, lerp(A.z, B.z, u))); }
+    NET.bridges.push({ a: a.d.id, b: b.d.id, A, B, h });
+    link(a.nodes[ka], b.nodes[kb], pts);
+  }
+}
+function midNodeToward(s, tx, tz) {
+  let best = 1, bd = 1e9;
+  for (let k = 1; k < 12; k += 2) { const n = NET.nodes[s.nodes[k]], d = Math.hypot(n.x - tx, n.z - tz); if (d < bd) { bd = d; best = k; } }
+  return best;
+}
+function nearestNode(s, tx, tz, step = 1) {
+  let best = 0, bd = 1e9;
+  for (let k = 0; k < 12; k += step) { const n = NET.nodes[s.nodes[k]], d = Math.hypot(n.x - tx, n.z - tz); if (d < bd) { bd = d; best = k; } }
+  return s.nodes[best];
+}
+function dijkstra(src, dst) {
+  const n = NET.nodes.length, dist = new Float64Array(n).fill(Infinity), prev = new Int32Array(n).fill(-1), via = new Array(n), done = new Uint8Array(n);
+  dist[src] = 0;
+  for (; ;) {
+    let u = -1, bd = Infinity;
+    for (let i = 0; i < n; i++) if (!done[i] && dist[i] < bd) { bd = dist[i]; u = i; }
+    if (u < 0 || u === dst) break; done[u] = 1;
+    for (const e of NET.adj[u]) { const nd = dist[u] + e.w; if (nd < dist[e.to]) { dist[e.to] = nd; prev[e.to] = u; via[e.to] = e; } }
+  }
+  const nodes = []; for (let v = dst; v >= 0; v = prev[v]) { nodes.push(v); if (v === src) break; }
+  nodes.reverse();
+  const pts = [];
+  nodes.forEach((v, i) => {
+    const N = NET.nodes[v];
+    if (i > 0 && via[v] && via[v].pts) { for (const p of via[v].pts.slice(1)) pts.push(p.clone()); }
+    else pts.push(new THREE.Vector3(N.x, N.y, N.z));
+  });
+  return pts;
+}
+function routeBetween(fromId, toId) {
+  const a = ISL[fromId], b = ISL[toId];
+  return dijkstra(nearestNode(a, b.x, b.z), nearestNode(b, a.x, a.z));
+}
+
+function buildBridges() {
+  for (const br of NET.bridges) {
+    const { A, B, h } = br;
+    const dx = B.x - A.x, dz = B.z - A.z, L = Math.hypot(dx, dz), yaw = Math.atan2(-dz, dx);
+    curOwner = null; curFrame = null;
+    const ext = 0.12;
+    for (let t = 0; t < 9; t++) {
+      const u0 = -ext / L + (t / 9) * (1 + 2 * ext / L), u1 = -ext / L + ((t + 1) / 9) * (1 + 2 * ext / L), u = (u0 + u1) / 2;
+      const y = TOP + 0.015 + Math.sin(clamp(u, 0, 1) * Math.PI) * h;
+      const slope = Math.cos(clamp(u, 0, 1) * Math.PI) * Math.PI * h / L;
+      P('box', A.x + dx * u, y, A.z + dz * u, (u1 - u0) * L * 0.9, 0.035, 0.36, t % 2 ? '#c99a72' : PAL.wood, { ry: yaw, rz: Math.atan(slope) });
+    }
+    for (const side of [-1, 1]) {
+      const nx = -dz / L * 0.17 * side, nz = dx / L * 0.17 * side;
+      for (const u of [-.05, .5, 1.05]) {
+        const y = TOP + 0.015 + Math.sin(clamp(u, 0, 1) * Math.PI) * h;
+        P('cyl', A.x + dx * u + nx, y + 0.07, A.z + dz * u + nz, 0.03, 0.14, 0.03, '#8a6446');
+      }
+      for (const [u0, u1] of [[-.05, .5], [.5, 1.05]]) {
+        const y0 = TOP + .015 + Math.sin(clamp(u0, 0, 1) * Math.PI) * h + .14, y1 = TOP + .015 + Math.sin(clamp(u1, 0, 1) * Math.PI) * h + .14;
+        const um = (u0 + u1) / 2, len = (u1 - u0) * L;
+        P('box', A.x + dx * um + nx, (y0 + y1) / 2, A.z + dz * um + nz, len, 0.025, 0.025, PAL.cream, { ry: yaw, rz: Math.atan2(y1 - y0, len) });
+      }
+    }
+  }
+}
+
+// 島名標籤（CSS2D，掛在前側崖邊）
+function initIslandLabels() {
+  for (const id in ISL) {
+    const s = ISL[id];
+    const el = document.createElement('div');
+    el.className = 'ilabel';
+    el.innerHTML = `<span class="no">${s.d.no}</span><span class="nm">${esc(tr(s.d.name, s.d.en))}</span>`;
+    el.title = tr(s.d.full, s.d.fullEn);
+    el.addEventListener('click', ev => { ev.stopPropagation(); if (window.selectIsland) window.selectIsland(id); });
+    const o = new CSS2DObject(el);
+    o.position.set(s.x, TOP - 0.05, s.z + R - 0.08);
+    o.userData.kind = 'island';
+    scene.add(o);
+    s.label = o; LABELS.push({ obj: o, el, prio: 3, kind: 'island', compactable: true });
+  }
+}
+const LABELS = [];
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  主迴圈與啟動
+// ═══════════════════════════════════════════════════════════════════════════
+let lastT = performance.now(), lastStep = -1;
+function tick(now) {
+  requestAnimationFrame(tick);
+  let dt = Math.min(.08, (now - lastT) / 1000); lastT = now;
+  const animating = !REDUCED && !state.paused;
+  if (animating) {
+    state.time += dt;
+    state.minute = (state.minute + dt * 10) % 1440; // 每秒 10 分鐘
+    const step = Math.floor(state.minute / 10); if (step !== lastStep) { lastStep = step; onMinuteStep(); }
+    waterMat.uniforms.uTime.value = state.time;
+    if (typeof updateClouds === 'function') updateClouds(dt);
+    markDirty();
+  }
+  if (typeof updateFlight === 'function' && updateFlight(now)) markDirty();
+  if (controls.update()) markDirty();
+  if (typeof updateWalkers === 'function' && animating) updateWalkers(dt);
+  if (typeof updateFlowLines === 'function') updateFlowLines(animating ? dt : 0);
+  if (!state.dirty) return;
+  state.dirty = false;
+  const d = camera.position.distanceTo(controls.target);
+  state.camDist = d;
+  for (const m of KIT.meshes) if (m.userData.small) m.visible = d < 26;
+  if (typeof updateWalkerVisibility === 'function') updateWalkerVisibility(d);
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+  if (typeof layoutLabels === 'function') layoutLabels();
+}
+let lastSlot = null;
+function onMinuteStep() {
+  applyTime(state.minute);
+  const c = $('#clock'); if (c) c.textContent = fmtTime(state.minute);
+  if (typeof onSlotMaybeChanged === 'function') onSlotMaybeChanged();
+}
+const fmtTime = m => { m = Math.floor(m) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+function setLoading(msg) { const el = $('#loadMsg'); if (el) el.textContent = msg; }
+function showError(e) {
+  console.error(e);
+  const L = $('#loader'); L.classList.remove('hidden'); L.style.opacity = 1;
+  const box = document.createElement('div'); box.className = 'err';
+  box.textContent = tr('無法載入 3D 場景：', 'Could not start the 3D scene: ') + (e && e.message ? e.message : e) + '\n' + tr('請確認瀏覽器支援 WebGL，且能連線到 cdn.jsdelivr.net。', 'Please check WebGL support and access to cdn.jsdelivr.net.');
+  L.querySelector('.hexspin')?.remove(); L.appendChild(box);
+}
+async function boot() {
+  try {
+    const base = 'three/addons/';
+    const mods = await Promise.all([
+      import('three'), import(base + 'controls/OrbitControls.js'), import(base + 'renderers/CSS2DRenderer.js'),
+      import(base + 'geometries/RoundedBoxGeometry.js'), import(base + 'utils/BufferGeometryUtils.js'), import(base + 'math/SimplexNoise.js')
+    ]);
+    THREE = mods[0]; OrbitControls = mods[1].OrbitControls; CSS2DRenderer = mods[2].CSS2DRenderer; CSS2DObject = mods[2].CSS2DObject;
+    RoundedBoxGeometry = mods[3].RoundedBoxGeometry; BufferGeometryUtils = mods[4]; SimplexNoise = mods[5].SimplexNoise;
+    const test = document.createElement('canvas');
+    if (!(test.getContext('webgl2') || test.getContext('webgl'))) throw new Error(tr('此瀏覽器不支援 WebGL', 'WebGL is not available'));
+
+    const pts = DATA.islands.map(d => axialToWorld(d.q, d.r));
+    CENTER = { x: pts.reduce((a, p) => a + p.x, 0) / pts.length, z: pts.reduce((a, p) => a + p.z, 0) / pts.length };
+    initRenderer();
+    initEnvironment();
+    initKit();
+    initIslands();
+    initNetwork();
+    buildBridges();
+    if (typeof buildIslandContent === 'function') {
+      buildIslandContent();
+      buildPools();
+      initTerrain();
+      initBackgroundTrees();
+      initMountains();
+      initClouds();
+      initSeaDecor();
+    }
+    buildKit();
+    initIslandLabels();
+    if (typeof initUI === 'function') initUI();
+    if (typeof initWalkers === 'function') initWalkers();
+    if (typeof initFlowLines === 'function') initFlowLines();
+    if (typeof initJournal === 'function') initJournal();
+
+    const pose = overviewPose();
+    camera.position.copy(pose.pos); controls.target.copy(pose.target); controls.update();
+    applyTime(state.minute); onMinuteStep();
+    if (typeof afterBoot === 'function') afterBoot();
+    renderer.render(scene, camera);
+    const L = $('#loader'); L.style.opacity = 0; setTimeout(() => L.classList.add('hidden'), 500);
+    window.__dbg = { applyTime, markDirty, state, ISL, ITEM, KIT, camera, controls, get scene() { return scene; }, get renderer() { return renderer; } };
+    window.__ready = true;
+    requestAnimationFrame(tick);
+  } catch (e) { showError(e); }
+}
+reduceMQ.addEventListener?.('change', e => { REDUCED = e.matches; if (typeof onReducedChange === 'function') onReducedChange(); markDirty(); });
+boot();
+</script>
+</body>
+</html>
