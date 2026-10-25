@@ -428,6 +428,61 @@ const DATA = {
         { id:'he', name:'數位訊號處理創思設計競賽', en:'DSP design contest', model:'lab', when:'spring', activity:'award', desc:'資工系榮獲第 2 名及 3 組佳作。', descEn:'2nd place plus 3 honorable mentions.', facts:['第 21 屆數位訊號處理創思設計競賽','第 2 名及 3 組佳作'], factsEn:['21st DSP design contest','2nd place + 3 mentions'] },
         { id:'hf', name:'EE Awards Asia 創新獎', en:'EE Awards Asia', model:'globe', when:'fall', activity:'award', desc:'2025 亞洲金選獎，虎科大榮獲創新獎 Innovation Award。', descEn:'2025 EE Awards Asia Innovation Award.', facts:['2025 亞洲金選獎 EE Awards Asia','Innovation Award 創新獎'], factsEn:['EE Awards Asia 2025','Innovation Award'] },
         { id:'hg', name:'InnoServe 資訊應用服務創新競賽', en:'InnoServe', model:'server', when:'fall', activity:'award', desc:'三支團隊勇奪多項冠軍，展現 AI、資安與智慧應用研發能量。', descEn:'Three teams won multiple first places.', facts:['第 30 屆大專校院資訊應用服務創新競賽','3 支團隊勇奪多項冠軍'], factsEn:['30th InnoServe','3 teams, multiple firsts'] }
+      ]},
+    // ── 特色領域島：以橋和本島相連，學生來這裡做專題；anim = 會動的專題成品 ──
+    { id:'fr', no:'13', name:'機器人島', en:'Robotics', full:'特色領域 · 機器人', fullEn:'Field · Robotics', q:-1, r:2, color:'#f0a35a', pattern:'stripe', tree:'maple', icon:'🤖', kind:'field',
+      summary:'機器人學、機器視覺與人機協作的專題基地。學生在這裡讓機械手臂與自走車真的動起來。',
+      summaryEn:'Robotics, machine vision and human–robot collaboration. Projects here really move.',
+      items:[
+        { id:'fra', name:'機器人實驗室', en:'Robotics lab', model:'school', when:'year', desc:'機器人學、自動控制與機器視覺的實作基地。', descEn:'Robotics, control and machine vision.', facts:['詹竣傑老師主持機器人實驗室（綜三館 4F 412）','專長含機器人學、機器視覺、人機協作'], factsEn:['Prof. Chan’s Robotics Lab, 4F 412','Robotics, machine vision, HRC'] },
+        { id:'frb', name:'機械手臂夾取專題', en:'Pick-and-place arm', model:'showcase', anim:'arm', when:'year', activity:'project', desc:'用視覺辨識物件位置，讓機械手臂自動夾取、搬移。', descEn:'Vision-guided pick-and-place.', facts:['人機協作是詹竣傑老師的專長之一','結合自動控制與機器視覺'], factsEn:['Human–machine collaboration','Control + vision'] },
+        { id:'frc', name:'ROS 自走車專題', en:'ROS rover', model:'showcase', anim:'rover', when:'year', activity:'project', desc:'在機器人作業系統 ROS 上做導航與避障，光達一直在轉。', descEn:'Navigation and obstacle avoidance on ROS.', facts:['游允帥老師專長：機器人作業系統 ROS','結合物聯網與人工智慧'], factsEn:['Prof. Yu: Robot Operating System','IoT + AI'] },
+        { id:'frd', name:'台灣機器人競賽', en:'Taiwan Robot Competition', model:'trophy', when:'spring', activity:'award', desc:'把專題機器人帶去參賽。', descEn:'Taking project robots to compete.', facts:['2027 第一屆台灣機器人競賽','系網最新消息公告'], factsEn:['1st Taiwan Robot Competition, 2027','Posted in dept news'] }
+      ]},
+    { id:'fd', no:'14', name:'無人機島', en:'Drones', full:'特色領域 · 無人機', fullEn:'Field · Drones', q:0, r:2, color:'#8fc1d8', pattern:'speckle', tree:'poplar', icon:'🛸', kind:'field',
+      summary:'自主無人機、飛行控制與無線網路。專題成品每天都在島上空試飛。',
+      summaryEn:'Autonomous drones, flight control and wireless networks. Test flights every day.',
+      items:[
+        { id:'fda', name:'無人機飛行場', en:'Drone flight field', model:'school', when:'year', desc:'無人機控制與應用研究的試飛基地。', descEn:'Test field for drone research.', facts:['張朝陽老師專長：自主無人機應用系統設計','杜俊育老師專長：無人機控制與應用'], factsEn:['Prof. Chang: autonomous drone systems','Prof. Tu: drone control'] },
+        { id:'fdb', name:'自主飛行專題', en:'Autonomous flight', model:'showcase', anim:'drone', when:'year', activity:'project', desc:'設定航點，無人機自己起飛、繞行、降落。', descEn:'Waypoints in, the drone flies itself.', facts:['行動通訊網路實驗室','結合物聯網與無線感測網路'], factsEn:['Mobile Communication Network Lab','IoT + WSN'] },
+        { id:'fdc', name:'無人機編隊專題', en:'Drone swarm', model:'showcase', anim:'swarm', when:'year', activity:'project', desc:'三台無人機透過無線網路協同編隊飛行。', descEn:'Three drones flying in formation over wireless links.', facts:['杜俊育老師專長：異質性網路整合','無線通訊網路'], factsEn:['Heterogeneous networks','Wireless networks'] },
+        { id:'fdd', name:'深度學習影像辨識', en:'Aerial image recognition', model:'antenna', when:'year', activity:'study', desc:'用深度學習辨識空拍影像。', descEn:'Deep learning on aerial images.', facts:['杜俊育老師專長：深度學習影像辨識','智慧物聯網'], factsEn:['Deep-learning image recognition','Smart IoT'] }
+      ]},
+    { id:'fb', no:'15', name:'資料庫島', en:'Databases', full:'特色領域 · 資料庫', fullEn:'Field · Databases', q:1, r:2, color:'#9cc27a', pattern:'brick', tree:'round', icon:'🗄', kind:'field',
+      summary:'資料庫系統、雲端與大數據。學生在這裡設計資料表、寫查詢、做即時儀表板。',
+      summaryEn:'Database systems, cloud and big data: schemas, queries and live dashboards.',
+      items:[
+        { id:'fba', name:'雲端資料中心', en:'Cloud data center', model:'school', when:'year', desc:'資料庫、雲端運算與大數據的實作場域。', descEn:'Databases, cloud and big data.', facts:['江季翰老師專長：資料庫系統設計、雲端運算','資訊系統方向：雲端運算、大數據'], factsEn:['Prof. Jiang: database design, cloud','Info Systems track'] },
+        { id:'fbb', name:'分散式資料庫專題', en:'Distributed database', model:'showcase', anim:'dbstack', when:'year', activity:'project', desc:'資料在多個節點間同步，磁碟一直轉、資料包一直跑。', descEn:'Data replicated across nodes.', facts:['吳祥維老師專長：資料庫管理 SQL','網際網路與網頁系統（全端）開發'], factsEn:['Prof. Wu: SQL databases','Full-stack web'] },
+        { id:'fbc', name:'大數據即時儀表板', en:'Big-data dashboard', model:'showcase', anim:'dashboard', when:'year', activity:'project', desc:'把感測資料即時畫成長條圖。', descEn:'Live charts from sensor data.', facts:['江季翰老師專長：大數據分析與安全','簡銘伸老師：AI 跨領域應用與數據服務'], factsEn:['Big data analysis & security','Cross-domain AI & data services'] },
+        { id:'fbd', name:'開源雲端與容器', en:'Open-source cloud', model:'server', when:'year', activity:'study', desc:'用容器把服務部署上雲。', descEn:'Deploying services with containers.', facts:['雲端智慧型系統實驗室','開源雲端運算與容器服務'], factsEn:['Cloud Intelligent Systems Lab','Open-source cloud & containers'] }
+      ]},
+    { id:'fe', no:'16', name:'電子學島', en:'Electronics', full:'特色領域 · 電子學', fullEn:'Field · Electronics', q:-3, r:3, color:'#e6c04f', pattern:'speckle', tree:'conifer', icon:'🔋', kind:'field',
+      summary:'電子電路、數位晶片與 FPGA。示波器上的波形、LED 矩陣的跑馬燈，都是學生做的。',
+      summaryEn:'Circuits, digital ICs and FPGA. The scope traces and LED marquees are student work.',
+      items:[
+        { id:'fea', name:'電子電路實驗室', en:'Electronics lab', model:'school', when:'year', desc:'電路量測與數位晶片設計的實作基地。', descEn:'Circuit measurement and digital IC design.', facts:['莊文河老師專長：數位晶片設計、FPGA 系統設計','系統設計方向：嵌入式、高速介面、FPGA'], factsEn:['Prof. Juang: digital IC, FPGA','System Design track'] },
+        { id:'feb', name:'示波器訊號量測', en:'Oscilloscope project', model:'showcase', anim:'scope', when:'year', activity:'project', desc:'把感測訊號接上示波器，看波形即時跳動。', descEn:'Live signals on the scope.', facts:['許永和老師專長：嵌入式系統設計、醫學電子設計','智慧機械感測應用設計'], factsEn:['Prof. Sheu: embedded, medical electronics','Smart machinery sensing'] },
+        { id:'fec', name:'FPGA LED 矩陣', en:'FPGA LED matrix', model:'showcase', anim:'ledmatrix', when:'year', activity:'project', desc:'用硬體描述語言寫出會跑的 LED 動畫。', descEn:'LED animations written in HDL.', facts:['莊文河老師專長：演算法加速器設計','微處理器系統設計'], factsEn:['Algorithm accelerator design','Microprocessor systems'] },
+        { id:'fed', name:'數位邏輯設計', en:'Digital logic', model:'chip', when:'year', activity:'study', desc:'從邏輯閘一路做到處理器。', descEn:'From gates to processors.', facts:['盛群盃 HOLTEK MCU 創意大賽包辦金牌等 10 大獎','晶心盃 RISC-V 創意大賽囊括 8 大獎'], factsEn:['Holtek MCU contest: 10 awards','Andes RISC-V contest: 8 awards'] }
+      ]},
+    { id:'fa', no:'17', name:'演算法島', en:'Algorithms', full:'特色領域 · 演算法', fullEn:'Field · Algorithms', q:-2, r:3, color:'#c9b6e4', pattern:'stripe', tree:'willow', icon:'🧮', kind:'field',
+      summary:'排序、圖論、平行計算。島上的長條圖一直在排序，小球沿著最短路徑跑。',
+      summaryEn:'Sorting, graphs and parallel computing, visualised live.',
+      items:[
+        { id:'faa', name:'演算法實驗室', en:'Algorithms lab', model:'school', when:'year', desc:'演算法、平行計算與生物資訊的研究基地。', descEn:'Algorithms, parallel computing, bioinformatics.', facts:['黃建宏老師主持計算生物學與演算法實驗室','專長：演算法、平行計算、機器學習'], factsEn:['Prof. Huang’s Computational Biology & Algorithms Lab','Algorithms, parallel computing'] },
+        { id:'fab', name:'排序演算法視覺化', en:'Sorting visualiser', model:'showcase', anim:'sortbars', when:'year', activity:'project', desc:'把氣泡排序做成動畫，一步一步交換給你看。', descEn:'Bubble sort, one swap at a time.', facts:['演算法是資訊系統方向的基礎','程式能力檢定 CPE 的必考題型'], factsEn:['Core of the Info Systems track','A CPE staple'] },
+        { id:'fac', name:'最短路徑導航', en:'Shortest-path navigator', model:'showcase', anim:'graph', when:'year', activity:'project', desc:'用 Dijkstra 找出最短路徑，小球沿路走一遍。', descEn:'Dijkstra finds the route; the token walks it.', facts:['這座城的島民也用 Dijkstra 找路','黃建宏老師專長：平行計算'], factsEn:['Islanders here route with Dijkstra too','Parallel computing'] },
+        { id:'fad', name:'程式能力檢定 CPE', en:'CPE practice', model:'cert', when:'spring', activity:'study', desc:'刷題、解題，準備程式能力檢定。', descEn:'Problem solving for the CPE.', facts:['2026-05-26 CPE 通過名單已公告','網站「程式能力檢定」專區'], factsEn:['CPE pass list posted 2026-05-26','CPE downloads area'] }
+      ]},
+    { id:'fi', no:'18', name:'人工智慧島', en:'AI', full:'特色領域 · 人工智慧', fullEn:'Field · Artificial Intelligence', q:0, r:1, color:'#f2b5c6', pattern:'brick', tree:'sakura', icon:'🧠', kind:'field',
+      summary:'深度學習、電腦視覺與大型語言模型，位在城市正中央，和每個年級島都只差一座橋。',
+      summaryEn:'Deep learning, computer vision and LLMs, right in the middle of the city.',
+      items:[
+        { id:'fia', name:'AI 專題工作室', en:'AI studio', model:'school', when:'year', desc:'深度學習、電腦視覺與語言模型的專題基地。', descEn:'Deep learning, vision and language models.', facts:['鄭錦聰老師專長：人工智慧與類神經網路、深度學習','許乙清老師專長：深度學習、機器學習'], factsEn:['Prof. Jeng: AI & neural networks','Prof. Hsu: deep learning'] },
+        { id:'fib', name:'神經網路訓練', en:'Neural network', model:'showcase', anim:'neural', when:'year', activity:'project', desc:'訊號一層一層往前傳，看得見的類神經網路。', descEn:'Watch signals flow through the layers.', facts:['鄭錦聰老師：自然語言與語音大語言模型','吳祥維老師：大型語言模型'], factsEn:['NLP & speech LLMs','Large language models'] },
+        { id:'fic', name:'影像辨識專題', en:'Vision project', model:'showcase', anim:'vision', when:'year', activity:'project', desc:'攝影機左右掃描，框出辨識到的物件。', descEn:'The camera scans and boxes what it sees.', facts:['黃惠俞老師主持視覺認知實驗室','林武杰老師專長：圖形識別、自動光學檢測'], factsEn:['Prof. Huang’s Visual Cognition Lab','Pattern recognition, AOI'] },
+        { id:'fid', name:'Best AI Awards', en:'Best AI Awards', model:'trophy', when:'year', activity:'award', desc:'把 AI 專題帶去智慧創新大賞。', descEn:'AI projects at the Best AI Awards.', facts:['Best AI Awards 多項大獎','展現 AI 實作實力'], factsEn:['Multiple Best AI Awards','AI implementation strength'] }
       ]}
   ],
   // 交流線：from 島 → to 島，carry 搬運物，role 走路角色，evidence 樣式
@@ -440,7 +495,13 @@ const DATA = {
     { id:'f6', from:'b3', to:'h',  name:'黑客松組隊',   en:'Hackathon teams',           carry:'laptop', role:'bike', evidence:'pending',  count:5 },
     { id:'f7', from:'j1', to:'j2', name:'學長姐筆記',   en:'Notes from seniors',        carry:'book',   role:'fresh',evidence:'thematic', count:6 },
     { id:'f8', from:'g',  to:'h',  name:'產學實作競賽', en:'Industry contest',          carry:'chip',   role:'grad', evidence:'official', count:5 },
-    { id:'f9', from:'j5', to:'b4', name:'校外實習出發', en:'Off to internships',        carry:'paper',  role:'intern',evidence:'official', count:6 }
+    { id:'f9', from:'j5', to:'b4', name:'校外實習出發', en:'Off to internships',        carry:'paper',  role:'intern',evidence:'official', count:6 },
+    { id:'f10', from:'b3', to:'fr', name:'機器人專題', en:'Robotics capstones',       carry:'robot',  role:'maker',evidence:'thematic', count:5 },
+    { id:'f11', from:'g',  to:'fi', name:'AI 模型訓練', en:'Training AI models',      carry:'laptop', role:'grad', evidence:'thematic', count:5 },
+    { id:'f12', from:'j4', to:'fe', name:'FPGA 電路實作', en:'FPGA circuits',         carry:'chip',   role:'jc',   evidence:'thematic', count:5 },
+    { id:'f13', from:'b4', to:'fb', name:'資料庫專題', en:'Database capstones',       carry:'laptop', role:'ug',   evidence:'thematic', count:5 },
+    { id:'f14', from:'b2', to:'fa', name:'演算法練功', en:'Algorithm practice',       carry:'book',   role:'ug',   evidence:'thematic', count:5 },
+    { id:'f15', from:'b1', to:'fd', name:'無人機試飛', en:'Drone test flights',       carry:'robot',  role:'maker',evidence:'thematic', count:5 }
   ],
   carries: { book:'筆記', paper:'書面資料', laptop:'筆電', robot:'專題機器人', cert:'證照', trophy:'參賽作品', chip:'晶片' },
   carriesEn: { book:'notes', paper:'documents', laptop:'a laptop', robot:'a project robot', cert:'a certificate', trophy:'a contest entry', chip:'a chip' },
@@ -453,22 +514,22 @@ const DATA = {
     { min:480,  label:'08:00 早八上課',   en:'08:00 Morning class',   items:['j1b','j1c','b1b','b1c','b2b','b3c'] },
     { min:600,  label:'10:00 實驗課',     en:'10:00 Lab session',     items:['j2a','j2b','j3a','b1a','b2a','b2c','b3a','b4a'] },
     { min:720,  label:'12:00 午餐時光',   en:'12:00 Lunch',           items:['b2d','j3d','b1d'] },
-    { min:840,  label:'14:00 專題討論',   en:'14:00 Capstone time',   items:['j4b','b3b','b4b','ga','gb','gc','gd'] },
+    { min:840,  label:'14:00 專題討論',   en:'14:00 Capstone time',   items:['j4b','b3b','b4b','ga','gb','gc','gd','frb','frc','fdb','fdc','fbb','fbc','feb','fec','fab','fac','fib','fic'] },
     { min:960,  label:'16:00 運動與社團', en:'16:00 Sports & clubs',  items:['j1d','j2d','b1e','b2e','j4d'] },
     { min:1140, label:'19:00 競賽衝刺',   en:'19:00 Contest prep',    items:['ha','hb','hc','hd','he','j4c','b3f','gf'] },
-    { min:1320, label:'22:00 宵夜趕專題', en:'22:00 Late-night push', items:['b2d','b3b','b4b','ge'] }
+    { min:1320, label:'22:00 宵夜趕專題', en:'22:00 Late-night push', items:['b2d','b3b','b4b','ge','fib','fbb'] }
   ],
   // 專任教師（本系成員 › 專任教師）。home = 綜三館；visit = 常去交流的島
   teachers: [
-    { name:'江季翰', en:'Ji-Han Jiang', title:'副教授兼系主任', titleEn:'Associate Professor & Chair', lab:'行動應用與軟體工程實驗室', office:'綜三館 5F 504', photo:'692302d208577729cc5e9239/thumb_%E6%B1%9F%E5%AD%A3%E7%BF%B0.jpg', visit:'b3',
+    { name:'江季翰', en:'Ji-Han Jiang', title:'副教授兼系主任', titleEn:'Associate Professor & Chair', lab:'行動應用與軟體工程實驗室', office:'綜三館 5F 504', photo:'692302d208577729cc5e9239/thumb_%E6%B1%9F%E5%AD%A3%E7%BF%B0.jpg', visit:'fb',
       skills:[['雲端運算與應用','Cloud computing'],['資料庫系統設計','Database system design'],['大數據分析與安全','Big data analysis & security'],['智慧物聯網與安全','AIoT & security'],['資通訊安全','ICT security']] },
     { name:'許永和', en:'Young-Huh Sheu', title:'特聘教授兼電資學院院長', titleEn:'Distinguished Professor & Dean', lab:'嵌入式異質系統應用設計實驗室', office:'綜三館 5F 506', photo:'692302d308577729cc5e9243/thumb_%E8%A8%B1%E6%B0%B8%E5%92%8C.jpg', visit:'b2',
       skills:[['嵌入式系統設計','Embedded system design'],['車載通訊電子網路設計','In-vehicle network design'],['智慧農業應用設計','Smart agriculture'],['智慧機械感測應用設計','Smart machinery sensing'],['醫學電子設計','Medical electronics']] },
     { name:'林易泉', en:'Yih-Chuan Lin', title:'教授兼學務長', titleEn:'Professor & Dean of Student Affairs', lab:'多媒體網路實驗室', office:'綜三館 6F 611', photo:'692302d408577729cc5e924c/thumb_%E6%9E%97%E6%98%93%E6%B3%89.jpg', visit:'b1',
       skills:[['行動計算','Mobile computing'],['無線通訊','Wireless communication'],['網路多媒體','Network multimedia']] },
-    { name:'鄭錦聰', en:'Jin-Tsong Jeng', title:'教授', titleEn:'Professor', lab:'基因體計算與計算智慧實驗室', office:'綜三館 6F 604', photo:'692302d408577729cc5e9254/thumb_%E9%84%AD%E9%8C%A6%E8%81%B0.jpg', visit:'g',
+    { name:'鄭錦聰', en:'Jin-Tsong Jeng', title:'教授', titleEn:'Professor', lab:'基因體計算與計算智慧實驗室', office:'綜三館 6F 604', photo:'692302d408577729cc5e9254/thumb_%E9%84%AD%E9%8C%A6%E8%81%B0.jpg', visit:'fi',
       skills:[['人工智慧與類神經網路','AI & neural networks'],['自然語言與語音大語言模型','NLP & speech LLMs'],['AI 邏輯與模糊計算','AI logic & fuzzy computing'],['深度學習','Deep learning'],['生物晶片與半導體元件','Microarrays & semiconductors'],['智慧型控制與工業 4.0','Intelligent control & Industry 4.0'],['大數據分析與 Web Service','Big data & web services'],['智慧型網路控制與機器人','Network control & robots'],['短距離無線通訊與車載應用','Short-range wireless & vehicles'],['智慧型手機程式開發','Smartphone apps'],['生物資訊與文字資料探勘','Bioinformatics & text mining']] },
-    { name:'黃建宏', en:'Chien-Hung Huang', title:'教授', titleEn:'Professor', lab:'計算生物學與演算法實驗室', office:'綜三館 5F 505', photo:'692302d508577729cc5e925d/thumb_%E9%BB%83%E5%BB%BA%E5%AE%8F.jpg', visit:'b2',
+    { name:'黃建宏', en:'Chien-Hung Huang', title:'教授', titleEn:'Professor', lab:'計算生物學與演算法實驗室', office:'綜三館 5F 505', photo:'692302d508577729cc5e925d/thumb_%E9%BB%83%E5%BB%BA%E5%AE%8F.jpg', visit:'fa',
       skills:[['演算法','Algorithms'],['生物資訊','Bioinformatics'],['平行計算','Parallel computation'],['機器學習','Machine learning']] },
     { name:'黃惠俞', en:'Hui-Yu Huang', title:'教授', titleEn:'Professor', lab:'視覺認知實驗室', office:'綜三館 6F 608', photo:'692302d608577729cc5e9267/thumb_%E9%BB%83%E6%83%A0%E4%BF%9E.jpg', visit:'g',
       skills:[['電腦視覺','Computer vision'],['人類視覺認知系統','Human cognition systems'],['多媒體安全及應用','Multimedia security'],['模糊類神經網路與深度學習','Fuzzy neural nets & deep learning']] },
@@ -492,11 +553,11 @@ const DATA = {
       skills:[['機器人作業系統 ROS','Robot Operating System'],['物聯網','Internet of Things'],['人工智慧','Artificial intelligence'],['資通訊安全','ICT security']] },
     { name:'蕭志清', en:'Chih-Ching Hsiao', title:'副教授', titleEn:'Associate Professor', lab:'智慧型控制與計算實驗室', office:'綜三館 6F 607', photo:'692302de08577729cc5e92cb/thumb_%E8%95%AD%E5%BF%97%E6%B8%85.jpg', visit:'j2',
       skills:[['智慧型計算','Intelligent computing'],['模糊理論','Fuzzy theory'],['人工智慧應用','AI applications'],['智慧型控制','Intelligent control'],['強健塑模','Robust modeling']] },
-    { name:'莊文河', en:'Wen-Ho Juang', title:'副教授兼副系主任', titleEn:'Associate Professor & Deputy Chair', lab:'智慧終端應用實驗室', office:'綜三館 5F 507', photo:'692302de08577729cc5e92d4/thumb_%E8%8E%8A%E6%96%87%E6%B2%B3.jpg', visit:'j3',
+    { name:'莊文河', en:'Wen-Ho Juang', title:'副教授兼副系主任', titleEn:'Associate Professor & Deputy Chair', lab:'智慧終端應用實驗室', office:'綜三館 5F 507', photo:'692302de08577729cc5e92d4/thumb_%E8%8E%8A%E6%96%87%E6%B2%B3.jpg', visit:'fe',
       skills:[['演算法加速器設計','Algorithm & accelerator design'],['數位晶片設計','Digital IC design'],['FPGA 系統設計與應用','FPGA systems'],['微處理器系統設計','Microprocessor systems'],['智慧終端物聯網應用','On-device AIoT'],['機器學習','Machine learning']] },
-    { name:'詹竣傑', en:'Chun-Chieh Chan', title:'助理教授', titleEn:'Assistant Professor', lab:'機器人實驗室', office:'綜三館 4F 412', photo:'692302e008577729cc5e92de/thumb_%E8%A9%B9%E7%AB%A3%E5%82%91.jpg', visit:'g',
+    { name:'詹竣傑', en:'Chun-Chieh Chan', title:'助理教授', titleEn:'Assistant Professor', lab:'機器人實驗室', office:'綜三館 4F 412', photo:'692302e008577729cc5e92de/thumb_%E8%A9%B9%E7%AB%A3%E5%82%91.jpg', visit:'fr',
       skills:[['機器人學','Robotics'],['自動控制','Automatic control'],['機器視覺','Machine vision'],['醫學工程','Medical engineering'],['能源管理','Energy management'],['系統識別','System identification'],['人機協作','Human–machine collaboration'],['人工智慧與深度學習','AI & deep learning']] },
-    { name:'杜俊育', en:'Jiun-Yu Tu', title:'助理教授兼電資學院特別助理', titleEn:'Assistant Professor & Special Assistant to the Dean', lab:'', office:'綜三館 4F 409', photo:'692302e008577729cc5e92e8/thumb_%E6%9D%9C%E4%BF%8A%E8%82%B2.jpg', visit:'j5',
+    { name:'杜俊育', en:'Jiun-Yu Tu', title:'助理教授兼電資學院特別助理', titleEn:'Assistant Professor & Special Assistant to the Dean', lab:'', office:'綜三館 4F 409', photo:'692302e008577729cc5e92e8/thumb_%E6%9D%9C%E4%BF%8A%E8%82%B2.jpg', visit:'fd',
       skills:[['無人機控制與應用','Drone control'],['無線通訊網路','Wireless networks'],['智慧物聯網','Smart IoT'],['行動通訊網路','Mobile networks'],['深度學習影像辨識','Deep-learning image recognition'],['異質性網路整合','Heterogeneous networks']] },
     { name:'吳祥維', en:'Hsiang-Wei Wu', title:'助理教授', titleEn:'Assistant Professor', lab:'智慧網路應用實驗室', office:'綜三館 4F 411', photo:'692302e108577729cc5e92f1/thumb_%E5%90%B3%E7%A5%A5%E7%B6%AD.jpg', visit:'b1',
       skills:[['網際網路與網頁系統（全端）開發','Internet & full-stack web'],['資料庫管理 SQL','SQL databases'],['地理資訊系統','GIS'],['無線感測網路','Wireless sensor networks'],['大型語言模型','Large language models'],['物件偵測','Object detection']] }
@@ -1365,6 +1426,13 @@ const MODELS = {
     B(.15, .16, .04, .03, .12, .01, PAL.coral, { rz: .3 }); B(.21, .16, .04, .03, .12, .01, PAL.coral, { rz: -.3 });
     P('cyl', -.25, .1, .28, .08, .38, .08, '#fffaf0', { rz: Math.PI / 2 }); P('torus', -.25, .1, .28, .1, .1, .2, PAL.coral, { ry: Math.PI / 2 });
   },
+  // 專題展示台：上面放會動的成品（見 ANIM_BUILD）
+  showcase(c) {
+    B(0, 0, 0, .94, .05, .94, PAL.stone);
+    B(0, .05, 0, .88, .03, .88, c.color);
+    for (const [x, z] of [[-.44, -.44], [.44, -.44], [-.44, .44], [.44, .44]]) CY(x, .05, z, .02, .08, PAL.cream, { small: true });
+    CY(.4, .05, .46, .01, .3, '#8d8d8d'); B(.4, .3, .46, .16, .08, .01, c.accent);
+  },
   cap(c) {
     B(0, 0, 0, .84, .04, .74, PAL.stone);
     CY(0, .04, 0, .2, .14, '#e9e2d8');
@@ -1377,7 +1445,7 @@ const MODELS = {
     mini(.32, .04, -.25, 1.1, PAL.ink, { small: true });
   }
 };
-const MODEL_TOP = { school: 1.05, hall: 1.4, classroom: .55, lab: .5, chip: .3, server: 1.3, robot: .8, drone: .9, court: .6, stage: .8, stall: .7, trophy: 1.0, book: .55, globe: 1.0, clock: 1.25, house: .8, antenna: 1.35, bikes: .45, busstop: .5, coin: .8, cert: .8, cap: .5 };
+const MODEL_TOP = { school: 1.05, hall: 1.4, classroom: .55, lab: .5, chip: .3, server: 1.3, robot: .8, drone: .9, court: .6, stage: .8, stall: .7, trophy: 1.0, book: .55, globe: 1.0, clock: 1.25, house: .8, antenna: 1.35, bikes: .45, busstop: .5, coin: .8, cert: .8, cap: .5, showcase: 1.0 };
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  島內配置：主建物 (0,-0.58)、其餘交錯格子在內切半徑 1.36 內
@@ -1407,7 +1475,7 @@ function buildIslandContent() {
       curOwner = it.id; curFrame = frameAt(x, TOP, z, sc, ry);
       const accent = s.color.clone().lerp(col(PAL.ink), .25);
       (MODELS[it.model] || MODELS.house)({ color: s.color, accent, island: s });
-      ITEM[it.id] = { d: it, island: id, idx: i, x, z, s: sc, top: TOP + (MODEL_TOP[it.model] || .8) * sc, pin: null };
+      ITEM[it.id] = { d: it, island: id, idx: i, x, z, s: sc, ry, top: TOP + (MODEL_TOP[it.model] || .8) * sc, pin: null };
       s.items.push(it.id);
     });
     curFrame = null; curOwner = null;
@@ -2148,7 +2216,7 @@ function howToSteps() {
 function openHelp() {
   const steps = howToSteps();
   openModal(`<div class="eyebrow">${tr('說明', 'HELP')}</div><h2>${tr('歡迎來到虎尾科大資工系特色島', 'Welcome to NFU CSIE Island')}</h2>
-  <p style="line-height:1.7">${tr('每座六角島是一個年級：五專一到五年級、四技一到四年級，以及碩士班；中間的綜三館是 20 位專任教師的大本營，榮譽殿堂收藏近年競賽成果。島民會上課、做專題、休閒，也會把作品帶去比賽。大四、專五與研二島上有碼頭，輪船定期載同學到外海的科技公司外島參訪，系友也會搭直升機回來分享。', 'Each hex island is a cohort: junior-college years 1–5, undergraduate years 1–4, and the master program. Building 3 is home to 20 faculty, and the Hall of Fame holds recent awards. Ferries from the Year-4, JC-5 and MS-2 piers take students to tech-company outer islands, and alumni fly back by helicopter to share.')}</p>
+  <p style="line-height:1.7">${tr('年級島是各個年級：五專一到五年級、四技一到四年級，以及碩士班；中間的綜三館是 20 位專任教師的大本營，榮譽殿堂收藏近年競賽成果。島民會上課、做專題、休閒，也會把作品帶去比賽。機器人、無人機、資料庫、電子學、演算法與人工智慧六座特色島以橋相連，學生在那裡做會動的專題。大四、專五與研二島上有碼頭，輪船定期載同學到外海的科技公司外島參訪，系友也會搭直升機回來分享。', 'The cohort islands are junior-college years 1–5, undergraduate years 1–4, and the master program. Building 3 is home to 20 faculty, and the Hall of Fame holds recent awards. Six bridged specialty islands (robotics, drones, databases, electronics, algorithms, AI) host moving student projects. Ferries from the Year-4, JC-5 and MS-2 piers take students to tech-company outer islands, and alumni fly back by helicopter to share.')}</p>
   <ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>
   <p style="font-size:13px;color:var(--muted)">${tr('時鐘每秒走 10 分鐘，一天 144 秒；不同時段會有不同的建物亮起（黃色）。', 'The clock runs 10 minutes per second; different buildings light up (yellow) through the day.')}</p>
   <div class="actions">
@@ -2181,7 +2249,7 @@ const WM = {};        // part name -> InstancedMesh
 let walkerN = 0;
 const SHIRTS = { jc: ['#3e7c8c', '#58a6a6', '#6f7fb5'], fresh: ['#58a6a6', '#9cc27a'], ug: ['#db6a41', '#f2b5c6', '#6f7fb5', '#9cc27a', '#fcea8b', '#ffffff'], bike: ['#db6a41', '#6f7fb5', '#fcea8b'], grad: ['#ffffff'], cap: ['#211d1d'], maker: ['#3e7c8c', '#db6a41'], intern: ['#f4ebdd', '#c5b5a7'], teacher: ['#f4ebdd', '#c9d8e6', '#e9e2d8'] };
 const PANTS = ['#3a3f55', '#2b2b33', '#5a5f75', '#6b5a4a'];
-const ROLE_OF_KIND = { jc: 'jc', ug: 'ug', grad: 'grad', staff: 'ug', award: 'ug' };
+const ROLE_OF_KIND = { jc: 'jc', ug: 'ug', grad: 'grad', staff: 'ug', award: 'ug', field: 'maker' };
 const ACT_VERB = { study: ['修習「{n}」', 'taking {n}'], project: ['製作「{n}」', 'working on {n}'], leisure: ['參加「{n}」', 'enjoying {n}'], award: ['挑戰「{n}」', 'competing in {n}'] };
 // 交流線上的島民在做什麼：「正在操作 筆電」「正在製作 專題機器人」
 const carryText = f => tr(`正在${DATA.carryVerbs[f.carry]} ${DATA.carries[f.carry]}`, `${DATA.carryVerbsEn[f.carry][0].toUpperCase() + DATA.carryVerbsEn[f.carry].slice(1)} ${DATA.carriesEn[f.carry]}`);
@@ -3141,6 +3209,281 @@ function refreshCoLabels() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  特色領域島：會動的專題成品（item.anim）
+//  單位空間與 MODELS 相同：展示台頂面 y=0、範圍約 ±0.42
+// ═══════════════════════════════════════════════════════════════════════════
+const ANIMS = [];
+const FM = {
+  std: c => new THREE.MeshStandardMaterial({ color: c, roughness: .6 }),
+  glow: (c, i = .9) => new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: i, roughness: .5 }),
+  box: (w, h, d) => new THREE.BoxGeometry(w, h, d),
+  cyl: (r, h, n = 14) => new THREE.CylinderGeometry(r, r, h, n),
+  sph: (r) => new THREE.SphereGeometry(r, 14, 10)
+};
+function fmesh(geo, mat, parent, x = 0, y = 0, z = 0) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; }
+function rotorSet(parent, span, r) {
+  const rot = [];
+  for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+    fmesh(FM.box(span * 1.5, .012, .016), FM.std('#3c3c44'), parent, sx * span / 2, 0, sz * span / 2).rotation.y = Math.PI / 4 * sx * sz;
+    const p = fmesh(FM.box(r * 2, .004, .018), FM.std('#d6dde2'), parent, sx * span, .02, sz * span); rot.push(p);
+  }
+  return rot;
+}
+const ANIM_BUILD = {
+  // 機械手臂：底座旋轉、肩肘擺動、夾爪開合，在兩個工作台之間搬方塊
+  arm(g, c) {
+    fmesh(FM.cyl(.13, .05), FM.std(PAL.ink), g, 0, .025, 0);
+    for (const x of [-.3, .3]) fmesh(FM.box(.16, .08, .16), FM.std('#e9e2d8'), g, x, .04, .18);
+    const yaw = new THREE.Group(); yaw.position.y = .05; g.add(yaw);
+    fmesh(FM.cyl(.075, .08), FM.std(PAL.yellow), yaw, 0, .04, 0);
+    const sh = new THREE.Group(); sh.position.y = .09; yaw.add(sh);
+    fmesh(FM.sph(.05), FM.std(PAL.ink), sh);
+    fmesh(FM.box(.06, .3, .06), FM.std(PAL.yellow), sh, 0, .15, 0);
+    const el = new THREE.Group(); el.position.y = .3; sh.add(el);
+    fmesh(FM.sph(.042), FM.std(PAL.ink), el);
+    fmesh(FM.box(.05, .24, .05), FM.std(PAL.yellow), el, 0, .12, 0);
+    const wr = new THREE.Group(); wr.position.y = .24; el.add(wr);
+    fmesh(FM.box(.1, .03, .06), FM.std(PAL.ink), wr, 0, .015, 0);
+    const fL = fmesh(FM.box(.015, .07, .04), FM.std('#c7ced4'), wr, -.035, .065, 0), fR = fmesh(FM.box(.015, .07, .04), FM.std('#c7ced4'), wr, .035, .065, 0);
+    const cube = fmesh(FM.box(.05, .05, .05), FM.std(c.color), wr, 0, .075, 0);
+    GLOW_LED(g, .1, .06, .12, '#9cff9c');
+    return t => {
+      const k = Math.sin(t * .9);
+      yaw.rotation.y = k * 1.1 + Math.PI / 2;
+      sh.rotation.z = -.55 + Math.sin(t * 1.8) * .25;
+      el.rotation.z = -1.5 + Math.sin(t * 1.8 + .6) * .3;
+      wr.rotation.z = -.9 - Math.sin(t * 1.8) * .2;
+      const open = .028 + Math.max(0, Math.cos(t * .9)) * .02;
+      fL.position.x = -open; fR.position.x = open; cube.visible = Math.abs(k) < .85;
+    };
+  },
+  // ROS 自走車：繞圈避障、光達旋轉、車頂燈閃爍
+  rover(g, c) {
+    for (const [x, z] of [[0, 0], [.18, -.12], [-.15, .14]]) { fmesh(new THREE.ConeGeometry(.035, .09, 10), FM.std(PAL.coral), g, x, .045, z); }
+    const car = new THREE.Group(); g.add(car);
+    fmesh(FM.box(.2, .06, .13), FM.std(c.color), car, 0, .055, 0);
+    fmesh(FM.box(.12, .03, .11), FM.std('#e9eef2'), car, -.02, .1, 0);
+    const wheels = [];
+    for (const [x, z] of [[.07, .075], [-.07, .075], [.07, -.075], [-.07, -.075]]) { const w = fmesh(FM.cyl(.03, .025), FM.std(PAL.ink), car, x, .03, z); w.rotation.x = Math.PI / 2; wheels.push(w); }
+    const lidar = fmesh(FM.cyl(.028, .03), FM.std(PAL.ink), car, .04, .13, 0);
+    fmesh(FM.box(.03, .012, .008), FM.glow('#7cd8ff'), lidar, .02, 0, 0);
+    const led = fmesh(FM.sph(.012), FM.glow('#ff6a4a'), car, -.09, .1, 0);
+    return t => {
+      const a = t * .8, r = .3;
+      car.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+      car.rotation.y = Math.atan2(-Math.cos(a), -Math.sin(a));
+      lidar.rotation.y = t * 8; wheels.forEach(w => w.rotation.y = t * 6);
+      led.material.emissiveIntensity = (Math.sin(t * 8) > 0) ? 1.4 : .1;
+    };
+  },
+  // 自主飛行：起飛、繞航點、降落
+  drone(g, c) {
+    fmesh(FM.cyl(.2, .012, 24), FM.std('#4a4a52'), g, 0, .006, 0);
+    fmesh(new THREE.TorusGeometry(.17, .008, 6, 32), FM.std(PAL.yellow), g, 0, .014, 0).rotation.x = Math.PI / 2;
+    const d = new THREE.Group(); g.add(d);
+    fmesh(FM.box(.1, .035, .1), FM.std(c.color), d, 0, 0, 0);
+    fmesh(FM.sph(.02), FM.glow('#9cff9c'), d, .05, -.005, 0);
+    const rot = rotorSet(d, .08, .05);
+    return t => {
+      const cyc = (t * .25) % 1, up = smooth(0, .15, cyc) * (1 - smooth(.85, 1, cyc));
+      const a = cyc * Math.PI * 4;
+      d.position.set(Math.cos(a) * .22 * up, .05 + up * .5 + Math.sin(t * 3) * .01 * up, Math.sin(a) * .22 * up);
+      d.rotation.y = -a; d.rotation.z = up * .12;
+      rot.forEach((p, i) => p.rotation.y = t * (30 + i) * (up > .02 ? 1 : .2));
+    };
+  },
+  // 無人機編隊：三台繞中央天線飛
+  swarm(g, c) {
+    fmesh(FM.cyl(.012, .55), FM.std('#8d8d8d'), g, 0, .275, 0);
+    const tip = fmesh(FM.sph(.025), FM.glow('#ff6a4a'), g, 0, .56, 0);
+    const ds = [0, 1, 2].map(k => {
+      const d = new THREE.Group(); g.add(d);
+      fmesh(FM.box(.07, .025, .07), FM.std([c.color, PAL.teal, PAL.coral][k]), d);
+      return { d, rot: rotorSet(d, .055, .035), k };
+    });
+    return t => {
+      ds.forEach(({ d, rot, k }) => {
+        const a = t * .9 + k * Math.PI * 2 / 3;
+        d.position.set(Math.cos(a) * .3, .4 + Math.sin(t * 1.4 + k) * .05, Math.sin(a) * .3);
+        d.rotation.y = -a; rot.forEach(p => p.rotation.y = t * 32);
+      });
+      tip.material.emissiveIntensity = .4 + (Math.sin(t * 5) > 0 ? 1 : 0);
+    };
+  },
+  // 分散式資料庫：三個資料庫磁碟各自旋轉，資料包在節點間上下流動
+  dbstack(g, c) {
+    const disks = [], rings = [];
+    for (const [x, z] of [[-.2, -.08], [.2, -.08], [0, .18]]) {
+      for (let k = 0; k < 3; k++) {
+        const m = fmesh(FM.cyl(.09, .06, 20), FM.std(k % 2 ? '#e9eef2' : c.color), g, x, .04 + k * .075, z); disks.push(m);
+        if (k < 2) { const r = fmesh(FM.cyl(.092, .012, 20), FM.glow('#7cc8ff', .3), g, x, .078 + k * .075, z); rings.push(r); }
+      }
+    }
+    const pk = [];
+    for (let k = 0; k < 6; k++) pk.push(fmesh(FM.box(.03, .03, .03), FM.glow(PAL.yellow, .8), g));
+    const nodes = [[-.2, -.08], [.2, -.08], [0, .18]];
+    return t => {
+      disks.forEach((m, i) => m.rotation.y = t * (1 + i % 3 * .4));
+      rings.forEach((r, i) => r.material.emissiveIntensity = .3 + Math.max(0, Math.sin(t * 4 - i)) * 1.5);
+      pk.forEach((m, k) => {
+        const u = (t * .45 + k / 6) % 1, a = nodes[k % 3], b = nodes[(k + 1) % 3];
+        m.position.set(lerp(a[0], b[0], u), .3 + Math.sin(u * Math.PI) * .18, lerp(a[1], b[1], u));
+        m.rotation.y = t * 3;
+      });
+    };
+  },
+  // 大數據儀表板：螢幕前的長條圖即時跳動
+  dashboard(g, c) {
+    fmesh(FM.box(.04, .3, .04), FM.std('#5a5450'), g, 0, .15, -.18);
+    fmesh(FM.box(.72, .44, .04), FM.std(PAL.ink), g, 0, .48, -.18);
+    fmesh(FM.box(.66, .38, .005), FM.glow('#1d3446', .6), g, 0, .48, -.157);
+    const bars = [];
+    for (let k = 0; k < 6; k++) { const b = fmesh(new THREE.BoxGeometry(.07, 1, .02).translate(0, .5, 0), FM.glow([PAL.coral, PAL.yellow, '#9cff9c', '#7cc8ff'][k % 4], .9), g, -.25 + k * .1, .32, -.15); bars.push(b); }
+    const dot = fmesh(FM.sph(.015), FM.glow('#ffffff', 1.2), g, 0, .62, -.15);
+    return t => {
+      bars.forEach((b, k) => b.scale.y = .04 + .26 * (.5 + .5 * Math.sin(t * 1.4 + k * 1.1)) * (.6 + .4 * Math.sin(t * .37 + k)));
+      dot.position.x = -.28 + ((t * .2) % 1) * .56;
+    };
+  },
+  // 示波器：波形即時跳動
+  scope(g, c) {
+    fmesh(FM.box(.66, .4, .28), FM.std('#d8d3cc'), g, 0, .2, -.1);
+    fmesh(FM.box(.42, .28, .01), FM.std('#0f2a1a'), g, -.08, .22, .045);
+    for (let k = 0; k < 4; k++) fmesh(FM.cyl(.02, .02, 10), FM.std(k % 2 ? PAL.coral : PAL.ink), g, .22, .3 - k * .06, .05).rotation.x = Math.PI / 2;
+    fmesh(FM.box(.3, .05, .2), FM.std('#3f7d55'), g, .05, .025, .25);
+    const N = 30, wave = new THREE.InstancedMesh(FM.box(.014, .014, .006), new THREE.MeshBasicMaterial({ color: '#9cff9c' }), N);
+    wave.position.set(-.08, .22, .052); g.add(wave);
+    const m4 = new THREE.Matrix4();
+    return t => {
+      const amp = .07 + .03 * Math.sin(t * .6);
+      for (let i = 0; i < N; i++) { const x = -.19 + i * .38 / (N - 1); m4.makeTranslation(x, amp * Math.sin(x * 24 - t * 5) + .02 * Math.sin(x * 70 + t * 9), 0); wave.setMatrixAt(i, m4); }
+      wave.instanceMatrix.needsUpdate = true;
+    };
+  },
+  // FPGA LED 矩陣：同心圓波紋跑馬燈
+  ledmatrix(g, c) {
+    fmesh(FM.box(.6, .03, .4), FM.std('#3f7d55'), g, 0, .015, .1);
+    fmesh(FM.box(.14, .02, .14), FM.std(PAL.ink), g, -.15, .04, .15);
+    fmesh(FM.box(.04, .5, .04), FM.std('#5a5450'), g, .2, .25, -.15);
+    fmesh(FM.box(.52, .52, .03), FM.std(PAL.ink), g, 0, .5, -.18);
+    const n = 8, led = new THREE.InstancedMesh(FM.box(.045, .045, .01), new THREE.MeshBasicMaterial({ color: '#ffffff' }), n * n);
+    const m4 = new THREE.Matrix4(), cc = new THREE.Color(), on = col('#ffd23f'), on2 = col(PAL.coral), off = col('#3a2a22');
+    for (let i = 0; i < n * n; i++) { m4.makeTranslation(-.21 + (i % n) * .06, .29 + Math.floor(i / n) * .06, -.163); led.setMatrixAt(i, m4); led.setColorAt(i, off); }
+    g.add(led);
+    return t => {
+      for (let i = 0; i < n * n; i++) {
+        const x = i % n - 3.5, y = Math.floor(i / n) - 3.5, d = Math.hypot(x, y);
+        const v = Math.sin(d * 1.3 - t * 4);
+        led.setColorAt(i, v > .55 ? on : v > .1 ? cc.copy(on2).lerp(off, .3) : off);
+      }
+      led.instanceColor.needsUpdate = true;
+    };
+  },
+  // 排序視覺化：氣泡排序，一步一步交換
+  sortbars(g, c) {
+    const N = 8, bars = [], vals = [5, 2, 7, 1, 8, 4, 6, 3];
+    const base = col('#f4ebdd'), cmp = col(PAL.coral), done = col(PAL.teal);
+    for (let k = 0; k < N; k++) { const m = fmesh(new THREE.BoxGeometry(.07, 1, .07).translate(0, .5, 0), FM.std('#ffffff'), g); m.scale.y = vals[k] * .07; bars.push({ m, v: vals[k], x: 0 }); }
+    let order = bars.slice(), i = 0, pass = 0, timer = 0, last = 0, rest = 0;
+    const slotX = s => -.3 + s * .086;
+    order.forEach((b, s) => { b.x = slotX(s); b.m.position.x = b.x; });
+    return t => {
+      const dt = Math.min(.1, Math.max(0, t - last)); last = t; timer += dt;
+      if (rest > 0) { rest -= dt; if (rest <= 0) { for (let s = N - 1; s > 0; s--) { const j = Math.floor(rand() * (s + 1)); [order[s], order[j]] = [order[j], order[s]]; } i = 0; pass = 0; } }
+      else if (timer > .35) {
+        timer = 0;
+        if (order[i].v > order[i + 1].v) [order[i], order[i + 1]] = [order[i + 1], order[i]];
+        i++; if (i >= N - 1 - pass) { i = 0; pass++; if (pass >= N - 1) rest = 2.5; }
+      }
+      order.forEach((b, s) => {
+        b.x = slotX(s); b.m.position.x += (b.x - b.m.position.x) * Math.min(1, dt * 10);
+        b.m.material.color.copy(rest > 0 || s >= N - pass ? done : (s === i || s === i + 1) ? cmp : base);
+      });
+    };
+  },
+  // 最短路徑：節點與邊，小球沿 Dijkstra 找到的路走，走過的節點亮起
+  graph(g, c) {
+    const P = [[-.32, -.25], [-.05, -.3], [.3, -.2], [-.25, .1], [.08, .02], [.3, .25], [-.05, .3]];
+    const E = [[0, 1], [1, 2], [0, 3], [1, 4], [3, 4], [4, 2], [4, 5], [3, 6], [6, 5], [2, 5]];
+    for (const [a, b] of E) {
+      const A = P[a], Bp = P[b], L = Math.hypot(Bp[0] - A[0], Bp[1] - A[1]);
+      const m = fmesh(FM.box(L, .012, .014), FM.std('#c4b6a6'), g, (A[0] + Bp[0]) / 2, .02, (A[1] + Bp[1]) / 2); m.rotation.y = -Math.atan2(Bp[1] - A[1], Bp[0] - A[0]);
+    }
+    const nodes = P.map(([x, z]) => fmesh(FM.cyl(.04, .05), FM.glow(c.color, .05), g, x, .025, z));
+    const token = fmesh(FM.sph(.03), FM.glow(PAL.coral, 1), g);
+    const route = [0, 3, 4, 5];
+    return t => {
+      const seg = route.length - 1, u = (t * .35) % (seg + 1.2), k = Math.min(seg - 1, Math.floor(u)), f = clamp(u - k, 0, 1);
+      const A = P[route[k]], Bp = P[route[k + 1]];
+      if (u < seg) token.position.set(lerp(A[0], Bp[0], f), .08 + Math.sin(f * Math.PI) * .04, lerp(A[1], Bp[1], f));
+      else token.position.set(P[route[seg]][0], .08, P[route[seg]][1]);
+      nodes.forEach((n, i) => { const at = route.indexOf(i); n.material.emissiveIntensity = at >= 0 && at <= u ? 1 : .05; n.position.y = .025 + (at >= 0 && at <= u ? .01 : 0); });
+    };
+  },
+  // 神經網路：訊號一層一層往前傳
+  neural(g, c) {
+    fmesh(FM.box(.04, .7, .04), FM.std('#5a5450'), g, -.36, .35, -.05);
+    fmesh(FM.box(.04, .7, .04), FM.std('#5a5450'), g, .36, .35, -.05);
+    const layers = [[-.25, 3], [0, 4], [.25, 2]], nodes = [], pts = [];
+    layers.forEach(([x, n], L) => { const row = []; for (let k = 0; k < n; k++) { const y = .42 + (k - (n - 1) / 2) * .13; row.push(fmesh(FM.sph(.035), FM.glow([PAL.teal, c.color, PAL.coral][L], .2), g, x, y, -.05)); } nodes.push(row); });
+    for (let L = 0; L < 2; L++) for (const a of nodes[L]) for (const b of nodes[L + 1]) pts.push(a.position.clone(), b.position.clone());
+    g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#8a7f75', transparent: true, opacity: .6 })));
+    const dots = new THREE.InstancedMesh(FM.sph(.012), new THREE.MeshBasicMaterial({ color: PAL.yellow }), pts.length / 2); g.add(dots);
+    const m4 = new THREE.Matrix4(), v = new THREE.Vector3();
+    return t => {
+      const p = (t * .7) % 1.6;
+      nodes.forEach((row, L) => row.forEach(n => n.material.emissiveIntensity = .2 + 1.4 * Math.max(0, 1 - Math.abs(p - L * .6) * 3)));
+      for (let e = 0; e < pts.length / 2; e++) {
+        const L = e < 12 ? 0 : 1, f = clamp((p - L * .6) / .6, 0, 1);
+        if (f <= 0 || f >= 1) m4.makeScale(0, 0, 0); else { v.lerpVectors(pts[e * 2], pts[e * 2 + 1], f); m4.makeTranslation(v.x, v.y, v.z); }
+        dots.setMatrixAt(e, m4);
+      }
+      dots.instanceMatrix.needsUpdate = true;
+    };
+  },
+  // 影像辨識：攝影機左右掃描，辨識框跳到看到的物件
+  vision(g, c) {
+    fmesh(FM.cyl(.015, .42), FM.std('#8d8d8d'), g, -.3, .21, -.25);
+    const head = new THREE.Group(); head.position.set(-.3, .44, -.25); g.add(head);
+    fmesh(FM.box(.12, .07, .07), FM.std('#fbfbf8'), head, .03, 0, 0);
+    fmesh(FM.cyl(.025, .03), FM.std(PAL.ink), head, .1, 0, 0).rotation.z = Math.PI / 2;
+    const rec = fmesh(FM.sph(.01), FM.glow('#ff3a2a', 1.5), head, .0, .045, 0);
+    const objs = [[.05, -.15, PAL.coral, 'box'], [.25, .05, PAL.teal, 'cyl'], [-.05, .22, PAL.yellow, 'sph']].map(([x, z, cc, k]) => {
+      const geo = k === 'box' ? FM.box(.1, .1, .1) : k === 'cyl' ? FM.cyl(.05, .14) : FM.sph(.06);
+      const h = k === 'cyl' ? .07 : .05;
+      fmesh(geo, FM.std(cc), g, x, k === 'sph' ? .06 : h, z);
+      return { x, z, a: Math.atan2(-(z + .25), x + .3) };
+    });
+    const frame = new THREE.LineSegments(new THREE.EdgesGeometry(FM.box(.17, .17, .17)), new THREE.LineBasicMaterial({ color: PAL.coral })); g.add(frame);
+    frame.position.set(objs[0].x, .085, objs[0].z);
+    return t => {
+      const ang = -.55 + Math.sin(t * .7) * .75; head.rotation.y = ang;
+      let best = objs[0], bd = 9; for (const o of objs) { const d = Math.abs(o.a - ang); if (d < bd) { bd = d; best = o; } }
+      frame.position.x += (best.x - frame.position.x) * .15; frame.position.z += (best.z - frame.position.z) * .15;
+      frame.scale.setScalar(1 + Math.sin(t * 6) * .05);
+      rec.material.emissiveIntensity = Math.sin(t * 6) > 0 ? 1.5 : .2;
+    };
+  }
+};
+function GLOW_LED(g, x, y, z, c) { return fmesh(FM.sph(.012), FM.glow(c, 1.2), g, x, y, z); }
+function initFieldAnims() {
+  for (const id in ITEM) {
+    const it = ITEM[id], b = ANIM_BUILD[it.d.anim]; if (!b) continue;
+    const g = new THREE.Group();
+    g.position.set(it.x, TOP + .08 * it.s, it.z); g.rotation.y = it.ry || 0; g.scale.setScalar(it.s);
+    const s = ISL[it.island];
+    const upd = b(g, { color: '#' + s.color.getHexString(), island: s });
+    scene.add(g); ANIMS.push({ g, upd, it });
+    upd(0);
+  }
+}
+function updateFieldAnims() {
+  if (!ANIMS.length) return;
+  const cam = camera.position, t = state.time;
+  for (const a of ANIMS) { if (Math.hypot(cam.x - a.g.position.x, cam.z - a.g.position.z) < 34) a.upd(t); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  主迴圈與啟動
 // ═══════════════════════════════════════════════════════════════════════════
 let lastT = performance.now(), lastStep = -1;
@@ -3160,6 +3503,7 @@ function tick(now) {
   if (controls.update()) markDirty();
   if (typeof updateWalkers === 'function' && animating) updateWalkers(dt);
   if (typeof updateHarbor === 'function' && animating) updateHarbor(dt);
+  if (typeof updateFieldAnims === 'function' && animating) updateFieldAnims();
   if (typeof updateFlowLines === 'function') updateFlowLines(animating ? dt : 0);
   if (!state.dirty) return;
   state.dirty = false;
@@ -3222,6 +3566,7 @@ async function boot() {
     if (typeof initUI === 'function') initUI();
     if (typeof initWalkers === 'function') initWalkers();
     if (typeof initHarbor === 'function') initHarbor();
+    if (typeof initFieldAnims === 'function') initFieldAnims();
     if (typeof initFlowLines === 'function') initFlowLines();
     if (typeof initJournal === 'function') initJournal();
 
