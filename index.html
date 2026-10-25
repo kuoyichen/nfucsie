@@ -154,6 +154,8 @@ button{font-family:inherit;color:inherit}
 .ilabel.sel .no{color:var(--yellow)}
 .ilabel.dim{opacity:.45}
 .ilabel.compact .nm{display:none}
+.ilabel.co{background:#f3f8fa;font-size:12px;padding:4px 10px;border:1.5px solid #9fc3d1}
+.ilabel.co.sel{background:var(--ink);border-color:var(--ink)}
 .pin{pointer-events:auto;cursor:pointer;width:24px;height:24px;border-radius:50%;background:var(--coral);color:#fff;font:700 12px var(--font);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px #0003;border:2px solid #fff}
 .pin.lit{background:#e8b600}
 .tag{pointer-events:auto;cursor:pointer;background:#fff;border:2px solid var(--coral);border-radius:9px;padding:2px 7px;font-size:11.5px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px #4a2a1425;user-select:none}
@@ -499,6 +501,36 @@ const DATA = {
     { name:'吳祥維', en:'Hsiang-Wei Wu', title:'助理教授', titleEn:'Assistant Professor', lab:'智慧網路應用實驗室', office:'綜三館 4F 411', photo:'692302e108577729cc5e92f1/thumb_%E5%90%B3%E7%A5%A5%E7%B6%AD.jpg', visit:'b1',
       skills:[['網際網路與網頁系統（全端）開發','Internet & full-stack web'],['資料庫管理 SQL','SQL databases'],['地理資訊系統','GIS'],['無線感測網路','Wireless sensor networks'],['大型語言模型','Large language models'],['物件偵測','Object detection']] }
   ],
+  // 碼頭：大四、專五、研二（碩士班島）各一座；toward = 碼頭朝向的空鄰格（axial）
+  docks: [
+    { id:'dj5', island:'j5', toward:[-2,0],  name:'專五碼頭', en:'JC-5 Pier', ferry:'虎科號', ferryEn:'Huke', color:'#db6a41' },
+    { id:'dg',  island:'g',  toward:[1,-2],  name:'研二碼頭', en:'MS-2 Pier', ferry:'築夢號', ferryEn:'Dreamer', color:'#3e7c8c' },
+    { id:'db4', island:'b4', toward:[3,-1],  name:'大四碼頭', en:'Year-4 Pier', ferry:'資工號', ferryEn:'CSIE', color:'#6f7fb5' }
+  ],
+  // 外島：國內知名科技公司（公司所在地與產業為公開資訊；島上情節與主管評語為示意）
+  companies: [
+    { id:'foxconn',  dock:'dj5', x:-13.5, z:-1.5, h:1.0, name:'鴻海', en:'Hon Hai (Foxconn)', city:'新北土城', cityEn:'Tucheng, New Taipei', ind:'電子製造服務與 AI 伺服器', indEn:'Electronics manufacturing & AI servers', color:'#2f5fa8', jobs:[['AI 伺服器軟體','AI server software'],['工業物聯網','Industrial IoT']] },
+    { id:'asus',     dock:'dj5', x:-14.5, z:4.0,  h:.9,  name:'華碩', en:'ASUS', city:'台北北投', cityEn:'Beitou, Taipei', ind:'電腦與消費電子品牌', indEn:'PCs & consumer electronics', color:'#1d1b22', jobs:[['BIOS 與系統軟體','BIOS & system software'],['AI 應用開發','AI applications']] },
+    { id:'quanta',   dock:'dj5', x:-12.5, z:9.8,  h:.85, name:'廣達', en:'Quanta', city:'桃園龜山', cityEn:'Guishan, Taoyuan', ind:'筆電與雲端伺服器', indEn:'Notebooks & cloud servers', color:'#c0392b', jobs:[['伺服器韌體','Server firmware'],['雲端平台工程','Cloud platform engineering']] },
+    { id:'delta',    dock:'dj5', x:-11.5, z:-6.8, h:.8,  name:'台達電', en:'Delta Electronics', city:'台北內湖', cityEn:'Neihu, Taipei', ind:'電源管理與工業自動化', indEn:'Power management & automation', color:'#1f6fb2', jobs:[['工業自動化軟體','Automation software'],['電源控制韌體','Power-control firmware']] },
+    { id:'tsmc',     dock:'dg',  x:-6.5,  z:-10.5,h:1.25,name:'台積電', en:'TSMC', city:'新竹科學園區', cityEn:'Hsinchu Science Park', ind:'晶圓代工', indEn:'Semiconductor foundry', color:'#c8102e', jobs:[['製程整合工程','Process integration'],['智慧製造 IT','Smart-manufacturing IT']] },
+    { id:'mediatek', dock:'dg',  x:-1.2,  z:-12.2,h:1.1, name:'聯發科', en:'MediaTek', city:'新竹科學園區', cityEn:'Hsinchu Science Park', ind:'IC 設計（手機與通訊晶片）', indEn:'IC design (mobile & connectivity)', color:'#f5a300', jobs:[['數位 IC 設計驗證','Digital IC verification'],['嵌入式軟體','Embedded software']] },
+    { id:'novatek',  dock:'dg',  x:4.3,   z:-12.2,h:.9,  name:'聯詠', en:'Novatek', city:'新竹科學園區', cityEn:'Hsinchu Science Park', ind:'顯示驅動 IC 設計', indEn:'Display driver IC design', color:'#0a7cc1', jobs:[['顯示驅動 IC 設計','Display driver IC design'],['韌體開發','Firmware']] },
+    { id:'realtek',  dock:'dg',  x:9.6,   z:-10.3,h:.95, name:'瑞昱', en:'Realtek', city:'新竹科學園區', cityEn:'Hsinchu Science Park', ind:'網通與多媒體 IC 設計', indEn:'Networking & multimedia ICs', color:'#2a8f5a', jobs:[['網通韌體','Networking firmware'],['驅動程式開發','Driver development']] },
+    { id:'umc',      dock:'db4', x:14.5,  z:-5.2, h:1.0, name:'聯電', en:'UMC', city:'新竹科學園區', cityEn:'Hsinchu Science Park', ind:'晶圓代工', indEn:'Semiconductor foundry', color:'#3a4fa0', jobs:[['製程工程','Process engineering'],['良率分析與資料科學','Yield analytics']] },
+    { id:'psmc',     dock:'db4', x:15.3,  z:0.8,  h:.85, name:'力積電', en:'PSMC', city:'新竹科學園區', cityEn:'Hsinchu Science Park', ind:'晶圓代工（記憶體與邏輯）', indEn:'Foundry (memory & logic)', color:'#6a3fa0', jobs:[['設備工程','Equipment engineering'],['製造系統開發','MES development']] },
+    { id:'ase',      dock:'db4', x:14.2,  z:6.6,  h:.9,  name:'日月光', en:'ASE', city:'高雄楠梓', cityEn:'Nanzi, Kaohsiung', ind:'半導體封裝測試', indEn:'Semiconductor packaging & test', color:'#d4572a', jobs:[['測試程式工程','Test programs'],['智慧工廠系統','Smart-factory systems']] },
+    { id:'advantech',dock:'db4', x:10.8,  z:11.0, h:.8,  name:'研華', en:'Advantech', city:'台北內湖', cityEn:'Neihu, Taipei', ind:'工業電腦與物聯網', indEn:'Industrial computing & IoT', color:'#1b75bb', jobs:[['邊緣運算平台','Edge computing'],['IoT 雲端軟體','IoT cloud software']] }
+  ],
+  // 外島主管對本系學生的評語（示意）
+  praise: [
+    ['虎科資工的學生實作能力超強！', 'NFU CSIE students really know how to build!'],
+    ['做過專題的就是不一樣，一來就上手', 'Capstone experience shows. They hit the ground running'],
+    ['程式寫得又快又穩，明年還要更多人', 'Fast, solid code. We want more next year!'],
+    ['團隊合作好、學習態度佳，讚！', 'Great teamwork and attitude!'],
+    ['從實習到正職都很亮眼', 'Outstanding from internship to full-time'],
+    ['資工系的同學，我們搶著要', 'We compete to hire CSIE grads']
+  ],
   photoBase: SRC + '/uploads/member_profile/avatar/',
   facultyPage: SRC + '/zh_tw/team/faculty'
 };
@@ -596,7 +628,7 @@ function initRenderer() {
   controls.minPolarAngle = THREE.MathUtils.degToRad(25);
   controls.maxPolarAngle = THREE.MathUtils.degToRad(70);
   controls.minDistance = 3;
-  controls.maxDistance = 70;
+  controls.maxDistance = 85;
   controls.screenSpacePanning = false;
   // 桌面：照規格不平移；觸控：一指平移、兩指旋轉（與縮放）
   controls.enablePan = true;
@@ -652,7 +684,7 @@ function onResize() {
 }
 // 直式螢幕時把全景方位轉 0.4 rad，讓東西向較長的城市斜放進窄畫面
 const OVERVIEW_DIR = () => { const v = new THREE.Vector3(.24, .33, .87).normalize(); if (innerWidth / innerHeight < .8) v.applyAxisAngle(new THREE.Vector3(0, 1, 0), -.4); return v; };
-function overviewDistance() { const a = innerWidth / innerHeight; return a > 1.3 ? 32 : a > 0.8 ? 40 : a > .6 ? 56 : 67; }
+function overviewDistance() { const a = innerWidth / innerHeight; return a > 1.3 ? 38 : a > 0.8 ? 46 : a > .6 ? 62 : 74; }
 function overviewPose() {
   // 透視下前方（+z）的島看起來較大，橫式畫面把目標往左挪一點讓整座城置中
   const target = new THREE.Vector3(CENTER.x - (innerWidth / innerHeight > 1.3 ? 1.6 : 0), TOP, CENTER.z);
@@ -1103,6 +1135,9 @@ const MODELS = {
     B(-.27, .05, -.05, .42, .78, .5, PAL.wall); B(.27, .05, -.05, .42, .78, .5, PAL.wall);
     for (const sx of [-.27, .27]) { windowsGrid(sx - .14, .14, .205, 4, 4, .06, .1, .093, .17); B(sx, .83, -.05, .46, .04, .54, PAL.eave); }
     for (let f = 1; f < 5; f++) B(0, .05 + f * .17, .205, 1, .012, .01, PAL.stone);
+    // 左翼屋頂直升機坪（系友直升機降落處）
+    CY(-.27, .87, -.05, .17, .012, '#4a4a52'); P('torus', -.27, .885, -.05, .3, .3, .1, PAL.yellow, { rx: Math.PI / 2 });
+    B(-.31, .882, -.05, .022, .004, .13, '#ffffff'); B(-.23, .882, -.05, .022, .004, .13, '#ffffff'); B(-.27, .882, -.05, .08, .004, .022, '#ffffff');
     B(0, .05, 0, .2, 1.05, .2, '#efe2d0');
     CY(0, .82, .1, .07, .02, PAL.cream, { rx: Math.PI / 2 });
     P('torus', 0, .83, .112, .18, .18, .1, PAL.coral);
@@ -1672,6 +1707,8 @@ function renderSide() {
     }
     DATA.teachers.forEach((t, i) => { if (match(t.name, t.en, t.title, t.lab, ...t.skills.flat())) { h += teacherRow(t, i); n++; } });
     DATA.flows.forEach(f => { if (match(f.name, f.en)) { h += flowRow(f); n++; } });
+    (DATA.companies || []).forEach(c => { if (match(c.name, c.en, c.city, c.ind, c.indEn)) { h += coRow(c); n++; } });
+    (DATA.docks || []).forEach(d => { if (match(d.name, d.en, d.ferry, d.ferryEn, '輪船', '碼頭', 'ferry')) { h += `<button class="row" data-ferry="${d.id}"><span class="n">⛴</span>${esc(tr(d.ferry + ' · ' + d.name, d.ferryEn + ' · ' + d.en))}</button>`; n++; } });
     if (!n) h += `<p style="padding:8px 12px;color:var(--muted)">${tr('找不到符合的項目', 'No matches')}</p>`;
   } else if (ui.tab === 'islands') {
     for (const d of DATA.islands) {
@@ -1679,6 +1716,14 @@ function renderSide() {
       h += `<details ${open ? 'open' : ''}><summary><span class="sw" style="background:${d.color}"></span><span class="no">${d.no}</span><span class="ttl">${esc(tr(d.full, d.fullEn))}</span><span class="cnt">${d.items.length}</span></summary>`;
       h += `<button class="row" data-isl="${d.id}"><span class="n">${d.icon}</span>${tr('前往島嶼', 'Go to island')}</button>`;
       d.items.forEach((it, i) => { h += `<button class="row" data-item="${it.id}"><span class="n">${CIRCLED[i]}</span>${esc(tr(it.name, it.en))}</button>`; });
+      h += `</details>`;
+    }
+    if (DATA.companies) {
+      const openCo = state.sel && ['company', 'ferry', 'heli'].includes(state.sel.kind);
+      h += `<details ${openCo ? 'open' : ''}><summary><span class="sw" style="background:#9fc3d1"></span><span class="no">⛴</span><span class="ttl">${tr('外島 · 科技公司', 'Outer islands · companies')}</span><span class="cnt">${DATA.companies.length}</span></summary>`;
+      DATA.docks.forEach(d => { h += `<button class="row" data-ferry="${d.id}"><span class="n">⛴</span>${esc(tr(`${d.ferry}（${d.name}）`, `${d.ferryEn} (${d.en})`))}</button>`; });
+      h += `<button class="row" data-heli="1"><span class="n">🚁</span>${tr('系友直升機', 'Alumni helicopter')}</button>`;
+      DATA.companies.forEach(c => { h += coRow(c); });
       h += `</details>`;
     }
   } else if (ui.tab === 'teachers') {
@@ -1693,8 +1738,16 @@ function renderSide() {
   body.querySelectorAll('[data-item]').forEach(b => b.onclick = () => selectItem(b.dataset.item));
   body.querySelectorAll('[data-teacher]').forEach(b => b.onclick = () => selectTeacher(+b.dataset.teacher));
   body.querySelectorAll('[data-flow]').forEach(b => b.onclick = () => selectFlow(b.dataset.flow));
+  wireHarbor(body);
   body.querySelectorAll('img').forEach(im => im.addEventListener('error', () => { im.style.visibility = 'hidden'; }));
 }
+function wireHarbor(root) {
+  if (typeof selectCompany !== 'function') return;
+  root.querySelectorAll('[data-co]').forEach(x => x.onclick = () => selectCompany(x.dataset.co));
+  root.querySelectorAll('[data-ferry]').forEach(x => x.onclick = () => selectFerry(x.dataset.ferry));
+  root.querySelectorAll('[data-heli]').forEach(x => x.onclick = () => selectHeli());
+}
+const coRow = c => `<button class="row" data-co="${c.id}"><span class="n">🏢</span><span>${esc(tr(c.name, c.en))}<br><small style="color:var(--muted)">${esc(tr(c.city + ' · ' + c.ind, c.cityEn + ' · ' + c.indEn))}</small></span></button>`;
 function teacherRow(t, i) {
   return `<button class="row" data-teacher="${i}"><img src="${photoURL(t)}" alt="" loading="lazy" referrerpolicy="no-referrer"><span><b>${esc(teacherName(t))}</b><br><small style="color:var(--muted)">${esc(tr(t.title, t.titleEn))}</small></span></button>`;
 }
@@ -1802,6 +1855,7 @@ function wireCard() {
   b.querySelectorAll('[data-item]').forEach(x => x.onclick = () => selectItem(x.dataset.item));
   b.querySelectorAll('[data-flow]').forEach(x => x.onclick = () => selectFlow(x.dataset.flow));
   b.querySelectorAll('[data-teacher]').forEach(x => x.onclick = () => selectTeacher(+x.dataset.teacher));
+  wireHarbor(b);
   b.querySelectorAll('img[data-fallback]').forEach(im => {
     const fb = () => { const d = document.createElement('div'); d.className = 'ava'; d.textContent = im.dataset.fallback; im.replaceWith(d); };
     if (im.complete && !im.naturalWidth && im.src) fb(); else im.addEventListener('error', fb);
@@ -1867,6 +1921,7 @@ function refreshIslandLabels() {
     el.classList.toggle('sel', !!on);
     el.classList.toggle('dim', !!state.sel && !on && (selIsl || fl));
   }
+  if (typeof refreshCoLabels === 'function') refreshCoLabels();
 }
 function refreshHighlight() {
   for (const o of ui.tinted) tintOwner(o, null, 0);
@@ -1877,6 +1932,8 @@ function refreshHighlight() {
   const s = state.sel;
   if (s && s.kind === 'item') { tintOwner(s.id, coral, .22); ui.tinted.add(s.id); }
   if (s && s.kind === 'island') for (const id of ISL[s.id].items) { tintOwner(id, coral, .22); ui.tinted.add(id); }
+  const ow = s && (s.kind === 'company' ? 'co:' + s.id : s.kind === 'ferry' ? 'dock:' + s.id : null);
+  if (ow) { tintOwner(ow, coral, .22); ui.tinted.add(ow); }
   markDirty();
 }
 function refreshPins() {
@@ -1952,7 +2009,8 @@ function initPicking() {
       const ud = h.object.userData;
       if (ud.walkerPart && h.instanceId != null && typeof walkerByInstance === 'function') { const w = walkerByInstance(h.object, h.instanceId); if (w) return selectWalker(w); continue; }
       if (ud.flow) return selectFlow(ud.flow);
-      if (ud.kit && h.instanceId != null) { const o = ud.owners[h.instanceId]; if (o && ITEM[o]) return selectItem(o); }
+      if (ud.pick && ud.pick(h)) return;
+      if (ud.kit && h.instanceId != null) { const o = ud.owners[h.instanceId]; if (o && ITEM[o]) return selectItem(o); if (o && typeof pickOwner === 'function' && pickOwner(o)) return; }
       const isl = islandAt(h.point.x, h.point.z);
       if (isl) return selectIsland(isl);
       if (ud.kit) continue;
@@ -2090,7 +2148,7 @@ function howToSteps() {
 function openHelp() {
   const steps = howToSteps();
   openModal(`<div class="eyebrow">${tr('說明', 'HELP')}</div><h2>${tr('歡迎來到虎尾科大資工系特色島', 'Welcome to NFU CSIE Island')}</h2>
-  <p style="line-height:1.7">${tr('每座六角島是一個年級：五專一到五年級、四技一到四年級，以及碩士班；中間的綜三館是 20 位專任教師的大本營，榮譽殿堂收藏近年競賽成果。島民會上課、做專題、休閒，也會把作品帶去比賽。', 'Each hex island is a cohort: junior-college years 1–5, undergraduate years 1–4, and the master program. Building 3 is home to 20 faculty, and the Hall of Fame holds recent awards.')}</p>
+  <p style="line-height:1.7">${tr('每座六角島是一個年級：五專一到五年級、四技一到四年級，以及碩士班；中間的綜三館是 20 位專任教師的大本營，榮譽殿堂收藏近年競賽成果。島民會上課、做專題、休閒，也會把作品帶去比賽。大四、專五與研二島上有碼頭，輪船定期載同學到外海的科技公司外島參訪，系友也會搭直升機回來分享。', 'Each hex island is a cohort: junior-college years 1–5, undergraduate years 1–4, and the master program. Building 3 is home to 20 faculty, and the Hall of Fame holds recent awards. Ferries from the Year-4, JC-5 and MS-2 piers take students to tech-company outer islands, and alumni fly back by helicopter to share.')}</p>
   <ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>
   <p style="font-size:13px;color:var(--muted)">${tr('時鐘每秒走 10 分鐘，一天 144 秒；不同時段會有不同的建物亮起（黃色）。', 'The clock runs 10 minutes per second; different buildings light up (yellow) through the day.')}</p>
   <div class="actions">
@@ -2523,7 +2581,7 @@ function refreshFlowVisibility() {
 const JOURNAL = [];
 function initJournal() {
   const sel = $('#journalFilter');
-  sel.innerHTML = `<option value="">${tr('全部事件', 'All events')}</option><option value="teacher">${tr('老師動態', 'Teachers')}</option>` + DATA.flows.map(f => `<option value="${f.id}">${esc(tr(f.name, f.en))}</option>`).join('');
+  sel.innerHTML = `<option value="">${tr('全部事件', 'All events')}</option><option value="teacher">${tr('老師動態', 'Teachers')}</option><option value="harbor">${tr('碼頭與外島', 'Piers & outer islands')}</option>` + DATA.flows.map(f => `<option value="${f.id}">${esc(tr(f.name, f.en))}</option>`).join('');
   sel.onchange = renderJournal;
   logEvent('slot', tr('島上的一天開始了，時鐘從 10:00 起走', 'A new day on the island begins at 10:00'));
 }
@@ -2534,7 +2592,7 @@ function logEvent(flowId, text, type = 'info') {
 }
 function renderJournal() {
   const f = $('#journalFilter').value;
-  const icon = { talk: '💬', depart: '🚶', arrive: '📍', handoff: '🤝', info: '•', slot: '⏰' };
+  const icon = { ferry: '⛴', heli: '🚁', praise: '👍', talk: '💬', depart: '🚶', arrive: '📍', handoff: '🤝', info: '•', slot: '⏰' };
   $('#journalList').innerHTML = JOURNAL.filter(e => !f || e.flowId === f).slice(0, 40).map(e => `<div><time>${e.t}</time>${icon[e.type] || '•'} ${esc(e.text)}</div>`).join('') || `<div style="color:var(--muted)">${tr('尚無事件', 'No events yet')}</div>`;
 }
 
@@ -2621,6 +2679,468 @@ async function openStats() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+//  碼頭、輪船、科技公司外島、系友直升機
+// ═══════════════════════════════════════════════════════════════════════════
+const COMP = {};          // id -> 外島 runtime
+const DOCK = {};        // id -> 碼頭 runtime
+const FERRIES = [];
+let HELI = null;
+const CO_R = 1.35, CO_EDGE = CO_R * Math.cos(Math.PI / 6);
+const PONTOON_Y = WATER_Y + .12;
+const angDiff = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+
+// 碼頭：島緣平台 level 長 → 斜坡 .6 → 浮動碼頭 .6；船停在浮動碼頭外
+function pierPoints(base, dir, level) {
+  const at = k => ({ x: base.x + dir.x * k, z: base.z + dir.y * k });
+  return { pontoon: at(level + .9), berth: at(level + 1.2 + .7) };
+}
+function harborLayout() {
+  const edge = R * Math.cos(Math.PI / 6);
+  for (const d of DATA.docks) {
+    const s = ISL[d.island], t = axialToWorld(...d.toward);
+    const dx = t.x - s.x, dz = t.z - s.z, L = Math.hypot(dx, dz);
+    const dir = new THREE.Vector2(dx / L, dz / L), level = .7;
+    const base = { x: s.x + dir.x * (edge - .06), z: s.z + dir.y * (edge - .06) };
+    DOCK[d.id] = { d, s, dir, base, level, ...pierPoints(base, dir, level), companies: [] };
+  }
+  for (const c of DATA.companies) {
+    const k = DOCK[c.dock];
+    const dx = k.berth.x - c.x, dz = k.berth.z - c.z, L = Math.hypot(dx, dz);
+    const dir = new THREE.Vector2(dx / L, dz / L), level = .3;
+    const base = { x: c.x + dir.x * (CO_EDGE - .06), z: c.z + dir.y * (CO_EDGE - .06) };
+    const pierA = Math.atan2(dir.y, dir.x);
+    // 直升機坪與主管：選離碼頭最遠、且不擋前方標籤的方位
+    const cand = [0, 1, 2, 3, 4, 5].map(i => i * Math.PI / 3 + Math.PI / 6);
+    const front = Math.PI / 2; // 世界 +z（鏡頭側）
+    const bossA = cand.filter(a => angDiff(a, pierA) > 1.2).sort((a, b) => angDiff(a, front) - angDiff(b, front))[0];
+    const padA = cand.slice().sort((a, b) => Math.min(angDiff(b, pierA), angDiff(b, bossA), angDiff(b, front) + .3) - Math.min(angDiff(a, pierA), angDiff(a, bossA), angDiff(a, front) + .3))[0];
+    COMP[c.id] = {
+      d: c, x: c.x, z: c.z, dir, base, level, ...pierPoints(base, dir, level), color: col(c.color),
+      pad: new THREE.Vector3(c.x + Math.cos(padA) * .78, TOP + .02, c.z + Math.sin(padA) * .78),
+      boss: { x: c.x + Math.cos(bossA) * .82, z: c.z + Math.sin(bossA) * .82 },
+      label: null, bubble: null, bubbleT: 0, visitors: null
+    };
+    k.companies.push(c.id);
+  }
+}
+
+// ── 靜態建模（kit）：碼頭、外島總部、直升機坪、主管 ─────────────────────────
+function buildPier(p, color, owner) {
+  const { base, dir, level } = p;
+  curOwner = owner; curFrame = frameAt(base.x, 0, base.z, 1, Math.atan2(-dir.y, dir.x));
+  const yL = TOP + .012, yP = PONTOON_Y;
+  B(level / 2, yL - .05, 0, level, .05, .44, PAL.wood);
+  for (let k = 0; k < Math.round(level / .14); k++) B(.07 + k * .14, yL, 0, .012, .004, .44, '#9a7150', { small: true });
+  for (const x of [level * .5, level]) for (const s of [-1, 1]) CY(x, WATER_Y - .25, .2 * s, .028, yL - WATER_Y + .2, '#8a6446');
+  const run = .6, drop = yL - yP, ang = Math.atan2(drop, run), gl = Math.hypot(run, drop);
+  P('box', level + run / 2, (yL + yP) / 2 - .015, 0, gl, .03, .26, '#c99a72', { rz: -ang });
+  for (const s of [-1, 1]) P('box', level + run / 2, (yL + yP) / 2 + .1, .13 * s, gl, .018, .018, PAL.cream, { rz: -ang });
+  const px = level + run + .3;
+  B(px, WATER_Y - .05, 0, .6, .17, .52, '#d8d3cc');
+  B(px, yP, 0, .58, .006, .5, '#c5b5a7', { small: true });
+  for (const [x, z] of [[-.24, .2], [-.24, -.2], [.24, .2], [.24, -.2]]) CY(px + x, yP, z, .022, .05, PAL.ink, { small: true });
+  CY(px + .22, yP, -.24, .012, .42, '#8d8d8d'); B(px + .22 + .07, yP + .32, -.24, .14, .08, .006, color);
+  CY(level, yL, .2, .014, .36, '#5a5450'); GS(level, yL + .37, .2, .03, '#fff1c4');
+  P('torus', level - .02, yL + .16, -.22, .1, .1, .25, PAL.coral, { ry: Math.PI / 2 });
+  curFrame = null; curOwner = null;
+}
+function corpHQ(co, k) {
+  const c = co.d, cc = c.color, h = c.h, glass = ['#9fc3d1', '#a9c4cc', '#b6cdd6'][k % 3];
+  curOwner = 'co:' + c.id;
+  // 背對碼頭，正面朝鏡頭側
+  curFrame = frameAt(c.x - co.dir.x * .12, TOP, c.z - co.dir.y * .12 - .08, 1, 0);
+  B(0, 0, 0, 1.02, .04, .74, PAL.stone);
+  B(0, .04, .02, .96, .22, .66, PAL.wall);
+  windowsGrid(-.4, .1, .355, 6, 1, .09, .09, .16, 0);
+  B(0, .26, .02, 1.0, .03, .7, PAL.eave);
+  const tx = k % 2 ? .14 : -.14;
+  B(tx, .29, -.06, .5, h, .42, glass);
+  for (let f = 1; f * .13 < h; f++) B(tx, .29 + f * .13, -.06, .52, .014, .44, '#eef2f2', { small: true });
+  windowsGrid(tx - .17, .33, .155, 4, Math.max(2, Math.floor(h / .13) - 1), .07, .07, .113, .13);
+  B(tx, .29 + h, -.06, .54, .06, .46, cc);
+  B(tx, .35 + h, .02, .36, .12, .03, '#ffffff');
+  B(tx, .37 + h, .036, .3, .08, .01, cc);
+  if (k % 3 === 0) { CY(tx + .15, .35 + h, -.12, .012, .3, '#8d8d8d'); GS(tx + .15, .66 + h, -.12, .025, '#ff6a4a'); }
+  const ax = -tx * 1.9;
+  B(ax, .29, .08, .3, .16 + (k % 3) * .06, .32, k % 2 ? '#e9e2d8' : '#f4ebdd');
+  B(ax, .45 + (k % 3) * .06, .08, .33, .03, .35, cc);
+  for (const s of [-1, 1]) IC(.42 * s, .05, .33, .06, pick(PAL.plant), { small: true });
+  curFrame = null;
+  // 直升機坪
+  const p = co.pad;
+  CY(p.x, TOP, p.z, .26, .016, '#4a4a52');
+  P('torus', p.x, TOP + .02, p.z, .5, .5, .12, PAL.yellow, { rx: Math.PI / 2 });
+  B(p.x - .06, TOP + .016, p.z, .03, .004, .2, '#ffffff'); B(p.x + .06, TOP + .016, p.z, .03, .004, .2, '#ffffff'); B(p.x, TOP + .016, p.z, .12, .004, .03, '#ffffff');
+  for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; GS(p.x + Math.cos(a) * .27, TOP + .025, p.z + Math.sin(a) * .27, .014, '#9cff9c', { small: true }); }
+  // 主管：深色西裝＋領帶
+  const b = co.boss;
+  curFrame = frameAt(b.x, TOP, b.z, 1.75, Math.atan2(CENTER.x - b.x, CENTER.z - b.z));
+  CY(0, 0, 0, .04, .1, PAL.ink); B(0, .055, .036, .012, .04, .006, PAL.coral);
+  SP(0, .14, 0, .045, pick(SKIN)); P('dome', 0, .155, 0, .1, .1, .1, '#3a3a3a');
+  curFrame = null; curOwner = null;
+}
+function buildHarborStatic() {
+  harborLayout();
+  for (const id in DOCK) buildPier(DOCK[id], DOCK[id].d.color, 'dock:' + id);
+  DATA.companies.forEach((c, k) => { const co = COMP[c.id]; buildPier(co, c.color, 'co:' + c.id); corpHQ(co, k); });
+  // 綜三館屋頂直升機坪（世界座標，供直升機降落）
+  const ta = ITEM.ta;
+  HALL_PAD = new THREE.Vector3(ta.x - .27 * ta.s, TOP + .885 * ta.s, ta.z - .05 * ta.s);
+}
+let HALL_PAD = null;
+
+// ── 外島地面（與主島同風格的小六角島）──────────────────────────────────────
+function buildCompanyIslands() {
+  const tops = [], sides = [], bands = [], shallow = [], foam = [];
+  const cream = col(PAL.cream), tex = groundTextures().speckle;
+  for (const id in COMP) {
+    const s = COMP[id];
+    const top = new THREE.CircleGeometry(CO_R - .04, 6).rotateZ(Math.PI / 6).rotateX(-Math.PI / 2).translate(s.x, TOP, s.z);
+    const p = top.attributes.position, uv = top.attributes.uv, cs = [], tint = cream.clone().lerp(s.color, .14);
+    for (let i = 0; i < p.count; i++) { uv.setXY(i, p.getX(i) / 2.2, p.getZ(i) / 2.2); cs.push(tint.r, tint.g, tint.b); }
+    top.setAttribute('color', new THREE.Float32BufferAttribute(cs, 3)); tops.push(top);
+    const hgt = TOP - (WATER_Y - .6);
+    sides.push(new THREE.CylinderGeometry(CO_R, CO_R * 1.015, hgt, 6, 1, true).translate(s.x, TOP - hgt / 2, s.z));
+    const band = new THREE.CylinderGeometry(CO_R + .006, CO_R + .006, .14, 6, 1, true).translate(s.x, TOP - .07, s.z);
+    const bc = []; for (let i = 0; i < band.attributes.position.count; i++) bc.push(s.color.r, s.color.g, s.color.b);
+    band.setAttribute('color', new THREE.Float32BufferAttribute(bc, 3)); bands.push(band);
+    hexRingGeo(CO_R, CO_R + .55, s.x, s.z, WATER_Y + .012, '#c4e6e3', shallow);
+    hexRingGeo(CO_R, CO_R + .14, s.x, s.z, WATER_Y + .02, '#ffffff', foam);
+  }
+  const merge = BufferGeometryUtils.mergeGeometries;
+  const topMesh = new THREE.Mesh(merge(tops), new THREE.MeshStandardMaterial({ map: tex, vertexColors: true, roughness: .92, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
+  topMesh.receiveShadow = true; topMesh.userData.pick = h => { const c = companyAt(h.point.x, h.point.z); if (c) { selectCompany(c); return true; } return false; };
+  scene.add(topMesh); PICKABLE.push(topMesh);
+  scene.add(new THREE.Mesh(merge(sides), waterMat));
+  const bandMesh = new THREE.Mesh(merge(bands), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85 })); bandMesh.receiveShadow = true; scene.add(bandMesh);
+  scene.add(new THREE.Mesh(merge(shallow), new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, opacity: .55, depthWrite: false, roughness: .4, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })));
+  scene.add(new THREE.Mesh(merge(foam), new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: .55, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })));
+}
+function companyAt(x, z) { for (const id in COMP) { const s = COMP[id]; if (hexDist(x - s.x, z - s.z) < CO_EDGE + .05) return id; } return null; }
+
+// ── 動態物件用的小工具：把多個已上色的幾何合成一個 mesh ─────────────────────
+function paintGeo(g, c) { c = col(c); const n = g.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; } g.setAttribute('color', new THREE.BufferAttribute(a, 3)); return g; }
+const vcMat = () => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .7 });
+function figureGeos(x, z, y, s, shirt, out) {
+  out.push(paintGeo(new THREE.CylinderGeometry(.04 * s, .045 * s, .11 * s, 10).translate(x, y + .055 * s, z), shirt));
+  out.push(paintGeo(new THREE.SphereGeometry(.05 * s, 12, 10).translate(x, y + .16 * s, z), pick(SKIN)));
+  out.push(paintGeo(new THREE.SphereGeometry(.053 * s, 12, 6, 0, Math.PI * 2, 0, Math.PI * .5).translate(x, y + .168 * s, z), pick(HAIR)));
+}
+function mergedMesh(geos, mat) { const m = new THREE.Mesh(BufferGeometryUtils.mergeGeometries(geos), mat || vcMat()); m.castShadow = true; return m; }
+function bubbleLabel(prio = 2) {
+  const el = document.createElement('div'); el.className = 'bubble';
+  const o = new CSS2DObject(el); o.visible = false; scene.add(o);
+  const lab = { obj: o, el, prio, kind: 'bubble' }; LABELS.push(lab);
+  return { o, el, lab, text: '' };
+}
+function setBubble(b, text, x, y, z) {
+  const on = !!text;
+  if (b.o.visible !== on) b.o.visible = on;
+  if (on && b.text !== text) { b.el.textContent = text; b.text = text; b.lab.dirtySize = true; }
+  if (on) b.o.position.set(x, y, z);
+}
+
+// ── 輪船 ───────────────────────────────────────────────────────────────────
+function ferryMesh(color) {
+  const g = new THREE.Group(), hull = [], win = [], pass = [];
+  hull.push(paintGeo(new THREE.BoxGeometry(.86, .16, .38).translate(-.04, 0, 0), '#fbfbf8'));
+  hull.push(paintGeo(new THREE.BoxGeometry(.27, .16, .27).rotateY(Math.PI / 4).scale(1.3, 1, 1.4).translate(.38, 0, 0), '#fbfbf8'));
+  hull.push(paintGeo(new THREE.BoxGeometry(.88, .045, .395).translate(-.04, -.05, 0), PAL.coral));
+  hull.push(paintGeo(new THREE.BoxGeometry(.8, .02, .34).translate(-.02, .09, 0), PAL.wood));
+  hull.push(paintGeo(new THREE.BoxGeometry(.4, .17, .28).translate(-.14, .185, 0), PAL.cream));
+  hull.push(paintGeo(new THREE.BoxGeometry(.46, .03, .33).translate(-.14, .285, 0), color));
+  hull.push(paintGeo(new THREE.CylinderGeometry(.04, .045, .14, 10).translate(-.26, .36, 0), color));
+  hull.push(paintGeo(new THREE.CylinderGeometry(.042, .042, .03, 10).translate(-.26, .44, 0), PAL.ink));
+  for (const s of [-1, 1]) hull.push(paintGeo(new THREE.BoxGeometry(.7, .04, .012).translate(.02, .13, .17 * s), PAL.cream));
+  hull.push(paintGeo(new THREE.CylinderGeometry(.006, .006, .22, 5).translate(-.44, .2, 0), '#8d8d8d'));
+  hull.push(paintGeo(new THREE.BoxGeometry(.1, .06, .004).translate(-.49, .28, 0), color));
+  for (const s of [-1, 1]) for (let k = 0; k < 4; k++) win.push(new THREE.BoxGeometry(.06, .055, .006).translate(-.29 + k * .1, .2, .141 * s));
+  for (let k = 0; k < 3; k++) win.push(new THREE.BoxGeometry(.006, .055, .05).translate(.061, .2, -.08 + k * .08));
+  const hm = mergedMesh(hull); g.add(hm);
+  const wm = new THREE.Mesh(BufferGeometryUtils.mergeGeometries(win), new THREE.MeshStandardMaterial({ color: '#cfe4ea', emissive: '#ffd890', emissiveIntensity: 0, roughness: .4 }));
+  g.add(wm);
+  [[.12, .08], [.12, -.08], [.25, .06], [.25, -.07], [.02, .12]].forEach(([x, z], i) => figureGeos(x, z, .1, 1.05, [PAL.coral, PAL.teal, '#6f7fb5', PAL.yellow, '#ffffff'][i], pass));
+  const pm = mergedMesh(pass); g.add(pm);
+  const wake = new THREE.Mesh(new THREE.PlaneGeometry(1.1, .5).rotateX(-Math.PI / 2).translate(-.95, -.035, 0), new THREE.MeshBasicMaterial({ map: wakeTex(), transparent: true, opacity: 0, depthWrite: false }));
+  wake.renderOrder = 2; g.add(wake);
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(1.1, .55, .5).translate(0, .15, 0), new THREE.MeshBasicMaterial({ visible: false })); g.add(hit);
+  return { g, wm, pm, wake, hit };
+}
+let _wakeTex;
+function wakeTex() {
+  return _wakeTex || (_wakeTex = canvasTex(128, 64, (g, w, h) => {
+    const gr = g.createLinearGradient(w, 0, 0, 0); gr.addColorStop(0, 'rgba(255,255,255,.95)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(w, h * .32); g.lineTo(0, 0); g.lineTo(0, h); g.lineTo(w, h * .68); g.closePath(); g.fill();
+  }, false));
+}
+function ferryPath(dock, co) {
+  const P0 = new THREE.Vector3(dock.berth.x, 0, dock.berth.z), P3 = new THREE.Vector3(co.berth.x, 0, co.berth.z);
+  const L = P0.distanceTo(P3) * .36;
+  const P1 = P0.clone().add(new THREE.Vector3(dock.dir.x, 0, dock.dir.y).multiplyScalar(L));
+  const P2 = P3.clone().add(new THREE.Vector3(co.dir.x, 0, co.dir.y).multiplyScalar(L));
+  const pts = new THREE.CubicBezierCurve3(P0, P1, P2, P3).getSpacedPoints(90);
+  const cum = [0]; for (let k = 1; k < pts.length; k++) cum.push(cum[k - 1] + pts[k].distanceTo(pts[k - 1]));
+  return { pts, cum, len: cum[cum.length - 1] };
+}
+function samplePts(p, s, out) {
+  const c = p.cum; let k = 1; while (k < c.length - 1 && c[k] < s) k++;
+  const a = p.pts[k - 1], b = p.pts[k], t = clamp((s - c[k - 1]) / Math.max(1e-6, c[k] - c[k - 1]), 0, 1);
+  out.lerpVectors(a, b, t); return Math.atan2(-(b.z - a.z), b.x - a.x);
+}
+function initHarbor() {
+  if (!DATA.docks || !Object.keys(DOCK).length) return;
+  buildCompanyIslands();
+  DATA.docks.forEach((d, i) => {
+    const dock = DOCK[d.id], m = ferryMesh(d.color);
+    const f = { i, d, dock, ...m, routes: dock.companies.map(id => ferryPath(dock, COMP[id])), idx: i % dock.companies.length, phase: 'board', t: 3 + i * 5, s: 0, pos: new THREE.Vector3(dock.berth.x, WATER_Y, dock.berth.z), heading: Math.atan2(-dock.dir.y, dock.dir.x), bubble: bubbleLabel(2), sayT: 0, say: '' };
+    m.hit.userData.pick = () => { selectFerry(d.id); return true; };
+    PICKABLE.push(m.hit);
+    m.g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    m.wake.castShadow = false;
+    scene.add(m.g); FERRIES.push(f);
+  });
+  // 參訪中的同學（每座外島一組，到站時出現）
+  for (const id in COMP) {
+    const co = COMP[id], geos = [], b = co.boss;
+    const toC = Math.atan2(co.z - b.z, co.x - b.x);
+    for (let k = 0; k < 4; k++) { const a = toC + Math.PI + (k - 1.5) * .6, r = .3; figureGeos(b.x + Math.cos(a) * r, b.z + Math.sin(a) * r, TOP, 1.2, [PAL.coral, PAL.teal, '#6f7fb5', PAL.yellow][k], geos); }
+    co.visitors = mergedMesh(geos); co.visitors.visible = false; scene.add(co.visitors);
+    co.bubble = bubbleLabel(3);
+    const el = document.createElement('div'); el.className = 'ilabel co';
+    el.innerHTML = `<span class="no">🏢</span><span class="nm">${esc(tr(co.d.name, co.d.en))}</span>`;
+    el.title = tr(`${co.d.name} · ${co.d.ind}`, `${co.d.en} · ${co.d.indEn}`);
+    el.addEventListener('click', ev => { ev.stopPropagation(); selectCompany(id); });
+    const o = new CSS2DObject(el); o.position.set(co.x, TOP - .05, co.z + CO_R - .1); scene.add(o);
+    co.label = o; LABELS.push({ obj: o, el, prio: 3, kind: 'island', compactable: true });
+  }
+  initHeli();
+  nightHooks.push(n => {
+    for (const f of FERRIES) f.wm.material.emissiveIntensity = n * 2.6;
+    if (HELI) HELI.light.material.emissiveIntensity = .4 + n * 3;
+  });
+}
+const ferryName = f => tr(f.d.ferry, f.d.ferryEn);
+function ferryLog(text, type) { if (typeof logEvent === 'function') logEvent('harbor', text, type); }
+function updateFerry(f, dt) {
+  const co = COMP[f.dock.companies[f.idx]], route = f.routes[f.idx];
+  let moving = false, target = f.heading;
+  if (f.phase === 'board' || f.phase === 'visit') {
+    f.t -= dt;
+    const out = f.phase === 'board' ? f.dock.dir : co.dir;
+    target = Math.atan2(-out.y, out.x);
+    if (f.phase === 'visit') { co.visitors.visible = true; f.pm.visible = false; }
+    if (f.t <= 0) {
+      if (f.phase === 'board') {
+        f.phase = 'out'; f.s = 0;
+        say(f, tr(`出發！去${co.d.name}參訪`, `Off to ${co.d.en}!`));
+        ferryLog(tr(`${ferryName(f)}從${f.d.name}出發，載${ISL[f.d.island].d.name}同學前往${co.d.name}參訪`, `The ${ferryName(f)} leaves ${f.d.en} with ${ISL[f.d.island].d.en} students for ${co.d.en}`), 'ferry');
+      } else {
+        f.phase = 'back'; f.s = route.len; co.visitors.visible = false; f.pm.visible = true;
+        say(f, tr('參訪結束，回系上囉', 'Heading back to campus'));
+      }
+    }
+  } else {
+    const fwd = f.phase === 'out', s = fwd ? f.s : route.len - f.s;
+    const v = 1.15 * clamp(Math.min(s, route.len - s) / 1.4 + .2, .2, 1);
+    f.s += (fwd ? 1 : -1) * v * dt; moving = true;
+    if (fwd && f.s >= route.len) {
+      f.s = route.len; f.phase = 'visit'; f.t = 9; moving = false;
+      const pr = pick(DATA.praise);
+      co.bubbleText = tr(`${co.d.name}主管：「${pr[0]}」`, `${co.d.en} manager: “${pr[1]}”`); co.bubbleT = 6.5;
+      ferryLog(tr(`同學抵達${co.d.name}參訪，主管讚不絕口：「${pr[0]}」`, `Students tour ${co.d.en}; the manager is full of praise: “${pr[1]}”`), 'praise');
+    } else if (!fwd && f.s <= 0) {
+      f.s = 0; f.phase = 'board'; f.t = 7; moving = false;
+      ferryLog(tr(`${ferryName(f)}載著同學從${co.d.name}回到${f.d.name}`, `The ${ferryName(f)} brings students back from ${co.d.en}`), 'arrive');
+      f.idx = (f.idx + 1) % f.dock.companies.length;
+    }
+  }
+  if (moving) { const h = samplePts(route, f.s, f.pos); target = f.phase === 'out' ? h : h + Math.PI; }
+  let d = target - f.heading; d = Math.atan2(Math.sin(d), Math.cos(d));
+  f.heading += d * Math.min(1, dt * (moving ? 4 : 1.1));
+  const t = state.time + f.i * 2;
+  f.g.position.set(f.pos.x, WATER_Y + .035 + Math.sin(t * 1.8) * .012, f.pos.z);
+  f.g.rotation.set(Math.sin(t * 1.3) * .025, f.heading, Math.sin(t * 1.7) * .02, 'YXZ');
+  f.wake.material.opacity = moving ? .5 : Math.max(0, f.wake.material.opacity - dt);
+  f.sayT -= dt;
+}
+function say(f, text) { f.say = text; f.sayT = 4.5; }
+
+// ── 系友直升機：偶爾從外島載學長姐回綜三館分享就業經驗 ──────────────────────
+function heliMesh() {
+  const g = new THREE.Group(), body = [];
+  body.push(paintGeo(new THREE.SphereGeometry(.1, 16, 12).scale(1.45, .95, .95), PAL.coral));
+  body.push(paintGeo(new THREE.SphereGeometry(.075, 14, 10).scale(1, .8, .9).translate(.08, .02, 0), '#bfe6ff'));
+  body.push(paintGeo(new THREE.BoxGeometry(.2, .03, .2).translate(-.01, -.08, 0), '#fbfbf8'));
+  body.push(paintGeo(new THREE.CylinderGeometry(.018, .03, .3, 8).rotateZ(Math.PI / 2).translate(-.27, .02, 0), PAL.coral));
+  body.push(paintGeo(new THREE.BoxGeometry(.06, .1, .012).translate(-.41, .07, 0), '#fbfbf8'));
+  body.push(paintGeo(new THREE.CylinderGeometry(.012, .012, .06, 6).translate(0, .11, 0), PAL.ink));
+  for (const s of [-1, 1]) {
+    body.push(paintGeo(new THREE.CylinderGeometry(.008, .008, .3, 6).rotateZ(Math.PI / 2).translate(0, -.14, .085 * s), PAL.ink));
+    for (const x of [-.06, .06]) body.push(paintGeo(new THREE.CylinderGeometry(.006, .006, .07, 5).translate(x, -.11, .085 * s), PAL.ink));
+  }
+  const bm = mergedMesh(body); g.add(bm);
+  const rotor = new THREE.Mesh(BufferGeometryUtils.mergeGeometries([new THREE.BoxGeometry(.5, .006, .03), new THREE.BoxGeometry(.03, .006, .5)]), new THREE.MeshStandardMaterial({ color: '#3a3a40', roughness: .6 }));
+  rotor.position.set(0, .145, 0); g.add(rotor);
+  const tail = new THREE.Mesh(BufferGeometryUtils.mergeGeometries([new THREE.BoxGeometry(.012, .13, .006), new THREE.BoxGeometry(.012, .006, .13).rotateX(Math.PI / 2)]), rotor.material);
+  tail.position.set(-.42, .07, .016); g.add(tail);
+  const light = new THREE.Mesh(new THREE.SphereGeometry(.015, 8, 6), new THREE.MeshStandardMaterial({ color: '#ff6a4a', emissive: '#ff6a4a', emissiveIntensity: .4 }));
+  light.position.set(-.44, .13, 0); g.add(light);
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(.7, .4, .45), new THREE.MeshBasicMaterial({ visible: false })); g.add(hit);
+  g.scale.setScalar(1.15);
+  return { g, rotor, tail, light, hit };
+}
+function initHeli() {
+  if (!HALL_PAD) return;
+  const m = heliMesh(), ids = Object.keys(COMP), at = ids[3 % ids.length];
+  HELI = { ...m, at, legs: [], leg: null, wait: 14, spin: 0, pos: COMP[at].pad.clone(), heading: 0, bubble: bubbleLabel(3), text: '', textT: 0, status: 'parked', guest: null };
+  m.hit.userData.pick = () => { selectHeli(); return true; };
+  PICKABLE.push(m.hit);
+  m.g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  scene.add(m.g);
+  placeHeli(0);
+}
+function heliPlan() {
+  const H = HELI, ids = Object.keys(COMP);
+  let next = H.at; while (next === H.at) next = pick(ids);
+  const co = COMP[next], job = pick(co.d.jobs);
+  H.guest = { co: next, job };
+  H.legs = [
+    { from: COMP[H.at].pad, to: co.pad, wait: 2.5, onArrive: () => { H.at = next; H.status = 'pickup'; } },
+    { from: co.pad, to: HALL_PAD, wait: 8, onDepart: () => ferryLog(tr(`🚁 ${co.d.name}的系友搭直升機回資工系分享就業經驗`, `🚁 An alum from ${co.d.en} flies back to CSIE to share career tips`), 'heli'),
+      onArrive: () => { H.status = 'sharing'; H.text = tr(`${co.d.name}系友：我在做${job[0]}，專題經驗超有用！`, `${co.d.en} alum: I work on ${job[1].toLowerCase()}. Capstones pay off!`); H.textT = 8; ferryLog(tr(`${co.d.name}系友降落綜三館，和學弟妹分享「${job[0]}」的工作日常`, `The ${co.d.en} alum lands on Building 3 and talks about ${job[1].toLowerCase()}`), 'heli'); } },
+    { from: HALL_PAD, to: co.pad, wait: 0, onArrive: () => { H.status = 'parked'; H.guest = null; H.wait = 30 + rand() * 25; } }
+  ];
+  H.status = 'pickup';
+}
+function startLeg(H) {
+  const L = H.legs.shift(); if (!L) return;
+  const dist = Math.hypot(L.to.x - L.from.x, L.to.z - L.from.z);
+  H.leg = { ...L, t: 0, cruise: Math.max(2, dist / 2.6), y: Math.max(L.from.y, L.to.y) + 2.6 + dist * .05 };
+  if (L.onDepart) L.onDepart();
+  if (H.status === 'sharing') H.status = 'return';
+}
+const HSPIN = 1.2, HUP = 1.8, HDOWN = 2;
+function updateHeli(dt) {
+  const H = HELI; if (!H) return;
+  if (!H.leg) {
+    H.wait -= dt;
+    H.spin = Math.max(0, H.spin - dt * .7);
+    if (H.wait <= 0) { if (!H.legs.length) heliPlan(); startLeg(H); }
+  } else {
+    const L = H.leg; L.t += dt;
+    const t1 = HSPIN, t2 = t1 + HUP, t3 = t2 + L.cruise, t4 = t3 + HDOWN;
+    H.spin = Math.min(1, H.spin + dt);
+    const yaw = Math.atan2(-(L.to.z - L.from.z), L.to.x - L.from.x);
+    if (L.t < t1) H.pos.copy(L.from);
+    else if (L.t < t2) { const u = easeInOutCubic((L.t - t1) / HUP); H.pos.set(L.from.x, lerp(L.from.y, L.y, u), L.from.z); }
+    else if (L.t < t3) { const u = easeInOutCubic((L.t - t2) / L.cruise); H.pos.set(lerp(L.from.x, L.to.x, u), L.y + Math.sin(u * Math.PI) * .4, lerp(L.from.z, L.to.z, u)); }
+    else if (L.t < t4) { const u = easeInOutCubic((L.t - t3) / HDOWN); H.pos.set(L.to.x, lerp(L.y, L.to.y, u), L.to.z); }
+    else { H.pos.copy(L.to); H.leg = null; H.wait = L.wait; if (L.onArrive) L.onArrive(); }
+    if (L.t > t1 * .5) { let d = yaw - H.heading; d = Math.atan2(Math.sin(d), Math.cos(d)); H.heading += d * Math.min(1, dt * 2); }
+  }
+  placeHeli(dt);
+}
+function placeHeli(dt) {
+  const H = HELI, t = state.time;
+  const flying = H.leg && H.leg.t > HSPIN;
+  H.g.position.set(H.pos.x, H.pos.y + .16 + (flying ? Math.sin(t * 3) * .02 : 0), H.pos.z);
+  const tilt = H.leg && H.leg.t > HSPIN + HUP && H.leg.t < HSPIN + HUP + H.leg.cruise ? -.12 : 0;
+  H.g.rotation.set(0, H.heading, tilt, 'YXZ');
+  H.rotor.rotation.y += dt * 38 * H.spin; H.tail.rotation.z += dt * 50 * H.spin;
+  H.textT -= dt;
+}
+
+// ── 每幀：船、直升機、泡泡 ─────────────────────────────────────────────────
+function updateHarbor(dt) {
+  if (!FERRIES.length) return;
+  for (const f of FERRIES) updateFerry(f, dt);
+  updateHeli(dt);
+  const cam = camera.position;
+  for (const f of FERRIES) {
+    const near = cam.distanceTo(f.pos) < 40;
+    setBubble(f.bubble, near && state.toggles.names && f.sayT > 0 ? `⛴ ${ferryName(f)}：${f.say}` : '', f.pos.x, WATER_Y + .75, f.pos.z);
+  }
+  for (const id in COMP) {
+    const co = COMP[id]; co.bubbleT -= dt;
+    const near = Math.hypot(cam.x - co.x, cam.z - co.z) < 46;
+    setBubble(co.bubble, near && co.bubbleT > 0 ? co.bubbleText : '', co.boss.x, TOP + .72, co.boss.z);
+  }
+  if (HELI) setBubble(HELI.bubble, HELI.textT > 0 && cam.distanceTo(HELI.pos) < 40 ? HELI.text : '', HELI.pos.x, HELI.pos.y + .7, HELI.pos.z);
+}
+
+// ── 卡片與選取 ─────────────────────────────────────────────────────────────
+function ferryStatus(f) {
+  const co = COMP[f.dock.companies[f.idx]].d;
+  return ({ board: tr(`停在${f.d.name}，同學上船中，下一站${co.name}`, `Boarding at ${f.d.en}; next stop ${co.en}`), out: tr(`航行中，前往${co.name}`, `Sailing to ${co.en}`), visit: tr(`停靠${co.name}，同學參訪中`, `Docked at ${co.en}; students on a tour`), back: tr(`從${co.name}返航中`, `Returning from ${co.en}`) })[f.phase];
+}
+function companyCard(id) {
+  const co = COMP[id], c = co.d, f = FERRIES.find(x => x.d.id === c.dock), dk = DOCK[c.dock].d;
+  const pr = DATA.praise[DATA.companies.indexOf(c) % DATA.praise.length], pr2 = DATA.praise[(DATA.companies.indexOf(c) + 3) % DATA.praise.length];
+  let h = `<div class="icon">🏢</div><h2>${esc(tr(c.name, c.en))}${LANG === 'en' ? '' : ` <small style="font-size:14px;color:var(--muted)">${esc(c.en)}</small>`}</h2>`;
+  h += `<div class="chips"><span class="chip cream">📍 ${esc(tr(c.city, c.cityEn))}</span><span class="chip">${esc(tr(c.ind, c.indEn))}</span></div>`;
+  h += `<p>${tr(`國內知名的科技公司，也是資工島外海的「外島」。${dk.name}的${dk.ferry}定期載同學來這裡參訪、實習，學長姐也會從這裡搭直升機回系上分享。`, `A well-known Taiwanese tech company, sitting offshore as an outer island. The ${dk.ferryEn} from the ${dk.en} brings students here for visits and internships, and alumni fly back by helicopter to share.`)}</p>`;
+  h += `<div class="eyebrow" style="margin-top:12px">${tr('主管怎麼說', 'WHAT THE MANAGERS SAY')}</div><div class="speech">「${esc(tr(pr[0], pr[1]))}」<br>「${esc(tr(pr2[0], pr2[1]))}」</div>`;
+  h += `<div class="eyebrow" style="margin-top:12px">${tr('系友在這裡做', 'ALUMNI WORK ON')}</div><ul>${c.jobs.map(j => `<li>${esc(tr(j[0], j[1]))}</li>`).join('')}</ul>`;
+  h += `<div class="eyebrow" style="margin-top:12px">${tr('交通', 'GETTING THERE')}</div><div class="chips"><button class="chip" data-ferry="${c.dock}">⛴ ${esc(tr(dk.ferry, dk.ferryEn))} · ${esc(tr(dk.name, dk.en))}</button><button class="chip cream" data-isl="${dk.island}">${ISL[dk.island].d.icon} ${esc(tr(ISL[dk.island].d.name, ISL[dk.island].d.en))}</button><button class="chip cream" data-heli="1">🚁 ${tr('系友直升機', 'Alumni helicopter')}</button></div>`;
+  if (f) h += `<p style="font-size:13px;color:var(--muted)">⛴ ${esc(ferryStatus(f))}</p>`;
+  h += `<div class="src">${tr('公司所在地與產業為公開資訊；外島上的參訪、評語與系友故事為示意情節，非企業官方說法。', 'Location and industry are public information; the tours, quotes and alumni stories are illustrative, not official statements.')}</div>`;
+  return h;
+}
+function ferryCard(dockId) {
+  const k = DOCK[dockId], d = k.d, f = FERRIES.find(x => x.d.id === dockId), s = ISL[d.island].d;
+  const cycle = f ? f.routes.reduce((a, r) => a + r.len * 2 / 1.0 + 16, 0) / f.routes.length : 0;
+  let h = `<div class="icon">⛴</div><h2>${esc(tr(d.ferry, d.ferryEn))}</h2>`;
+  h += `<div class="chips"><button class="chip cream" data-isl="${s.id}">${s.icon} ${esc(tr(s.full, s.fullEn))}</button><span class="chip">${esc(tr(d.name, d.en))}</span></div>`;
+  h += `<p>${tr(`${d.ferry}定期從${s.name}的${d.name}出航，載同學輪流前往外島的科技公司參訪，看看學長姐的工作環境，再一起回系上。`, `The ${d.ferryEn} sails on a schedule from the ${d.en} on ${s.en}, taking students in turn to the tech companies on the outer islands and back.`)}</p>`;
+  if (f) h += `<div class="tiles"><div class="tile"><span class="big">${k.companies.length}</span><small>${tr('個外島航點', 'outer-island stops')}</small></div><div class="tile"><span class="big">5</span><small>${tr('位同學同行', 'students aboard')}</small></div><div class="tile"><span class="big">${Math.max(1, Math.round(cycle * 10 / 60))}</span><small>${tr('小時一班（島上時間）', 'h per round trip (island time)')}</small></div></div>`;
+  if (f) h += `<p style="font-size:13px;color:var(--muted)">${tr('現在：', 'Now: ')}${esc(ferryStatus(f))}</p>`;
+  h += `<div class="eyebrow" style="margin-top:12px">${tr('航線', 'ROUTE')}</div><div class="list">`;
+  k.companies.forEach((id, i) => { const c = COMP[id].d; h += `<button data-co="${id}"><span class="n">${CIRCLED[i]}</span><span style="flex:1">${esc(tr(c.name, c.en))}</span><small>${esc(tr(c.city, c.cityEn))}</small></button>`; });
+  h += `</div>`;
+  return h;
+}
+function heliCard() {
+  const H = HELI, g = H && H.guest ? COMP[H.guest.co].d : null;
+  const st = !H ? '' : ({ parked: tr(`停在${COMP[H.at].d.name}的直升機坪`, `Parked at ${COMP[H.at].d.en}`), pickup: tr(`前往${g ? g.name : ''}接系友`, `Picking up an alum at ${g ? g.en : ''}`), sharing: tr('停在綜三館屋頂，系友正在分享', 'On the Building 3 roof; the alum is sharing'), return: tr(`送系友回${g ? g.name : ''}`, `Flying the alum back to ${g ? g.en : ''}`) })[H.status];
+  let h = `<div class="icon">🚁</div><h2>${tr('系友直升機', 'Alumni helicopter')}</h2>`;
+  h += `<p>${tr('外島的學長姐偶爾會搭直升機回到資工系，降落在綜三館屋頂，和學弟妹分享就業經驗與工作日常。', 'Now and then, alumni at the outer-island companies fly back to CSIE, land on the Building 3 roof and share their career stories.')}</p>`;
+  if (st) h += `<p style="font-size:13px;color:var(--muted)">${tr('現在：', 'Now: ')}${esc(st)}</p>`;
+  h += `<div class="chips"><button class="chip cream" data-isl="t">${ISL.t.d.icon} ${esc(tr(ISL.t.d.full, ISL.t.d.fullEn))}</button>${g ? `<button class="chip" data-co="${H.guest.co}">🏢 ${esc(tr(g.name, g.en))}</button>` : ''}</div>`;
+  return h;
+}
+function selectCompany(id) {
+  const co = COMP[id]; state.sel = { kind: 'company', id };
+  afterSelect();
+  flyTo(poseFor(new THREE.Vector3(co.x, TOP, co.z), new THREE.Vector3(2.4, 4.6, 5.4)));
+  openCard(companyCard(id), tr('外島 · 科技公司', 'OUTER ISLAND · COMPANY'));
+}
+function selectFerry(dockId) {
+  const f = FERRIES.find(x => x.d.id === dockId); state.sel = { kind: 'ferry', id: dockId };
+  afterSelect();
+  flyTo(poseFor(f.pos.clone().setY(WATER_Y), new THREE.Vector3(2.2, 3.6, 4.6)));
+  openCard(ferryCard(dockId), tr('輪船', 'FERRY'));
+}
+function selectHeli() {
+  state.sel = { kind: 'heli', id: 'heli' };
+  afterSelect();
+  flyTo(poseFor(HELI.pos.clone(), new THREE.Vector3(2.2, 3.6, 4.6)));
+  openCard(heliCard(), tr('直升機', 'HELICOPTER'));
+}
+// kit 零件的 owner 'co:xx' / 'dock:xx' 被點到時
+function pickOwner(o) {
+  if (o.startsWith('co:')) { selectCompany(o.slice(3)); return true; }
+  if (o.startsWith('dock:')) { selectFerry(o.slice(5)); return true; }
+  return false;
+}
+function refreshCoLabels() {
+  const s = state.sel;
+  for (const id in COMP) {
+    const on = s && (s.kind === 'company' && s.id === id || s.kind === 'ferry' && DOCK[s.id].companies.includes(id));
+    COMP[id].label.element.classList.toggle('sel', !!on);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 //  主迴圈與啟動
 // ═══════════════════════════════════════════════════════════════════════════
 let lastT = performance.now(), lastStep = -1;
@@ -2639,6 +3159,7 @@ function tick(now) {
   if (typeof updateFlight === 'function' && updateFlight(now)) markDirty();
   if (controls.update()) markDirty();
   if (typeof updateWalkers === 'function' && animating) updateWalkers(dt);
+  if (typeof updateHarbor === 'function' && animating) updateHarbor(dt);
   if (typeof updateFlowLines === 'function') updateFlowLines(animating ? dt : 0);
   if (!state.dirty) return;
   state.dirty = false;
@@ -2694,11 +3215,13 @@ async function boot() {
       initMountains();
       initClouds();
       initSeaDecor();
+      if (typeof buildHarborStatic === 'function') buildHarborStatic();
     }
     buildKit();
     initIslandLabels();
     if (typeof initUI === 'function') initUI();
     if (typeof initWalkers === 'function') initWalkers();
+    if (typeof initHarbor === 'function') initHarbor();
     if (typeof initFlowLines === 'function') initFlowLines();
     if (typeof initJournal === 'function') initJournal();
 
@@ -2708,7 +3231,7 @@ async function boot() {
     if (typeof afterBoot === 'function') afterBoot();
     renderer.render(scene, camera);
     const L = $('#loader'); L.style.opacity = 0; setTimeout(() => L.classList.add('hidden'), 500);
-    window.__dbg = { FLOWS: typeof FLOWS !== 'undefined' ? FLOWS : null, WALKERS: typeof WALKERS !== 'undefined' ? WALKERS : null, applyTime, markDirty, state, ISL, ITEM, KIT, camera, controls, get scene() { return scene; }, get renderer() { return renderer; } };
+    window.__dbg = { FLOWS: typeof FLOWS !== 'undefined' ? FLOWS : null, FERRIES: typeof FERRIES !== 'undefined' ? FERRIES : null, get HELI() { return typeof HELI !== 'undefined' ? HELI : null; }, COMP: typeof COMP !== 'undefined' ? COMP : null, updateHarbor: typeof updateHarbor === 'function' ? updateHarbor : null, sel: { company: typeof selectCompany === 'function' ? selectCompany : null, ferry: typeof selectFerry === 'function' ? selectFerry : null, heli: typeof selectHeli === 'function' ? selectHeli : null }, DOCK: typeof DOCK !== 'undefined' ? DOCK : null, WALKERS: typeof WALKERS !== 'undefined' ? WALKERS : null, applyTime, markDirty, state, ISL, ITEM, KIT, camera, controls, get scene() { return scene; }, get renderer() { return renderer; } };
     window.__ready = true;
     requestAnimationFrame(tick);
   } catch (e) { showError(e); }
