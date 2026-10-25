@@ -691,7 +691,20 @@ const DATA = {
     ['今年參訪的學弟妹，明年歡迎來實習！', 'Today’s visitors: come intern with us next year!']
   ],
   photoBase: SRC + '/uploads/member_profile/avatar/',
-  facultyPage: SRC + '/zh_tw/team/faculty'
+  facultyPage: SRC + '/zh_tw/team/faculty',
+  staffPage: SRC + '/zh_tw/team/staff',
+  // 系辦行政人員（姓名、職稱、電話、辦公室與業務取自系網「行政人員」頁）；visit：常去幫忙的島，hair：髮型
+  staff: [
+    { name:'林伯俊', en:'Po-Chun Lin', honor:'先生', title:'技佐', titleEn:'Technical Specialist', phone:'05-6315581', office:'綜三館 401 系辦', visit:'j2', hair:0, shirt:'#7d9bb8',
+      hi:['同學好！設備有問題跟我說喔', '程式能力檢定要加油！', '校慶程式設計比賽報名了嗎？'], hiEn:['Hi! Tell me if any equipment breaks.', 'Good luck on the programming test!', 'Signed up for the anniversary coding contest?'],
+      duties:['系上教室、實驗室及研究室等所需設備之資料收集、申購核銷、設備管理及拍照存檔相關事宜','系教室、實驗室、研究室及辦公室財產設備修繕之申購及核銷','系內會議相關資料準備及提案建議','各教師排配課相關事宜','校慶程式設計比賽之事宜','系上程式能力檢定舉辦及成績登錄','技專校院資料庫通知老師更新及管控','公文簽擬及協助文書處理','計畫結餘款及管理費申購核銷及管控','系上教師徵聘作業'] },
+    { name:'蔡明靜', en:'Ming-Jing Tsai', honor:'小姐', title:'行政專員', titleEn:'Administrative Specialist', phone:'05-6315571', office:'綜三館 401 系辦', visit:'b1', hair:2, shirt:'#e7a9a0',
+      hi:['同學好～有問題歡迎來系辦！', '實習的資料準備好了嗎？', '活動場地我幫你們借好囉'], hiEn:['Hi! Drop by the office any time.', 'Is your internship paperwork ready?', 'I’ve booked the venue for your event!'],
+      duties:['系辦公室及教師研究室財產設備之管理','承辦系內各項配合款之簽證及經費之控管','系內各項資料之陳閱及歸檔','負責技專資料庫表4系列填報','協助本系活動之場地商借及演講費、交通費之簽證','協助公文簽擬及文書處理','電子公文登記桌作業的簽收、送出及創稿登錄','系內例行工作之擬定、執行與管制','系內各項會議之通知及準備','工程教育認證評鑑資料彙整','協助四技、碩士班招生活動、招生作業、校外實習等相關業務','系事務用品之採購','臨時交辦事項'] },
+    { name:'洪瑛君', en:'Ying-Chun Hung', honor:'小姐', title:'行政助理', titleEn:'Administrative Assistant', phone:'05-6315582 / 5583', office:'綜三館 401 系辦／跨領域實作館 301 科辦', visit:'j1', hair:3, shirt:'#b9d3a0',
+      hi:['五專的同學好！', '專題申請記得準時交喔', '有困難隨時來科辦找我～'], hiEn:['Hi, JC students!', 'Remember to hand in your project application!', 'Come find me at the office any time.'],
+      duties:['負責五專資工科相關業務','協助五專招生活動、招生作業、校外實習等相關業務','協助系所相關行政業務','管控學生專題申請、驗收、成績彙整及排定各老師驗收時間地點等相關事宜','協助公文簽擬及文書處理','電子公文登記桌作業的簽收、送出及創稿登錄','系內例行工作之擬定、執行與管制','系事務用品之採購','臨時交辦事項'] }
+  ]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2077,6 +2090,8 @@ function renderSide() {
   } else if (ui.tab === 'teachers') {
     h += `<div class="sec">${tr(`專任教師 ${DATA.teachers.length} 位`, `${DATA.teachers.length} FULL-TIME FACULTY`)}</div>`;
     DATA.teachers.forEach((t, i) => { h += teacherRow(t, i); });
+    h += `<div class="sec">${tr(`系辦行政人員 ${DATA.staff.length} 位`, `${DATA.staff.length} OFFICE STAFF`)}</div>`;
+    DATA.staff.forEach((st, i) => { h += `<button class="row" data-staff="${i}"><span class="n">🗂</span><span><b>${esc(tr(st.name + ' ' + st.honor, st.en))}</b><br><small style="color:var(--muted)">${esc(tr(st.title + ' · ' + st.office, st.titleEn))}</small></span></button>`; });
   } else {
     h += `<div class="sec">${tr('交流線', 'LINKS')}</div>`;
     DATA.flows.forEach(f => { h += flowRow(f); });
@@ -2085,6 +2100,7 @@ function renderSide() {
   body.querySelectorAll('[data-isl]').forEach(b => b.onclick = () => selectIsland(b.dataset.isl));
   body.querySelectorAll('[data-item]').forEach(b => b.onclick = () => selectItem(b.dataset.item));
   body.querySelectorAll('[data-teacher]').forEach(b => b.onclick = () => selectTeacher(+b.dataset.teacher));
+  body.querySelectorAll('[data-staff]').forEach(b => b.onclick = () => selectStaff(+b.dataset.staff));
   body.querySelectorAll('[data-flow]').forEach(b => b.onclick = () => selectFlow(b.dataset.flow));
   wireHarbor(body);
   body.querySelectorAll('img').forEach(im => im.addEventListener('error', () => { im.style.visibility = 'hidden'; }));
@@ -2196,7 +2212,7 @@ function walkerCard(w) {
   }
   return h;
 }
-const ROLE_ICON = { jc: '🎒', fresh: '🐣', ug: '🧑‍💻', bike: '🚲', grad: '🥼', cap: '🎓', maker: '⛑', intern: '🧳', teacher: '🏷' };
+const ROLE_ICON = { jc: '🎒', fresh: '🐣', ug: '🧑‍💻', bike: '🚲', grad: '🥼', cap: '🎓', maker: '⛑', intern: '🧳', teacher: '🏷', office: '🗂' };
 function srcLine() { return `<div class="src">${tr('資料來源：', 'Source: ')}<a href="${DATA.city.source}" target="_blank" rel="noopener">csie.nfu.edu.tw</a></div>`; }
 function wireCard() {
   const b = $('#cardBody');
@@ -2244,8 +2260,30 @@ function selectTeacher(i) {
   if (typeof showTeacherSay === 'function') showTeacherSay(w, teacherIntro(DATA.teachers[i]));
   if (store.get('nfucsie.voice', true)) speak(teacherIntro(DATA.teachers[i]));
 }
+function selectStaff(i) {
+  const w = (typeof WALKERS !== 'undefined') ? WALKERS.find(x => x.staff === i) : null, st = DATA.staff[i];
+  state.sel = { kind: 'walker', id: w ? w.id : 'staff' + i, walker: w };
+  afterSelect();
+  flyTo(poseFor(w ? w.pos.clone() : new THREE.Vector3(ISL.t.x, TOP, ISL.t.z), new THREE.Vector3(1.9, 3.0, 4.2)));
+  openCard(staffCard(i), tr('系辦公室', 'DEPARTMENT OFFICE'));
+  const hello = tr(`同學好，我是系辦的${st.name}，負責${st.duties[0]}等業務。有任何問題都歡迎來${st.office.split('／')[0]}找我！`, `Hi! I’m ${st.en}, ${st.titleEn.toLowerCase()} at the department office. Feel free to drop by any time!`);
+  if (typeof showTeacherSay === 'function') showTeacherSay(w, hello);
+}
+function staffCard(i) {
+  const st = DATA.staff[i], v = ISL[st.visit]?.d;
+  let h = `<div class="icon">🗂</div><h2>${esc(tr(st.name + ' ' + st.honor, st.en))}</h2>`;
+  h += `<div style="font-size:13px;color:var(--muted);margin-top:-4px">${esc(tr('系辦 · ' + st.title, 'Department office · ' + st.titleEn))}</div>`;
+  h += `<div class="speech">「${esc(tr(st.hi[0], st.hiEn[0]))}」</div>`;
+  h += `<p>${tr('親切友善的系辦夥伴，平常幫同學和老師處理各種系務，路上遇到同學都會主動打招呼。', 'A friendly member of the department office who helps students and faculty with department affairs and always says hello on the way.')}</p>`;
+  h += `<div class="chips"><button class="chip cream" data-isl="t">🏛 ${esc(tr(ISL.t.d.name, ISL.t.d.en))}</button>${v ? `<button class="chip cream" data-isl="${v.id}">${v.icon} ${tr('常去', 'Visits')} ${esc(tr(v.name, v.en))}</button>` : ''}</div>`;
+  h += `<div class="eyebrow" style="margin-top:12px">${tr('辦公室與電話', 'OFFICE & PHONE')}</div><p style="margin:4px 0">${esc(st.office)}<br>☎ ${esc(st.phone)}</p>`;
+  h += `<div class="eyebrow" style="margin-top:12px">${tr('業務', 'DUTIES')}</div><ul>${st.duties.map(d => `<li>${esc(d)}</li>`).join('')}</ul>`;
+  h += `<div class="src">${tr('資料來源：', 'Source: ')}<a href="${DATA.staffPage}" target="_blank" rel="noopener">${tr('資工系網站 › 行政人員', 'CSIE website › Staff')}</a></div>`;
+  return h;
+}
 function selectWalker(w) {
   if (w.teacher != null) return selectTeacher(w.teacher);
+  if (w.staff != null) return selectStaff(w.staff);
   state.sel = { kind: 'walker', id: w.id, walker: w };
   afterSelect();
   flyTo(poseFor(w.pos.clone(), new THREE.Vector3(1.9, 3.0, 4.2)));
@@ -2530,7 +2568,7 @@ function afterBoot() {
 const WALKERS = [];
 const WM = {};        // part name -> InstancedMesh
 let walkerN = 0;
-const SHIRTS = { jc: ['#3e7c8c', '#58a6a6', '#6f7fb5'], fresh: ['#58a6a6', '#9cc27a'], ug: ['#db6a41', '#f2b5c6', '#6f7fb5', '#9cc27a', '#fcea8b', '#ffffff'], bike: ['#db6a41', '#6f7fb5', '#fcea8b'], grad: ['#ffffff'], cap: ['#211d1d'], maker: ['#3e7c8c', '#db6a41'], intern: ['#f4ebdd', '#c5b5a7'], teacher: ['#f4ebdd', '#c9d8e6', '#e9e2d8'] };
+const SHIRTS = { jc: ['#3e7c8c', '#58a6a6', '#6f7fb5'], fresh: ['#58a6a6', '#9cc27a'], ug: ['#db6a41', '#f2b5c6', '#6f7fb5', '#9cc27a', '#fcea8b', '#ffffff'], bike: ['#db6a41', '#6f7fb5', '#fcea8b'], grad: ['#ffffff'], cap: ['#211d1d'], maker: ['#3e7c8c', '#db6a41'], intern: ['#f4ebdd', '#c5b5a7'], teacher: ['#f4ebdd', '#c9d8e6', '#e9e2d8'], office: ['#c9d8e6'] };
 const PANTS = ['#3a3f55', '#2b2b33', '#5a5f75', '#6b5a4a'];
 const ROLE_OF_KIND = { jc: 'jc', ug: 'ug', grad: 'grad', staff: 'ug', award: 'ug', field: 'maker' };
 const ACT_VERB = { study: ['修習「{n}」', 'taking {n}'], project: ['製作「{n}」', 'working on {n}'], leisure: ['參加「{n}」', 'enjoying {n}'], award: ['挑戰「{n}」', 'competing in {n}'] };
@@ -2577,6 +2615,11 @@ function initWalkers() {
     for (let k = 1; k < stops.length; k++) { const r = routeBetween(stops[k - 1], stops[k]); path.push(...(path.length ? r.slice(1) : r)); }
     const w = makeWalker({ role: 'teacher', home: 't', teacher: i, path, speed: .3 + (i % 5) * .012, endWait: [2.2, 4.5], logEvents: true });
     w.s = (i * 0.37 % 1) * w.len;
+  });
+  // 系辦行政人員：綜三館系辦 ↔ 常去幫忙的島，路上親切地招呼同學
+  DATA.staff.forEach((st, i) => {
+    const w = makeWalker({ role: 'office', home: 't', path: routeBetween('t', st.visit), shirt: st.shirt, speed: .27 + i * .015, endWait: [3.5, 2.5], logEvents: false });
+    w.staff = i; w.hairStyle = st.hair; w.s = (.25 + i * .3) * w.len;
   });
   // 各島居民：沿步道環繞行，停在細項旁做事
   for (const id in ISL) {
@@ -2740,8 +2783,8 @@ function onArrive(w, atEnd) {
     logEvent('teacher', tr(atEnd ? `${t.name}老師抵達${isl.name}，和同學交流` : `${t.name}老師回到綜三館研究室`, atEnd ? `${t.en} arrives at ${isl.en}` : `${t.en} is back at Building 3`), 'arrive');
   }
 }
-function roleName(w) { return ({ jc: '五專生', fresh: '專一新生', ug: '大學生', bike: '騎車的大學生', grad: '研究生', cap: '大四生', maker: '專題組員', intern: '實習生', teacher: '老師' })[w.role] || '島民'; }
-function roleNameEn(w) { return ({ jc: 'JC student', fresh: 'JC freshman', ug: 'student', bike: 'cyclist', grad: 'grad student', cap: 'senior', maker: 'capstone maker', intern: 'intern', teacher: 'teacher' })[w.role] || 'islander'; }
+function roleName(w) { return ({ jc: '五專生', fresh: '專一新生', ug: '大學生', bike: '騎車的大學生', grad: '研究生', cap: '大四生', maker: '專題組員', intern: '實習生', teacher: '老師', office: '系辦人員' })[w.role] || '島民'; }
+function roleNameEn(w) { return ({ jc: 'JC student', fresh: 'JC freshman', ug: 'student', bike: 'cyclist', grad: 'grad student', cap: 'senior', maker: 'capstone maker', intern: 'intern', teacher: 'teacher', office: 'office staff' })[w.role] || 'islander'; }
 function setPart(name, i, local) { _W.L.multiplyMatrices(_W.M, local); WM[name].setMatrixAt(i, _W.L); }
 function local(x, y, z, sx, sy, sz, rx = 0, ry = 0, rz = 0, pivotY = 0) {
   const m = new THREE.Matrix4();
@@ -2779,7 +2822,8 @@ function poseWalker(w, sc) {
   WM.shadow.setMatrixAt(i, _W.L.compose(_W.v.set(w.pos.x, w.pos.y + .004, w.pos.z), new THREE.Quaternion(), _W.s.set(s, s, s)));
   setPart('hit', i, local(0, 0, 0, 1, 1, 1));
   const r = w.role;
-  if (r === 'teacher') { setPart('vest', i, local(0, .16, 0, 1, 1, 1)); setPart('badge', i, local(.025, .17, .053, 1, 1, 1)); } else { WM.vest.setMatrixAt(i, ZERO); WM.badge.setMatrixAt(i, ZERO); }
+  if (r === 'teacher') setPart('vest', i, local(0, .16, 0, 1, 1, 1)); else WM.vest.setMatrixAt(i, ZERO);
+  if (r === 'teacher' || r === 'office') setPart('badge', i, local(.025, .17, .053, 1, 1, 1)); else WM.badge.setMatrixAt(i, ZERO);  // 老師與系辦人員都掛識別證
   if (r === 'grad') setPart('coat', i, local(0, .125, 0, 1, 1, 1)); else WM.coat.setMatrixAt(i, ZERO);
   if (r === 'fresh' || r === 'maker') setPart('capTop', i, local(0, .29 + lift, 0, 1, 1, 1, -.12)); else WM.capTop.setMatrixAt(i, ZERO);
   if (r === 'cap') setPart('board', i, local(0, .355, 0, 1, 1, 1, -.1, Math.PI / 4)); else WM.board.setMatrixAt(i, ZERO);
@@ -2820,6 +2864,15 @@ function buildBadgesAndTags() {
     if (w.flow) {
       const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: badgeTexture(w.flow.carry), depthWrite: false, transparent: true }));
       sp.scale.set(.16, .16, .16); sp.renderOrder = 5; sp.visible = false; scene.add(sp); w.badge = sp;
+    }
+    if (w.staff != null) {
+      const st = DATA.staff[w.staff];
+      const el = document.createElement('div'); el.className = 'tag';
+      el.innerHTML = LANG === 'en' ? esc(st.en) : `${esc(st.name)}<small>${esc(st.title)}</small>`;
+      el.title = tr('系辦 · ' + st.title, 'Dept. office · ' + st.titleEn);
+      el.addEventListener('click', e => { e.stopPropagation(); selectStaff(w.staff); });
+      const o = new CSS2DObject(el); scene.add(o); w.tag = o;
+      w.tagLab = { obj: o, el, prio: 4, kind: 'teacher' }; LABELS.push(w.tagLab);
     }
     if (w.teacher != null) {
       const t = DATA.teachers[w.teacher];
@@ -2881,17 +2934,28 @@ function updateTagsAndBadges() {
 const GREET_T = ['同學好～', '早安！', '加油喔！', '最近好嗎？'], GREET_S = ['老師好！', '老師早！', '老師好～', '嗨，老師！'];
 const GREET_T_EN = ['Hi there!', 'Morning!', 'Keep it up!', 'How are you?'], GREET_S_EN = ['Hello, professor!', 'Morning, prof!', 'Hi, professor!'];
 const ASK_S = ['老師，想請教專題', '這題作業卡住了…', '老師，實驗結果出來了！', '想跟老師討論論文'], ASK_S_EN = ['Can I ask about my project?', 'I’m stuck on homework…', 'The results are in!', 'About my thesis…'];
+const ASK_STAFF = ['請問加退選怎麼辦？', '實習要交哪些資料？', '教室的投影機壞了…', '想借場地辦活動', '專題申請表在哪裡？'], ASK_STAFF_EN = ['How do I add or drop a course?', 'What do I need for my internship?', 'The classroom projector is broken…', 'Can we book a room for an event?', 'Where’s the project application form?'];
 let meetT = 0;
 function meetings(dt) {
   meetT += dt; if (meetT < .25) return; meetT = 0;
   const now = state.time;
   if (WX.indoor) return;
   for (const t of WALKERS) {
-    if (t.teacher == null || t.frozen || t.pause > 0 || t.wait > 0 || (t.meetCD || 0) > now) continue;
+    if ((t.teacher == null && t.staff == null) || t.frozen || t.pause > 0 || t.wait > 0 || (t.meetCD || 0) > now) continue;
     for (const s of WALKERS) {
-      if (s.teacher != null || s.frozen || s.pause > 0 || s.wait > 0 || (s.meetCD || 0) > now) continue;
+      if (s.teacher != null || s.staff != null || s.frozen || s.pause > 0 || s.wait > 0 || (s.meetCD || 0) > now) continue;
       const dx = s.pos.x - t.pos.x, dz = s.pos.z - t.pos.z;
       if (dx * dx + dz * dz > .36 * .36) continue;
+      if (t.staff != null) {
+        // 系辦人員：親切打招呼，有時停下來幫同學處理事情
+        const st = DATA.staff[t.staff], help = rand() < .35, k = Math.floor(rand() * st.hi.length), dur = help ? 4.2 : 1.8;
+        t.pause = s.pause = dur; t.partner = s; s.partner = t; t.greet = s.greet = !help;
+        t.meetCD = s.meetCD = now + dur + 9 + rand() * 8;
+        t.say = tr(st.hi[k], st.hiEn[k]);
+        s.say = help ? tr(pick(ASK_STAFF), pick(ASK_STAFF_EN)) : tr(`${st.name[0]}${st.honor}好！`, `Hi, ${st.honor === '先生' ? 'Mr.' : 'Ms.'} ${st.en.split(' ').pop()}!`);
+        if (help) logEvent('teacher', tr(`系辦${st.name}${st.honor}在路上幫${roleName(s)}處理事情`, `${st.en} from the office helps a ${roleNameEn(s)} on the way`), 'talk');
+        break;
+      }
       const r = rand(), discuss = r < .3;
       const T = DATA.teachers[t.teacher], skill = T.skills[Math.floor(rand() * T.skills.length)];
       const dur = discuss ? 4.5 + rand() * 2 : 1.6;
