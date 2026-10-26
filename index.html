@@ -611,7 +611,7 @@ const DATA = {
       skills:[['人工智慧與類神經網路','AI & neural networks'],['自然語言與語音大語言模型','NLP & speech LLMs'],['AI 邏輯與模糊計算','AI logic & fuzzy computing'],['深度學習','Deep learning'],['生物晶片與半導體元件','Microarrays & semiconductors'],['智慧型控制與工業 4.0','Intelligent control & Industry 4.0'],['大數據分析與 Web Service','Big data & web services'],['智慧型網路控制與機器人','Network control & robots'],['短距離無線通訊與車載應用','Short-range wireless & vehicles'],['智慧型手機程式開發','Smartphone apps'],['生物資訊與文字資料探勘','Bioinformatics & text mining']] },
     { name:'黃建宏', en:'Chien-Hung Huang', title:'教授', titleEn:'Professor', lab:'計算生物學與演算法實驗室', office:'綜三館 5F 505', photo:'692302d508577729cc5e925d/thumb_%E9%BB%83%E5%BB%BA%E5%AE%8F.jpg', visit:'fa',
       skills:[['演算法','Algorithms'],['生物資訊','Bioinformatics'],['平行計算','Parallel computation'],['機器學習','Machine learning']] },
-    { name:'黃惠俞', en:'Hui-Yu Huang', title:'教授', titleEn:'Professor', lab:'視覺認知實驗室', office:'綜三館 6F 608', photo:'692302d608577729cc5e9267/thumb_%E9%BB%83%E6%83%A0%E4%BF%9E.jpg', visit:'g',
+    { name:'黃惠俞', en:'Hui-Yu Huang', female:true, title:'教授', titleEn:'Professor', lab:'視覺認知實驗室', office:'綜三館 6F 608', photo:'692302d608577729cc5e9267/thumb_%E9%BB%83%E6%83%A0%E4%BF%9E.jpg', visit:'g',
       skills:[['電腦視覺','Computer vision'],['人類視覺認知系統','Human cognition systems'],['多媒體安全及應用','Multimedia security'],['模糊類神經網路與深度學習','Fuzzy neural nets & deep learning']] },
     { name:'張朝陽', en:'Jau-Yang Chang', title:'教授', titleEn:'Professor', lab:'行動通訊網路實驗室', office:'綜三館 4F 406', photo:'692302d608577729cc5e9270/thumb_%E5%BC%B5%E6%9C%9D%E9%99%BD.jpg', visit:'b3',
       skills:[['人工智慧系統整合應用','Integrated AI systems'],['自主無人機應用系統設計','Autonomous drone systems'],['物聯網系統','IoT systems'],['無線感測網路','Wireless sensor networks'],['行動通訊網路','Mobile networks']] },
@@ -2615,6 +2615,7 @@ function initWalkers() {
     for (let k = 1; k < stops.length; k++) { const r = routeBetween(stops[k - 1], stops[k]); path.push(...(path.length ? r.slice(1) : r)); }
     const w = makeWalker({ role: 'teacher', home: 't', teacher: i, path, speed: .3 + (i % 5) * .012, endWait: [2.2, 4.5], logEvents: true });
     w.s = (i * 0.37 % 1) * w.len;
+    w.hairStyle = t.female ? 2 : 0;  // 系上女性成員才用長髮，其他老師一律短髮
   });
   // 系辦行政人員：綜三館系辦 ↔ 常去幫忙的島，路上親切地招呼同學
   DATA.staff.forEach((st, i) => {
