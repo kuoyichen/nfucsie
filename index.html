@@ -1277,7 +1277,7 @@ const GB = (x, y, z, w, h, d, c, o) => P('glowbox', x, y + h / 2, z, w, h, d, c 
 const GS = (x, y, z, r, c, o) => P('glowsphere', x, y, z, r * 2, r * 2, r * 2, c || '#fff3c4', o);
 const HIP = (x, y, z, w, h, d, c, o) => P('hip', x, y + h / 2, z, w, h, d, c, o);
 const SKIN = ['#f3d2b3', '#e8b98f', '#d9a27a', '#f6dcc4'];
-const HAIR = ['#2b2321', '#3b2a22', '#5a3b2a', '#1d1b22'];
+const HAIR = ['#1d1b22', '#221e1f', '#18161a', '#262122']; // 一律黑髮
 function mini(x, y, z, s, shirt, o) { // 靜態迷你人
   CY(x, y, z, .035 * s, .1 * s, shirt, o);
   SP(x, y + .14 * s, z, .045 * s, pick(SKIN), o);
@@ -2826,7 +2826,7 @@ function poseWalker(w, sc) {
   if (r === 'teacher') setPart('vest', i, local(0, .16, 0, 1, 1, 1)); else WM.vest.setMatrixAt(i, ZERO);
   if (r === 'teacher' || r === 'office') setPart('badge', i, local(.025, .17, .053, 1, 1, 1)); else WM.badge.setMatrixAt(i, ZERO);  // 老師與系辦人員都掛識別證
   if (r === 'grad') setPart('coat', i, local(0, .125, 0, 1, 1, 1)); else WM.coat.setMatrixAt(i, ZERO);
-  if (r === 'fresh' || r === 'maker') setPart('capTop', i, local(0, .29 + lift, 0, 1, 1, 1, -.12)); else WM.capTop.setMatrixAt(i, ZERO);
+  WM.capTop.setMatrixAt(i, ZERO);  // 不再戴黃色帽子／安全帽，頭頂只看到黑髮
   if (r === 'cap') setPart('board', i, local(0, .355, 0, 1, 1, 1, -.1, Math.PI / 4)); else WM.board.setMatrixAt(i, ZERO);
   if (r === 'jc' || r === 'fresh' || r === 'ug') setPart('pack', i, local(0, .16, -.06, 1, 1, 1)); else WM.pack.setMatrixAt(i, ZERO);
   if (r === 'intern') setPart('case', i, local(.08, .04, -.02, 1, 1, 1, .3)); else WM.case.setMatrixAt(i, ZERO);
