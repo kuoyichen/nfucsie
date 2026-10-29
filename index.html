@@ -3929,7 +3929,7 @@ const WX = { season: 'autumn', seasonPick: 'auto', event: 'none', eventPick: 'au
 const FP = { on: false };
 const TOUR = { on: false };
 const SEASONS = { spring: ['春 · 櫻花', 'Spring', '🌸'], summer: ['夏 · 螢火蟲', 'Summer', '☀️'], autumn: ['秋 · 落葉', 'Autumn', '🍂'], winter: ['冬 · 寒流', 'Winter', '❄️'] };
-const EVENTS = { none: ['平常日', 'Regular day', '📅'], start: ['開學週', 'First week', '🎒'], midterm: ['期中考週', 'Midterms', '📝'], anniv: ['校慶', 'Anniversary', '🎉'], grad: ['畢業典禮', 'Graduation', '🎓'] };
+const EVENTS = { none: ['平常日', 'Regular day', '📅'], start: ['開學週', 'First week', '🎒'], midterm: ['期中考週', 'Midterms', '📝'], anniv: ['校慶', 'Anniversary', '🎉'], grad: ['畢業典禮', 'Graduation', '🎓'], kaiju: ['哥吉拉來襲', 'Kaiju attack', '🦖'] };
 const WEATHERS = { clear: ['晴天', 'Clear', '☀️'], rain: ['下雨', 'Rain', '🌧'], typhoon: ['颱風', 'Typhoon', '🌀'], meteor: ['流星雨', 'Meteors', '🌠'] };
 // 行事曆：依虎科大 115 學年度行事曆（https://www.nfu.edu.tw/zh_tw/nfu_calendar），[月, 日] 起訖，每年換新校曆時更新
 //   8/31-9/2 新生週、9/7 開學；11/1-11/7 期中考；11/16-11/20 校慶週、11/21 校慶活動；2/22 開學；4/18-4/24 期中考；6/5 畢業典禮
@@ -3968,7 +3968,7 @@ MODELS.gallery = c => {
 MODEL_TOP.gallery = .6;
 
 const fxRand = mulberry32(4242);
-const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, get RIDER() { return RIDERS[0]; }, get RIDERS() { return RIDERS; }, get CAR() { return CAR; }, carPlan: () => carPlan(), riderMode: (m, i = 0) => riderMode(RIDERS[i], m), groundAt: (x, z) => groundAt(x, z) };
+const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, get RIDER() { return RIDERS[0]; }, get RIDERS() { return RIDERS; }, get CAR() { return CAR; }, get KJ() { return EVFX.kaiju; }, carPlan: () => carPlan(), riderMode: (m, i = 0) => riderMode(RIDERS[i], m), groundAt: (x, z) => groundAt(x, z) };
 function toast(msg, ms = 2600) {
   const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), ms);
@@ -4219,7 +4219,8 @@ function clearEventFX() {
     EVFX.group.traverse(o => { if (o.isMesh || o.isPoints) { o.geometry.dispose(); if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
   }
   EVFX.group = new THREE.Group(); scene.add(EVFX.group);
-  EVFX.caps = []; EVFX.fireworks = []; EVFX.balloons = [];
+  EVFX.caps = []; EVFX.fireworks = []; EVFX.balloons = []; EVFX.kaiju = null;
+  kjHideBubbles();
 }
 function applyEvent() {
   const prev = WX.event;
@@ -4253,9 +4254,13 @@ function applyEvent() {
       evCaps('b4'); evCaps('g'); evCaps('j5', 6);
       evBalloons('b4', 0); evBalloons('j5', 2);
       break;
+    case 'kaiju':
+      initKaiju();
+      if (prev !== 'kaiju' && WX.eventPick === 'kaiju') kjCamera();
+      break;
   }
-  if (prev !== WX.event && WX.event !== 'none') logEvent('slot', tr(`校園活動：${EVENTS[WX.event][0]}，相關的島上搭起了帳篷與舞台`, `Campus event: ${EVENTS[WX.event][1]}. Tents and stages are up.`), 'info');
-  else if (prev !== WX.event && prev !== 'none') logEvent('slot', tr(`${EVENTS[prev][0]}結束，帳篷與舞台都收起來了`, `${EVENTS[prev][1]} is over; tents packed away`), 'info');
+  if (prev !== WX.event && WX.event !== 'none' && WX.event !== 'kaiju') logEvent('slot', tr(`校園活動：${EVENTS[WX.event][0]}，相關的島上搭起了帳篷與舞台`, `Campus event: ${EVENTS[WX.event][1]}. Tents and stages are up.`), 'info');
+  else if (prev !== WX.event && prev !== 'none' && prev !== 'kaiju') logEvent('slot', tr(`${EVENTS[prev][0]}結束，帳篷與舞台都收起來了`, `${EVENTS[prev][1]} is over; tents packed away`), 'info');
   syncPickerIcons(); markDirty();
 }
 function initFireworks() {
@@ -4269,7 +4274,7 @@ function initFireworks() {
   }
 }
 function updateEventFX(dt) {
-  let any = false; const t = state.time;
+  let any = updateKaiju(dt); const t = state.time;
   for (const c of EVFX.caps) {
     const T = 2.6, u = ((t + c.ph * T) % T) / T, y = TOP + .3 + Math.sin(u * Math.PI) * c.h;
     c.g.position.set(c.x, y, c.z); c.g.rotation.set(u * 9 + c.ph, u * 5, u * 3); any = true;
@@ -5307,6 +5312,222 @@ function selectCar() {
   h += `<div class="chips"><button class="chip cream" data-isl="${at.id}">${at.icon} ${esc(tr(at.name, at.en))}</button>${to ? `<button class="chip cream" data-isl="${to.id}">${to.icon} ${esc(tr(to.name, to.en))}</button>` : ''}<span class="chip">${tr(`已飛 ${C.trips} 趟`, `${C.trips} trips so far`)}</span></div>`;
   h += `<div class="src">${tr('飛天車為示意的未來交通工具，非任何廠牌產品。', 'An illustrative concept vehicle, not any real brand’s product.')}</div>`;
   openCard(h, tr('飛天車', 'FLYING CAR'));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  活動「哥吉拉來襲」：原創巨大海怪從海裡浮現、一步步走向島嶼；同學衝去機器人島
+//  打造巨大機器人「資工號」，在怪獸靠近時開著機器人出擊、把怪獸打回海裡，最後回島接受歡呼
+// ═══════════════════════════════════════════════════════════════════════════
+const KJ_T = { rise: 10, seen: 4, build0: 6, build1: 30, walk0: 10, walk1: 36, launch0: 31, launch1: 36, fight1: 56, back1: 64, home1: 72, loop: 118 };
+const KJ_BUBBLES = {};
+function kjBubbles() { for (const k of ['m', 'r', 'c']) if (!KJ_BUBBLES[k]) KJ_BUBBLES[k] = bubbleLabel(k === 'r' ? 6 : 5); return KJ_BUBBLES; }
+function kjPart(parent, geos, x, y, z) { const m = mergedMesh(geos); const g = new THREE.Group(); g.position.set(x, y, z); g.add(m); parent.add(g); return g; }
+// 原創怪獸：灰綠色鱗皮、淺色腹部、背上一排會發光的青色晶板、長尾巴
+function kaijuMesh() {
+  const skin = '#3f5a4a', dark = '#2c4137', belly = '#9aa889', claw = '#e8e2cf';
+  const g = new THREE.Group(), K = { g };
+  const body = [];
+  body.push(paintGeo(new THREE.CapsuleGeometry(1.0, 1.7, 6, 14).rotateX(.22).translate(0, 3.2, 0), skin));
+  body.push(paintGeo(new THREE.CapsuleGeometry(.78, 1.5, 6, 12).rotateX(.22).translate(0, 3.1, .34), belly));
+  body.push(paintGeo(new THREE.CylinderGeometry(.55, .8, 1.0, 12).rotateX(.5).translate(0, 4.45, .35), skin));     // 脖子
+  K.body = kjPart(g, body, 0, 0, 0);
+  // 頭（可轉動）與下顎（張嘴吼叫）
+  K.head = new THREE.Group(); K.head.position.set(0, 4.85, .7); g.add(K.head);
+  const hg = [];
+  hg.push(paintGeo(new THREE.SphereGeometry(.6, 14, 10).scale(1, .85, 1.15), skin));
+  hg.push(paintGeo(new THREE.BoxGeometry(.72, .42, .8).translate(0, -.05, .66), skin));
+  hg.push(paintGeo(new THREE.BoxGeometry(.8, .12, .5).translate(0, .26, .3), dark));                                  // 眉骨
+  for (const s of [-1, 1]) for (let k = 0; k < 4; k++) hg.push(paintGeo(new THREE.ConeGeometry(.035, .12, 4).rotateX(Math.PI).translate(s * (.28 - k * .02), -.24, .52 + k * .18), claw)); // 牙
+  K.head.add(mergedMesh(hg));
+  K.jaw = new THREE.Group(); K.jaw.position.set(0, -.3, .2); K.head.add(K.jaw);
+  K.jaw.add(mergedMesh([paintGeo(new THREE.BoxGeometry(.66, .18, .9).translate(0, -.04, .5), dark)]));
+  const eyeMat = new THREE.MeshStandardMaterial({ color: '#ffb347', emissive: '#ff8a1f', emissiveIntensity: 1.2 });
+  for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.085, 8, 6), eyeMat); e.position.set(s * .33, .12, .58); K.head.add(e); }
+  // 腿（可抬步）
+  K.legs = [-1, 1].map(s => kjPart(g, [paintGeo(new THREE.CylinderGeometry(.5, .66, 2.1, 12).translate(0, -1.05, 0), skin), paintGeo(new THREE.BoxGeometry(.9, .32, 1.15).translate(0, -2.0, .2), dark), ...[-.28, 0, .28].map(x => paintGeo(new THREE.ConeGeometry(.07, .22, 4).rotateX(Math.PI / 2).translate(x, -2.05, .82), claw))], s * .62, 2.1, -.05));
+  // 手臂（揮擊）
+  K.arms = [-1, 1].map(s => kjPart(g, [paintGeo(new THREE.CylinderGeometry(.2, .27, 1.25, 10).translate(0, -.6, 0), skin), ...[-.1, 0, .1].map(x => paintGeo(new THREE.ConeGeometry(.05, .2, 4).rotateX(Math.PI).translate(x, -1.3, .05), claw))], s * 1.0, 3.95, .45));
+  for (const a of K.arms) a.rotation.x = -.7;
+  // 尾巴（擺動）
+  K.tail = new THREE.Group(); K.tail.position.set(0, 2.0, -.8); g.add(K.tail);
+  const tg = []; for (let k = 0; k < 5; k++) tg.push(paintGeo(new THREE.ConeGeometry(.62 - k * .11, 1.0, 10).rotateX(-Math.PI / 2 - .35).translate(0, -k * .32, -.45 - k * .82), k % 2 ? skin : dark));
+  K.tail.add(mergedMesh(tg));
+  // 背上發光晶板
+  K.spineMat = new THREE.MeshStandardMaterial({ color: '#7fe8d8', emissive: '#2fd6c4', emissiveIntensity: .5, roughness: .4 });
+  const sp = []; for (let k = 0; k < 7; k++) { const h = .9 - Math.abs(k - 2.5) * .12; sp.push(new THREE.ConeGeometry(.34, h, 4).scale(.32, 1, 1).rotateX(-.35).translate(0, 2.3 + k * .38, -.95 + k * .06 - (k > 4 ? (k - 4) * .12 : 0))); }
+  for (let k = 0; k < 4; k++) sp.push(new THREE.ConeGeometry(.26 - k * .04, .6, 4).scale(.32, 1, 1).rotateX(-1.2).translate(0, 1.9 - k * .32, -1.4 - k * .82));
+  const spM = new THREE.Mesh(BufferGeometryUtils.mergeGeometries(sp), K.spineMat); g.add(spM);
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return K;
+}
+// 原創巨大機器人「資工號」：白色機身、橘色裝甲、青色目鏡與胸口能量核心
+function robotMesh() {
+  const white = '#f1f2f4', orange = '#ef7a3a', grey = '#5c6470', dark = '#2c3038';
+  const g = new THREE.Group(), R = { g };
+  R.legs = [-1, 1].map(s => kjPart(g, [paintGeo(new THREE.BoxGeometry(.46, 1.55, .5).translate(0, -.78, 0), white), paintGeo(new THREE.BoxGeometry(.5, .32, .56).translate(0, -.75, .06), orange), paintGeo(new THREE.BoxGeometry(.56, .22, .8).translate(0, -1.55, .12), grey)], s * .4, 1.62, 0));
+  R.pelvis = kjPart(g, [paintGeo(new THREE.BoxGeometry(1.0, .36, .62), grey)], 0, 1.72, 0);
+  R.torso = kjPart(g, [paintGeo(new THREE.BoxGeometry(1.32, 1.15, .82), white), paintGeo(new THREE.BoxGeometry(.95, .5, .1).translate(0, .18, .42), orange), paintGeo(new THREE.BoxGeometry(1.36, .14, .86).translate(0, -.5, 0), dark)], 0, 2.48, 0);
+  R.core = new THREE.Mesh(new THREE.CircleGeometry(.16, 18), new THREE.MeshStandardMaterial({ color: '#9ff6ff', emissive: '#38e1ff', emissiveIntensity: 1.4 }));
+  R.core.position.set(0, .16, .475); R.torso.add(R.core);
+  R.arms = [-1, 1].map(s => kjPart(g, [paintGeo(new THREE.BoxGeometry(.5, .36, .62).translate(s * .06, .06, 0), orange), paintGeo(new THREE.BoxGeometry(.32, 1.05, .32).translate(0, -.6, 0), white), paintGeo(new THREE.BoxGeometry(.42, .4, .42).translate(0, -1.28, 0), grey)], s * .9, 2.9, 0));
+  R.head = kjPart(g, [paintGeo(new THREE.BoxGeometry(.56, .5, .56), white), paintGeo(new THREE.BoxGeometry(.1, .32, .1).rotateZ(.5).translate(-.14, .38, 0), orange), paintGeo(new THREE.BoxGeometry(.1, .32, .1).rotateZ(-.5).translate(.14, .38, 0), orange)], 0, 3.38, 0);
+  const visor = new THREE.Mesh(new THREE.BoxGeometry(.44, .13, .04), R.core.material); visor.position.set(0, .04, .29); R.head.add(visor);
+  // 腳底推進火焰
+  R.flameMat = new THREE.MeshBasicMaterial({ color: '#ffb347', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  R.flames = R.legs.map(l => { const f = new THREE.Mesh(new THREE.ConeGeometry(.2, .9, 10).rotateX(Math.PI), R.flameMat); f.position.set(0, -2.05, 0); l.add(f); return f; });
+  R.build = [R.legs[0], R.legs[1], R.pelvis, R.torso, R.arms[0], R.arms[1], R.head];
+  g.traverse(o => { if (o.isMesh && o.material !== R.flameMat) o.castShadow = true; });
+  return R;
+}
+function initKaiju() {
+  kjBubbles();
+  const fr = ISL.fr, dir = new THREE.Vector3(fr.x - CENTER.x, 0, fr.z - CENTER.z).normalize();
+  const home = new THREE.Vector3(fr.x, TOP, fr.z);
+  const KJ = EVFX.kaiju = { t: 0, dir, home, logged: {}, splashes: [], hits: [],
+    start: home.clone().addScaledVector(dir, 20), fightM: home.clone().addScaledVector(dir, 7.2), fightR: home.clone().addScaledVector(dir, 4.4) };
+  KJ.M = kaijuMesh(); KJ.M.g.scale.setScalar(.95); EVFX.group.add(KJ.M.g);
+  KJ.R = robotMesh(); KJ.R.g.scale.setScalar(1.05); EVFX.group.add(KJ.R.g);
+  // 施工鷹架與焊接火花
+  KJ.scaffold = new THREE.Group(); EVFX.group.add(KJ.scaffold);
+  const poleM = stdM('#f2c230');
+  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, 4.2, 6), poleM); p.position.set(fr.x + x * .95, TOP + 2.1, fr.z + z * .75); KJ.scaffold.add(p); }
+  for (const y of [1.2, 2.4, 3.6]) { const b = new THREE.Mesh(new THREE.BoxGeometry(2, .05, .05), poleM); b.position.set(fr.x, TOP + y, fr.z - .75); KJ.scaffold.add(b); const b2 = b.clone(); b2.position.z = fr.z + .75; KJ.scaffold.add(b2); }
+  const n = 40, pos = new Float32Array(n * 3), geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  KJ.sparks = new THREE.Points(geo, new THREE.PointsMaterial({ size: .09, color: '#ffe08a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); KJ.sparks.frustumCulled = false; EVFX.group.add(KJ.sparks);
+  // 趕來幫忙的同學
+  KJ.crowd = [];
+  for (let k = 0; k < 14; k++) {
+    const a = k / 14 * Math.PI * 2 + .2, out = [], shirt = ['#db6a41', '#3e7c8c', '#6f7fb5', '#9cc27a', '#fcea8b', '#f2b5c6'][k % 6];
+    figureGeos(0, 0, 0, 1.7, shirt, out); const m = mergedMesh(out); EVFX.group.add(m);
+    KJ.crowd.push({ m, a, r: 1.15 + (k % 3) * .22, ph: k * .7, from: 1.95 + (k % 2) * .1 });
+  }
+  // 撞擊閃光、怪獸光束
+  KJ.flash = new THREE.Mesh(new THREE.SphereGeometry(.5, 14, 10), new THREE.MeshBasicMaterial({ color: '#fff1b0', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })); EVFX.group.add(KJ.flash);
+  KJ.beam = new THREE.Mesh(new THREE.CylinderGeometry(.14, .3, 1, 12, 1, true).rotateX(Math.PI / 2).translate(0, 0, .5), new THREE.MeshBasicMaterial({ color: '#8ff3ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); EVFX.group.add(KJ.beam);
+  KJ.shield = new THREE.Mesh(new THREE.CircleGeometry(.9, 24), new THREE.MeshBasicMaterial({ color: '#9ff6ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); EVFX.group.add(KJ.shield);
+  const ringGeo = new THREE.RingGeometry(.5, .75, 28).rotateX(-Math.PI / 2);
+  for (let k = 0; k < 6; k++) { const r = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false })); EVFX.group.add(r); KJ.splashes.push({ m: r, t: 9 }); }
+  KJ.splashI = 0; KJ.lastStep = -1;
+  updateKaiju(0);
+}
+function kjLog(key, zh, en, type = 'info') { const KJ = EVFX.kaiju; if (KJ.logged[key]) return; KJ.logged[key] = true; logEvent('slot', tr(zh, en), type); }
+function kjSplash(x, z, size = 1) { const KJ = EVFX.kaiju, s = KJ.splashes[KJ.splashI++ % KJ.splashes.length]; s.t = 0; s.size = size; s.m.position.set(x, WATER_Y + .03, z); }
+function kjFlash(p, s = 1) { const KJ = EVFX.kaiju; KJ.flashT = 0; KJ.flashS = s; KJ.flash.position.copy(p); }
+function updateKaiju(dt) {
+  const KJ = EVFX.kaiju, T = KJ_T; if (!KJ) return false;
+  KJ.t += dt; if (KJ.t > T.loop) { KJ.t = 0; KJ.logged = {}; KJ.lastStep = -1; }
+  const t = KJ.t, M = KJ.M, R = KJ.R, dir = KJ.dir, B = KJ_BUBBLES, sm = x => x * x * (3 - 2 * x), cl = x => clamp(x, 0, 1);
+  const faceM = Math.atan2(-dir.x, -dir.z), faceR = Math.atan2(dir.x, dir.z);
+  let mText = '', rText = '', cText = '';
+  // ── 怪獸 ──
+  const deep = WATER_Y - 7.5, wade = WATER_Y - 1.5;
+  let mp = KJ.start.clone(), my = deep, walking = false, mYaw = faceM, lean = 0;
+  if (t < T.rise) { my = lerp(deep, wade, sm(cl(t / T.rise))); if (t > T.seen) mText = '吼──！'; }
+  else if (t < T.walk1) {
+    const u = cl((t - T.walk0) / (T.walk1 - T.walk0)); mp.lerpVectors(KJ.start, KJ.fightM, u); my = wade; walking = t > T.walk0 && t < T.walk1;
+    if (t > T.walk0 + 4 && t < T.walk0 + 9) mText = tr('咚…咚…咚…', 'STOMP… STOMP…');
+  } else if (t < T.fight1) { mp.copy(KJ.fightM); my = wade; }
+  else if (t < T.back1) { const u = sm(cl((t - T.fight1) / (T.back1 - T.fight1))); mp.lerpVectors(KJ.fightM, KJ.start, u * .45); my = lerp(wade, deep, u); mYaw = faceM + Math.PI * sm(cl((t - T.fight1) / 2.5)); walking = true; if (t < T.fight1 + 3) mText = tr('嗚嗷……', 'Grrooo…'); }
+  else my = deep - 2;
+  // 戰鬥中被擊中後退
+  let recoil = 0;
+  if (t >= T.walk1 && t < T.fight1) {
+    const ft = t - T.walk1, k = Math.floor(ft / 1.3), u = (ft % 1.3) / 1.3;
+    const beam = ft > 7 && ft < 10.5;
+    if (!beam && k % 2 === 0) { recoil = Math.sin(cl((u - .35) / .3) * Math.PI) * .45; lean = -recoil * .25; }
+    if (beam) mText = tr('吼！！（噴出光束）', 'ROAR!! (beam)'); else if (k % 3 === 1) mText = tr('吼──！', 'RAWR!');
+    mp.addScaledVector(dir, recoil * 1.2 + Math.min(1.6, ft * .08));
+  }
+  M.g.position.set(mp.x, my + Math.abs(Math.sin(t * 2.86)) * (walking ? .12 : 0), mp.z);
+  M.g.rotation.set(lean, mYaw, 0, 'YXZ');
+  M.g.visible = my > deep - 1.5;
+  const step = walking ? Math.sin(t * 2.86) : 0;
+  M.legs[0].rotation.x = step * .45; M.legs[1].rotation.x = -step * .45;
+  M.tail.rotation.y = Math.sin(t * 1.4) * .25; M.tail.rotation.x = Math.sin(t * 1.1) * .05;
+  const roar = mText ? .35 + Math.sin(t * 9) * .1 : .05; M.jaw.rotation.x = roar; M.head.rotation.x = -roar * .4;
+  M.arms[0].rotation.x = -.7 + (walking ? step * .25 : 0); M.arms[1].rotation.x = -.7 - (walking ? step * .25 : 0);
+  M.spineMat.emissiveIntensity = .5 + (mText ? 1.2 + Math.sin(t * 12) * .5 : Math.sin(t * 2) * .2);
+  if (walking && my > wade - .5) { const sIdx = Math.floor(t * 2.86 / Math.PI); if (sIdx !== KJ.lastStep) { KJ.lastStep = sIdx; const side = sIdx % 2 ? 1 : -1, px = -dir.z * side * .6, pz = dir.x * side * .6; kjSplash(mp.x + px, mp.z + pz, 1.6); } }
+  if (t < T.rise && t > 1 && Math.floor(t * 1.2) !== Math.floor((t - dt) * 1.2)) kjSplash(KJ.start.x, KJ.start.z, 2.4);
+  // ── 機器人：組裝 → 出擊 → 戰鬥 → 回島 ──
+  const bu = cl((t - T.build0) / (T.build1 - T.build0)) * R.build.length;
+  R.build.forEach((p, i) => { const s = t < T.build0 ? 0 : sm(cl(bu - i)); p.scale.set(s ? 1 : .001, Math.max(.001, s), s ? 1 : .001); });
+  let rp = KJ.home.clone(), rYaw = faceR, fly = 0;
+  if (t >= T.launch0 && t < T.launch1) { const u = sm(cl((t - T.launch0) / (T.launch1 - T.launch0))); rp.lerpVectors(KJ.home, KJ.fightR, u); rp.y = lerp(TOP, WATER_Y - .25, u) + Math.sin(u * Math.PI) * 3.2; fly = 1; rText = tr('資工號，出擊！', 'CSIE-1, launch!'); }
+  else if (t >= T.launch1 && t < T.back1 + 1) { rp.copy(KJ.fightR); rp.y = WATER_Y - .25; }
+  else if (t >= T.back1 + 1 && t < T.home1) { const u = sm(cl((t - T.back1 - 1) / (T.home1 - T.back1 - 1))); rp.lerpVectors(KJ.fightR, KJ.home, u); rp.y = lerp(WATER_Y - .25, TOP, u) + Math.sin(u * Math.PI) * 2.6; rYaw = faceR + Math.PI * Math.sin(u * Math.PI) * 0; fly = 1; rText = tr('任務完成，回島！', 'Mission complete!'); }
+  // 戰鬥動作
+  const armX = [0, 0];
+  if (t >= T.walk1 && t < T.fight1) {
+    const ft = t - T.walk1, k = Math.floor(ft / 1.3), u = (ft % 1.3) / 1.3, beam = ft > 7 && ft < 10.5;
+    if (beam) {
+      armX[0] = armX[1] = -1.5; rText = tr('能量護盾！', 'Energy shield!');
+      const mouth = M.head.getWorldPosition(new THREE.Vector3()).addScaledVector(dir, -.5), shieldP = rp.clone().addScaledVector(dir, .9).setY(rp.y + 2.6);
+      KJ.beam.position.copy(mouth); KJ.beam.lookAt(shieldP); KJ.beam.scale.set(1, 1, mouth.distanceTo(shieldP)); KJ.beam.material.opacity = .55 + Math.sin(t * 30) * .2;
+      KJ.shield.position.copy(shieldP); KJ.shield.lookAt(mouth); KJ.shield.material.opacity = .45 + Math.sin(t * 20) * .15;
+    } else {
+      const arm = k % 2, punch = Math.sin(cl(u / .5) * Math.PI);
+      armX[arm] = -1.55 * punch;
+      if (k % 2 === 0 || k % 2 === 1) { if (u > .3 && !KJ.hits[k]) { KJ.hits[k] = true; kjFlash(new THREE.Vector3(mp.x, my + 3.4, mp.z).addScaledVector(dir, .9), 1 + (k % 3) * .3); } }
+      if (k === 0) rText = tr('看招！資工鐵拳！', 'CSIE Iron Fist!'); else if (k === 3) rText = tr('再來！', 'Again!'); else if (k >= 12) rText = tr('最後一擊！', 'Final blow!');
+    }
+  }
+  if (t < T.walk1 || t >= T.fight1) { KJ.beam.material.opacity = 0; KJ.shield.material.opacity = 0; }
+  if (t < 1) KJ.hits = [];
+  const cheering = t >= T.home1 && t < T.loop - 6;
+  if (cheering) { armX[1] = -2.9 + Math.sin(t * 4) * .15; rText = t < T.home1 + 6 ? tr('大家好！資工號平安回來了！', 'CSIE-1 is back!') : ''; }
+  R.arms[0].rotation.x = armX[0]; R.arms[1].rotation.x = armX[1];
+  R.legs[0].rotation.x = fly ? .25 : 0; R.legs[1].rotation.x = fly ? -.15 : 0;
+  R.flameMat.opacity = fly ? .7 + Math.sin(t * 40) * .2 : 0; for (const f of R.flames) f.scale.y = .8 + Math.sin(t * 50) * .25;
+  R.g.position.copy(rp); R.g.rotation.set(0, rYaw, 0);
+  R.core.material.emissiveIntensity = 1.2 + Math.sin(t * 5) * .4;
+  // 施工鷹架、火花
+  const building = t >= T.build0 && t < T.build1 + 1;
+  KJ.scaffold.visible = t >= T.build0 - 1 && t < T.launch0;
+  const sa = KJ.sparks.geometry.attributes.position;
+  if (building) { const h = 3.6 * cl(bu / R.build.length) + .3; for (let i = 0; i < sa.count; i++) { const a = fxRand() * 6.28, r = .4 + fxRand() * .6; sa.setXYZ(i, KJ.home.x + Math.cos(a) * r, TOP + h * fxRand(), KJ.home.z + Math.sin(a) * r); } sa.needsUpdate = true; }
+  KJ.sparks.material.opacity = building ? .9 : 0;
+  // 同學：看到怪獸 → 跑到機器人島 → 組裝 → 加油 → 歡呼
+  const gather = sm(cl((t - T.seen) / 3)), fightOn = t >= T.launch0 && t < T.home1;
+  for (const c of KJ.crowd) {
+    const r = lerp(c.from, c.r, gather), x = KJ.home.x + Math.cos(c.a) * r, z = KJ.home.z + Math.sin(c.a) * r;
+    const jump = cheering ? Math.abs(Math.sin(t * 6 + c.ph)) * .18 : fightOn ? Math.abs(Math.sin(t * 4 + c.ph)) * .06 : 0;
+    c.m.position.set(x, TOP + jump, z); c.m.visible = t > T.seen - .5;
+    c.m.rotation.y = Math.atan2(-Math.cos(c.a), -Math.sin(c.a));
+  }
+  if (t > T.seen && t < T.build0 + 2) cText = tr('怪獸露頭了！快去機器人島！', 'Kaiju sighted! To Robotics Island!');
+  else if (building) cText = tr('焊接、組裝，加速打造巨大機器人！', 'Weld it, bolt it, build the giant robot!');
+  else if (t >= T.walk1 && t < T.fight1) cText = tr('資工號加油！', 'Go, CSIE-1!');
+  else if (cheering) cText = tr('🎉 資工號萬歲！我們贏了！', '🎉 Hooray, CSIE-1! We won!');
+  // 水花、撞擊閃光
+  for (const s of KJ.splashes) { s.t += dt; const u = cl(s.t / 1.4); s.m.scale.setScalar((1 + u * 3) * (s.size || 1)); s.m.material.opacity = (1 - u) * .7; }
+  KJ.flashT = (KJ.flashT ?? 9) + dt; { const u = cl(KJ.flashT / .45); KJ.flash.scale.setScalar((.5 + u * 1.6) * (KJ.flashS || 1)); KJ.flash.material.opacity = (1 - u) * .9; }
+  // 對話泡泡
+  const camD = p => camera.position.distanceTo(p) < 70;
+  const mHead = new THREE.Vector3(mp.x, my + 6.4, mp.z), rHead = rp.clone().setY(rp.y + 4.5), cHead = KJ.home.clone().setY(TOP + 1.0).addScaledVector(dir, -1.6);
+  setBubble(B.m, mText && M.g.visible && camD(mHead) ? '🦖 ' + mText : '', mHead.x, mHead.y, mHead.z);
+  setBubble(B.r, rText && camD(rHead) ? '🤖 ' + rText : '', rHead.x, rHead.y, rHead.z);
+  setBubble(B.c, cText && camD(cHead) ? cText : '', cHead.x, cHead.y, cHead.z);
+  // 日誌
+  if (t > .5) kjLog('rise', '🌊 外海冒出大量氣泡，一隻巨大怪獸慢慢從海裡浮現……', '🌊 The sea bubbles as a giant kaiju slowly rises from the deep…');
+  if (t > T.seen) kjLog('seen', '👀 同學們看到怪獸露頭，衝去機器人島打造巨大機器人「資工號」！', '👀 Students spot the kaiju and rush to Robotics Island to build the giant robot CSIE-1!', 'talk');
+  if (t > T.walk0 + 1) kjLog('walk', '🦖 怪獸一步一步朝島嶼走來，海面掀起大浪', '🦖 The kaiju stomps toward the islands, step by step');
+  if (t > T.build1) kjLog('built', '🤖 資工號組裝完成！機器人島上一片歡呼', '🤖 CSIE-1 is complete! Cheers on Robotics Island');
+  if (t > T.launch0) kjLog('launch', '🚀 怪獸快接近島嶼了，同學們開著資工號出擊！', '🚀 As the kaiju nears, the students launch CSIE-1!');
+  if (t > T.walk1 + 8) kjLog('beam', '⚡ 怪獸噴出光束，資工號用能量護盾擋下！', '⚡ The kaiju fires a beam; CSIE-1 blocks it with an energy shield!');
+  if (t > T.fight1) kjLog('win', '🏆 資工號最後一擊，怪獸被打回大海！', '🏆 One final blow sends the kaiju back into the sea!', 'praise');
+  if (t > T.home1) kjLog('home', '🎉 資工號平安回到機器人島，全島同學歡呼！', '🎉 CSIE-1 returns to Robotics Island to cheers from everyone!', 'praise');
+  return true;
+}
+function kjHideBubbles() { for (const k in KJ_BUBBLES) setBubble(KJ_BUBBLES[k], '', 0, 0, 0); }
+function kjCamera() {
+  const KJ = EVFX.kaiju; if (!KJ) return;
+  const dir = KJ.dir, perp = new THREE.Vector3(-dir.z, 0, dir.x);
+  // 從側面看：左邊是機器人島，右邊是走來的怪獸（選離城市較近的一側，避免被島擋住）
+  const target = KJ.home.clone().addScaledVector(dir, 7.5).setY(2.4);
+  const side = s => target.clone().addScaledVector(perp, 23 * s).addScaledVector(dir, -6).setY(12);
+  const pos = side(1).distanceTo(CENTER) < side(-1).distanceTo(CENTER) ? side(1) : side(-1);
+  flyTo({ pos, target }, 1400);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
