@@ -3929,7 +3929,7 @@ const WX = { season: 'autumn', seasonPick: 'auto', event: 'none', eventPick: 'au
 const FP = { on: false };
 const TOUR = { on: false };
 const SEASONS = { spring: ['春 · 櫻花', 'Spring', '🌸'], summer: ['夏 · 螢火蟲', 'Summer', '☀️'], autumn: ['秋 · 落葉', 'Autumn', '🍂'], winter: ['冬 · 寒流', 'Winter', '❄️'] };
-const EVENTS = { none: ['平常日', 'Regular day', '📅'], start: ['開學週', 'First week', '🎒'], midterm: ['期中考週', 'Midterms', '📝'], anniv: ['校慶', 'Anniversary', '🎉'], grad: ['畢業典禮', 'Graduation', '🎓'], kaiju: ['哥吉拉來襲', 'Kaiju attack', '🦖'] };
+const EVENTS = { none: ['平常日', 'Regular day', '📅'], start: ['開學週', 'First week', '🎒'], midterm: ['期中考週', 'Midterms', '📝'], anniv: ['校慶', 'Anniversary', '🎉'], grad: ['畢業典禮', 'Graduation', '🎓'], kaiju: ['哥吉拉來襲', 'Kaiju attack', '🦖'], ufo: ['ID4 外星人來襲', 'Alien invasion', '🛸'] };
 const WEATHERS = { clear: ['晴天', 'Clear', '☀️'], rain: ['下雨', 'Rain', '🌧'], typhoon: ['颱風', 'Typhoon', '🌀'], meteor: ['流星雨', 'Meteors', '🌠'] };
 // 行事曆：依虎科大 115 學年度行事曆（https://www.nfu.edu.tw/zh_tw/nfu_calendar），[月, 日] 起訖，每年換新校曆時更新
 //   8/31-9/2 新生週、9/7 開學；11/1-11/7 期中考；11/16-11/20 校慶週、11/21 校慶活動；2/22 開學；4/18-4/24 期中考；6/5 畢業典禮
@@ -3968,7 +3968,7 @@ MODELS.gallery = c => {
 MODEL_TOP.gallery = .6;
 
 const fxRand = mulberry32(4242);
-const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, get RIDER() { return RIDERS[0]; }, get RIDERS() { return RIDERS; }, get CAR() { return CAR; }, get KJ() { return EVFX.kaiju; }, carPlan: () => carPlan(), riderMode: (m, i = 0) => riderMode(RIDERS[i], m), groundAt: (x, z) => groundAt(x, z) };
+const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, get RIDER() { return RIDERS[0]; }, get RIDERS() { return RIDERS; }, get CAR() { return CAR; }, get KJ() { return EVFX.kaiju; }, get UF() { return EVFX.ufo; }, carPlan: () => carPlan(), riderMode: (m, i = 0) => riderMode(RIDERS[i], m), groundAt: (x, z) => groundAt(x, z) };
 function toast(msg, ms = 2600) {
   const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), ms);
@@ -4219,8 +4219,8 @@ function clearEventFX() {
     EVFX.group.traverse(o => { if (o.isMesh || o.isPoints) { o.geometry.dispose(); if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
   }
   EVFX.group = new THREE.Group(); scene.add(EVFX.group);
-  EVFX.caps = []; EVFX.fireworks = []; EVFX.balloons = []; EVFX.kaiju = null;
-  kjHideBubbles();
+  EVFX.caps = []; EVFX.fireworks = []; EVFX.balloons = []; EVFX.kaiju = null; EVFX.ufo = null;
+  kjHideBubbles(); ufHideBubbles();
 }
 function applyEvent() {
   const prev = WX.event;
@@ -4258,9 +4258,13 @@ function applyEvent() {
       initKaiju();
       if (prev !== 'kaiju' && WX.eventPick === 'kaiju') kjCamera();
       break;
+    case 'ufo':
+      initUfo();
+      if (prev !== 'ufo' && WX.eventPick === 'ufo') ufCamera();
+      break;
   }
-  if (prev !== WX.event && WX.event !== 'none' && WX.event !== 'kaiju') logEvent('slot', tr(`校園活動：${EVENTS[WX.event][0]}，相關的島上搭起了帳篷與舞台`, `Campus event: ${EVENTS[WX.event][1]}. Tents and stages are up.`), 'info');
-  else if (prev !== WX.event && prev !== 'none' && prev !== 'kaiju') logEvent('slot', tr(`${EVENTS[prev][0]}結束，帳篷與舞台都收起來了`, `${EVENTS[prev][1]} is over; tents packed away`), 'info');
+  if (prev !== WX.event && WX.event !== 'none' && WX.event !== 'kaiju' && WX.event !== 'ufo') logEvent('slot', tr(`校園活動：${EVENTS[WX.event][0]}，相關的島上搭起了帳篷與舞台`, `Campus event: ${EVENTS[WX.event][1]}. Tents and stages are up.`), 'info');
+  else if (prev !== WX.event && prev !== 'none' && prev !== 'kaiju' && prev !== 'ufo') logEvent('slot', tr(`${EVENTS[prev][0]}結束，帳篷與舞台都收起來了`, `${EVENTS[prev][1]} is over; tents packed away`), 'info');
   syncPickerIcons(); markDirty();
 }
 function initFireworks() {
@@ -4274,7 +4278,7 @@ function initFireworks() {
   }
 }
 function updateEventFX(dt) {
-  let any = updateKaiju(dt); const t = state.time;
+  let any = updateKaiju(dt); any = updateUfo(dt) || any; const t = state.time;
   for (const c of EVFX.caps) {
     const T = 2.6, u = ((t + c.ph * T) % T) / T, y = TOP + .3 + Math.sin(u * Math.PI) * c.h;
     c.g.position.set(c.x, y, c.z); c.g.rotation.set(u * 9 + c.ph, u * 5, u * 3); any = true;
@@ -5528,6 +5532,196 @@ function kjCamera() {
   const side = s => target.clone().addScaledVector(perp, 23 * s).addScaledVector(dir, -6).setY(12);
   const pos = side(1).distanceTo(CENTER) < side(-1).distanceTo(CENTER) ? side(1) : side(-1);
   flyTo({ pos, target }, 1400);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  活動「ID4 外星人來襲」：巨大圓盤飛船慢慢飛進來、停在綜三館上方；同學在無人機島
+//  打造無人戰鬥機群，飛船準備向下發射雷射時全員出擊，最後擊落飛船、保護資工島
+// ═══════════════════════════════════════════════════════════════════════════
+const UF_T = { arrive: 24, build0: 3, build1: 22, charge0: 22, launch0: 25, launch1: 30, fight1: 46, crash1: 55, home1: 64, loop: 112 };
+const UF_N = 16;
+const UF_BUBBLES = {};
+function ufBubbles() { for (const k of ['u', 'd', 'c']) if (!UF_BUBBLES[k]) UF_BUBBLES[k] = bubbleLabel(k === 'd' ? 6 : 5); }
+function ufHideBubbles() { for (const k in UF_BUBBLES) setBubble(UF_BUBBLES[k], '', 0, 0, 0); }
+// 原創圓盤飛船：金屬灰雙層圓盤、上方暗色圓頂、外緣一圈燈、底部雷射發射口
+function saucerMesh() {
+  const g = new THREE.Group(), U = { g };
+  const hull = new THREE.MeshStandardMaterial({ color: '#9aa3ad', metalness: .55, roughness: .35 });
+  const dark = new THREE.MeshStandardMaterial({ color: '#4b525c', metalness: .5, roughness: .5 });
+  const add = (geo, mat, y = 0) => { const m = new THREE.Mesh(geo, mat); m.position.y = y; m.castShadow = true; g.add(m); return m; };
+  add(new THREE.CylinderGeometry(6.2, 4.4, .9, 48), hull, 0);
+  add(new THREE.CylinderGeometry(4.6, 6.2, .55, 48), hull, .72);
+  add(new THREE.CylinderGeometry(6.35, 6.35, .18, 48), dark, .42);
+  add(new THREE.SphereGeometry(2.6, 32, 14, 0, Math.PI * 2, 0, Math.PI * .5).scale(1, .55, 1), dark, .98);
+  for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; const p = add(new THREE.BoxGeometry(1.4, .12, .35), dark, .1); p.position.set(Math.cos(a) * 3.2, -.45, Math.sin(a) * 3.2); p.rotation.y = -a; }
+  U.lightMat = new THREE.MeshStandardMaterial({ color: '#c9fbff', emissive: '#4ff0ff', emissiveIntensity: 1 });
+  U.lights = new THREE.InstancedMesh(new THREE.SphereGeometry(.13, 8, 6), U.lightMat, 36);
+  const M4 = new THREE.Matrix4(); for (let k = 0; k < 36; k++) { const a = k / 36 * Math.PI * 2; U.lights.setMatrixAt(k, M4.makeTranslation(Math.cos(a) * 6.3, .42, Math.sin(a) * 6.3)); } g.add(U.lights);
+  U.coreMat = new THREE.MeshStandardMaterial({ color: '#ffd0d0', emissive: '#ff3b3b', emissiveIntensity: .3 });
+  U.core = add(new THREE.CylinderGeometry(1.1, 1.4, .3, 32), U.coreMat, -.55);
+  U.ringMat = new THREE.MeshBasicMaterial({ color: '#ff5a4a', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  U.ring = new THREE.Mesh(new THREE.RingGeometry(1.5, 4.2, 48).rotateX(Math.PI / 2), U.ringMat); U.ring.position.y = -.5; g.add(U.ring);
+  U.beam = new THREE.Mesh(new THREE.CylinderGeometry(.35, .9, 1, 20, 1, true).translate(0, -.5, 0), new THREE.MeshBasicMaterial({ color: '#ff6a5a', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  U.beam.position.y = -.7; g.add(U.beam);
+  return U;
+}
+// 原創無人戰鬥機：X 形機架、四旋翼、青色機身燈
+function droneGeos() {
+  const o = [], ink = '#2a2e35';
+  o.push(paintGeo(new THREE.BoxGeometry(.5, .05, .07).rotateY(Math.PI / 4), ink), paintGeo(new THREE.BoxGeometry(.5, .05, .07).rotateY(-Math.PI / 4), ink));
+  o.push(paintGeo(new THREE.CapsuleGeometry(.08, .16, 4, 10).rotateX(Math.PI / 2), '#e9eef2'));
+  o.push(paintGeo(new THREE.BoxGeometry(.06, .03, .1).translate(0, -.06, .12), '#ef7a3a'));
+  for (const [x, z] of [[.18, .18], [-.18, .18], [.18, -.18], [-.18, -.18]]) o.push(paintGeo(new THREE.CylinderGeometry(.11, .11, .015, 16).translate(x, .05, z), '#7f8a96'));
+  return o;
+}
+function initUfo() {
+  ufBubbles();
+  const T = ISL.t, D = ISL.fd;
+  const hover = new THREE.Vector3(T.x, TOP + 6.2, T.z);
+  const away = new THREE.Vector3(T.x - CENTER.x, 0, T.z - CENTER.z); if (away.lengthSq() < 1) away.set(0, 0, -1); away.normalize();
+  const UF = EVFX.ufo = { t: 0, logged: {}, hover, start: hover.clone().add(new THREE.Vector3(-34, 16, -46)), crash: ufCrashPoint(T), padC: new THREE.Vector3(D.x, TOP, D.z), smoke: [], hits: 0 };
+  UF.U = saucerMesh(); EVFX.group.add(UF.U.g);
+  UF.shadow = new THREE.Mesh(new THREE.CircleGeometry(6, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0, depthWrite: false })); UF.shadow.renderOrder = 2; EVFX.group.add(UF.shadow);
+  // 無人機：在無人機島上排成 4×4 機隊
+  const geo = BufferGeometryUtils.mergeGeometries(droneGeos());
+  UF.drones = [];
+  for (let k = 0; k < UF_N; k++) {
+    const m = new THREE.Mesh(geo, vcMat()); m.castShadow = true; EVFX.group.add(m);
+    const gx = (k % 4) - 1.5, gz = Math.floor(k / 4) - 1.5;
+    UF.drones.push({ m, pad: new THREE.Vector3(D.x + gx * .55, TOP + .08, D.z + gz * .55), ph: k * .61, orb: 7.4 + (k % 3) * .9, oy: -1.2 + (k % 4) * .9, os: (k % 2 ? 1 : -1) * (.35 + (k % 5) * .05) });
+  }
+  const lp = new Float32Array(UF_N * 6), lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(lp, 3));
+  UF.lasers = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: '#7dff9a', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })); UF.lasers.frustumCulled = false; EVFX.group.add(UF.lasers);
+  UF.flashes = []; for (let k = 0; k < 6; k++) { const f = new THREE.Mesh(new THREE.SphereGeometry(.45, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffe9a8', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })); EVFX.group.add(f); UF.flashes.push({ m: f, t: 9 }); }
+  UF.flashI = 0;
+  for (let k = 0; k < 14; k++) { const s = new THREE.Mesh(new THREE.SphereGeometry(.6, 10, 8), new THREE.MeshStandardMaterial({ color: '#4a4a4f', transparent: true, opacity: 0, depthWrite: false })); EVFX.group.add(s); UF.smoke.push({ m: s, t: 9, v: new THREE.Vector3() }); }
+  UF.smokeI = 0;
+  const n = 40, sp = new THREE.BufferGeometry(); sp.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  UF.sparks = new THREE.Points(sp, new THREE.PointsMaterial({ size: .09, color: '#ffe08a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); UF.sparks.frustumCulled = false; EVFX.group.add(UF.sparks);
+  UF.splashes = []; const rg = new THREE.RingGeometry(.6, .9, 32).rotateX(-Math.PI / 2);
+  for (let k = 0; k < 4; k++) { const r = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false })); EVFX.group.add(r); UF.splashes.push({ m: r, t: 9 }); }
+  // 無人機島上的同學
+  UF.crowd = [];
+  for (let k = 0; k < 12; k++) {
+    const a = k / 12 * Math.PI * 2 + .3, out = [];
+    figureGeos(0, 0, 0, 1.7, ['#db6a41', '#3e7c8c', '#6f7fb5', '#9cc27a', '#fcea8b', '#f2b5c6'][k % 6], out);
+    const m = mergedMesh(out); EVFX.group.add(m); UF.crowd.push({ m, a, ph: k * .8 });
+  }
+  updateUfo(0);
+}
+// 墜毀點：在鏡頭後方的外海，挑離各島與外島最遠的方向，免得飛船砸在島上
+function ufCrashPoint(T) {
+  let best = null, bd = -1;
+  for (let k = 0; k < 24; k++) {
+    const a = Math.PI + k / 24 * Math.PI, p = new THREE.Vector3(T.x + Math.cos(a) * 17, WATER_Y, T.z + Math.sin(a) * 17);
+    let d = 1e9;
+    for (const id in ISL) d = Math.min(d, Math.hypot(ISL[id].x - p.x, ISL[id].z - p.z) - 2.2);
+    for (const id in COMP) d = Math.min(d, Math.hypot(COMP[id].x - p.x, COMP[id].z - p.z) - 1.6);
+    if (d > bd) { bd = d; best = p; }
+  }
+  return best;
+}
+function ufFlash(p, s = 1) { const UF = EVFX.ufo, f = UF.flashes[UF.flashI++ % UF.flashes.length]; f.t = 0; f.s = s; f.m.position.copy(p); }
+function ufSmoke(p) { const UF = EVFX.ufo, s = UF.smoke[UF.smokeI++ % UF.smoke.length]; s.t = 0; s.m.position.copy(p); s.v.set((fxRand() - .5) * .4, .5 + fxRand() * .4, (fxRand() - .5) * .4); }
+function ufLog(key, zh, en, type = 'info') { const UF = EVFX.ufo; if (UF.logged[key]) return; UF.logged[key] = true; logEvent('slot', tr(zh, en), type); }
+function updateUfo(dt) {
+  const UF = EVFX.ufo, T = UF_T; if (!UF) return false;
+  UF.t += dt; if (UF.t > T.loop) { UF.t = 0; UF.logged = {}; UF.hits = 0; }
+  const t = UF.t, U = UF.U, B = UF_BUBBLES, sm = x => x * x * (3 - 2 * x), cl = x => clamp(x, 0, 1);
+  let uText = '', dText = '', cText = '';
+  // ── 飛船：飛進來 → 停在綜三館上方充能 → 被攻擊冒煙 → 墜毀海中 ──
+  const p = new THREE.Vector3(); let tilt = 0, tiltZ = 0, alive = true;
+  if (t < T.arrive) { const u = sm(cl(t / T.arrive)); p.lerpVectors(UF.start, UF.hover, u); tilt = (1 - u) * .12; if (t > 6) uText = tr('嗡──嗡──（不明飛行物體接近中）', 'Hummm… (UFO approaching)'); }
+  else if (t < T.fight1) { p.copy(UF.hover); p.y += Math.sin(t * .8) * .15; const dmg = cl((t - T.launch1) / (T.fight1 - T.launch1)); tilt = Math.sin(t * 3.1) * .04 * dmg + dmg * .1; tiltZ = Math.sin(t * 2.3) * .05 * dmg; }
+  else if (t < T.crash1) {
+    const u = cl((t - T.fight1) / (T.crash1 - T.fight1)), e = u * u;
+    p.lerpVectors(UF.hover, UF.crash, sm(u)); p.y = lerp(UF.hover.y, WATER_Y - .2, e) + Math.sin(u * Math.PI) * 1.2;
+    tilt = .15 + u * .55; tiltZ = Math.sin(t * 5) * .08 * (1 - u) + u * .25;
+    if (u < .9 && Math.floor(t * 5) !== Math.floor((t - dt) * 5)) ufSmoke(p.clone().add(new THREE.Vector3((fxRand() - .5) * 4, .6, (fxRand() - .5) * 4)));
+    uText = tr('嗶嗶嗶──！！（系統失靈）', 'BEEP BEEP!! (systems failing)');
+  } else { const u = cl((t - T.crash1) / 8); p.copy(UF.crash); p.y = lerp(WATER_Y - .2, WATER_Y - 3, u); tilt = .7; tiltZ = .25; alive = u < 1; }
+  U.g.position.copy(p); U.g.rotation.set(tilt, t * (t < T.fight1 ? .12 : .5), tiltZ, 'XYZ');
+  U.g.visible = alive && t < T.loop - 2;
+  // 充能：底部紅環越來越亮，主雷射準備往下射（被無人機群打斷）
+  const charge = t >= T.charge0 && t < T.fight1 ? cl((t - T.charge0) / 6) : 0;
+  U.ringMat.opacity = charge * (.45 + Math.sin(t * 9) * .2);
+  U.coreMat.emissiveIntensity = .3 + charge * (2.5 + Math.sin(t * 14));
+  const aim = t >= T.charge0 + 2 && t < T.launch1 + 3;
+  U.beam.material.opacity = aim ? (.18 + Math.sin(t * 30) * .08) * cl((t - T.charge0 - 2) / 2) : 0;
+  U.beam.scale.set(.5, p.y - TOP, .5);
+  if (t >= T.charge0 && t < T.launch1) uText = tr('（飛船底部亮起紅光，準備向下發射雷射！）', '(The hull glows red: the laser is charging!)');
+  U.lightMat.emissiveIntensity = t < T.fight1 ? 1 + Math.sin(t * 4) * .4 : Math.max(0, Math.sin(t * 17)) * 1.5;
+  const sh = t < T.fight1 ? sm(cl(t / T.arrive)) : 0;
+  UF.shadow.position.set(p.x, TOP + .03, p.z); UF.shadow.material.opacity = sh * .28; UF.shadow.scale.setScalar(.8 + sh * .2);
+  // 墜毀爆炸與水花
+  if (t >= T.crash1 && t < T.crash1 + 1 && !UF.crashed) { UF.crashed = true; ufFlash(UF.crash.clone().setY(WATER_Y + 1), 6); for (let k = 0; k < 4; k++) { const s = UF.splashes[k]; s.t = -k * .25; s.m.position.set(UF.crash.x, WATER_Y + .03, UF.crash.z); } }
+  if (t < T.crash1) UF.crashed = false;
+  for (const s of UF.splashes) { s.t += dt; const u = cl(s.t / 2); s.m.scale.setScalar(1 + u * 9); s.m.material.opacity = s.t < 0 ? 0 : (1 - u) * .8; }
+  // ── 無人機：島上組裝 → 起飛 → 環繞攻擊 → 回島降落 ──
+  const lp = UF.lasers.geometry.attributes.position; let firing = 0;
+  const built = cl((t - T.build0) / (T.build1 - T.build0)) * UF_N;
+  UF.drones.forEach((d, k) => {
+    const show = t >= T.build0 && built > k;
+    d.m.visible = show; if (!show) { lp.setXYZ(k * 2, 0, -99, 0); lp.setXYZ(k * 2 + 1, 0, -99, 0); return; }
+    const grow = sm(cl(built - k)); d.m.scale.setScalar(.6 + .4 * grow);
+    const lt = t - T.launch0 - k * .18, rt = t - T.crash1 - k * .15;
+    const orbitA = t * d.os + d.ph, orbit = new THREE.Vector3(UF.hover.x + Math.cos(orbitA) * d.orb, UF.hover.y + d.oy + Math.sin(t * 2 + d.ph) * .3, UF.hover.z + Math.sin(orbitA) * d.orb);
+    let pos, yaw = 0, roll = 0;
+    if (t < T.launch0 || lt < 0) { pos = d.pad.clone(); }
+    else if (t < T.launch1 + 1.2 && lt < 4) { const u = sm(cl(lt / 4)); pos = d.pad.clone().lerp(orbit, u); pos.y += Math.sin(u * Math.PI) * 2.5; }
+    else if (t < T.crash1 || rt < 0) { pos = orbit; yaw = -orbitA; roll = .35 * Math.sign(d.os); }
+    else if (rt < 6) { const u = sm(cl(rt / 6)); const from = new THREE.Vector3(UF.hover.x + Math.cos(d.ph) * d.orb, UF.hover.y - 1, UF.hover.z + Math.sin(d.ph) * d.orb); pos = from.lerp(d.pad, u); pos.y += Math.sin(u * Math.PI) * 2; }
+    else pos = d.pad.clone();
+    if (t >= T.home1 && t < T.loop - 8) pos.y += Math.abs(Math.sin(t * 3 + d.ph)) * .25;   // 慶祝時上下跳動
+    d.m.position.copy(pos); d.m.rotation.set(0, yaw, roll);
+    // 雷射：環繞時輪流對飛船開火
+    const fire = t >= T.launch1 && t < T.fight1 && Math.sin(t * 7 + d.ph * 3) > .55;
+    if (fire) {
+      const hit = UF.hover.clone().add(new THREE.Vector3(Math.cos(orbitA) * 5.6, .3, Math.sin(orbitA) * 5.6));
+      lp.setXYZ(k * 2, pos.x, pos.y, pos.z); lp.setXYZ(k * 2 + 1, hit.x, hit.y, hit.z); firing++;
+      if (fxRand() < dt * 1.2) { ufFlash(hit, .9); UF.hits++; if (fxRand() < .4) ufSmoke(hit); }
+    } else { lp.setXYZ(k * 2, 0, -99, 0); lp.setXYZ(k * 2 + 1, 0, -99, 0); }
+  });
+  lp.needsUpdate = true; UF.lasers.material.opacity = firing ? .85 : 0;
+  // 火花、閃光、煙
+  const building = t >= T.build0 && t < T.build1 + .5, sa = UF.sparks.geometry.attributes.position;
+  if (building) { for (let i = 0; i < sa.count; i++) { const a = fxRand() * 6.28, r = fxRand() * 1.1; sa.setXYZ(i, UF.padC.x + Math.cos(a) * r, TOP + .1 + fxRand() * .4, UF.padC.z + Math.sin(a) * r); } sa.needsUpdate = true; }
+  UF.sparks.material.opacity = building ? .9 : 0;
+  for (const f of UF.flashes) { f.t += dt; const u = cl(f.t / (f.s > 3 ? 1.2 : .4)); f.m.scale.setScalar((.6 + u * 1.8) * (f.s || 1)); f.m.material.opacity = (1 - u) * .9; }
+  for (const s of UF.smoke) { s.t += dt; const u = cl(s.t / 3); s.m.position.addScaledVector(s.v, dt); s.m.scale.setScalar(1 + u * 2.2); s.m.material.opacity = (1 - u) * .55; }
+  // 同學
+  const cheering = t >= T.home1 && t < T.loop - 6;
+  for (const c of UF.crowd) {
+    const r = 1.5, x = UF.padC.x + Math.cos(c.a) * r, z = UF.padC.z + Math.sin(c.a) * r;
+    c.m.position.set(x, TOP + (cheering ? Math.abs(Math.sin(t * 6 + c.ph)) * .18 : 0), z); c.m.rotation.y = Math.atan2(-Math.cos(c.a), -Math.sin(c.a));
+    c.m.visible = t > 2;
+  }
+  if (t > 2 && t < T.build0 + 4) cText = tr('有飛碟！快去無人機島組無人機！', 'A UFO! To Drone Island, build the drones!');
+  else if (building) cText = tr(`組裝無人戰鬥機中… ${Math.min(UF_N, Math.floor(built))}/${UF_N}`, `Building attack drones… ${Math.min(UF_N, Math.floor(built))}/${UF_N}`);
+  else if (t >= T.launch0 && t < T.launch1) dText = tr('它要發射雷射了！無人機群，出擊！', 'It’s charging! Drone squadron, launch!');
+  else if (t >= T.launch1 && t < T.fight1) dText = tr(`集中火力攻擊！命中 ${UF.hits} 次`, `Focus fire! ${UF.hits} hits`);
+  else if (t >= T.fight1 && t < T.crash1 + 3) cText = tr('飛船要掉下去了！', 'It’s going down!');
+  else if (cheering) cText = tr('🎉 任務達成！保護資工島！', '🎉 Mission complete! CSIE Islands saved!');
+  const near = v => camera.position.distanceTo(v) < 80;
+  const uTop = p.clone().setY(p.y + 2.4), dTop = UF.hover.clone().setY(UF.hover.y - 2.5).addScaledVector(new THREE.Vector3(UF.padC.x - UF.hover.x, 0, UF.padC.z - UF.hover.z).normalize(), 6.5), cTop = UF.padC.clone().setY(TOP + 1);
+  setBubble(B.u, uText && U.g.visible && near(uTop) ? '🛸 ' + uText : '', uTop.x, uTop.y, uTop.z);
+  setBubble(B.d, dText && near(dTop) ? '🛩 ' + dText : '', dTop.x, dTop.y, dTop.z);
+  setBubble(B.c, cText && near(cTop) ? cText : '', cTop.x, cTop.y, cTop.z);
+  // 日誌
+  if (t > 1) ufLog('come', '🛸 天空出現巨大的圓盤飛船，正慢慢飛向資工島……', '🛸 A giant flying saucer appears and drifts toward the CSIE Islands…');
+  if (t > T.build0) ufLog('build', '🛠 同學們衝到無人機島，開始打造無人戰鬥機群！', '🛠 Students rush to Drone Island to build an attack-drone squadron!', 'talk');
+  if (t > T.arrive) ufLog('hover', '🛸 飛船停在綜三館正上方，遮住了半個天空', '🛸 The saucer stops right above Building 3, blotting out the sky');
+  if (t > T.charge0) ufLog('charge', '🔴 飛船底部亮起紅光，準備向下發射雷射！', '🔴 The underside glows red: the saucer is about to fire!');
+  if (t > T.launch0) ufLog('launch', `🛩 ${UF_N} 架無人戰鬥機從無人機島起飛，迎擊飛船！`, `🛩 ${UF_N} attack drones take off from Drone Island to intercept!`);
+  if (t > T.fight1) ufLog('down', '💥 飛船被無人機群擊中要害，冒著濃煙墜落！', '💥 Hit in a weak spot, the saucer goes down trailing smoke!');
+  if (t > T.crash1) ufLog('crash', '🌊 飛船墜毀在外海，激起巨大水花', '🌊 The saucer crashes into the sea with a huge splash');
+  if (t > T.home1) ufLog('win', '🏆 任務達成！無人機群平安返航，資工島保住了！', '🏆 Mission complete! The drones return safely and the CSIE Islands are saved!', 'praise');
+  return true;
+}
+function ufCamera() {
+  const UF = EVFX.ufo; if (!UF) return;
+  const target = UF.hover.clone().lerp(UF.padC, .3).setY(TOP + 4);
+  flyTo({ pos: target.clone().add(new THREE.Vector3(7, 17, 33)), target }, 1400);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
