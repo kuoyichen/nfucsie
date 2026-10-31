@@ -6292,8 +6292,9 @@ function initStarship() {
   tm(new THREE.BoxGeometry(.42, TH, .42), steelD, 0, TH / 2, 0);
   const band = new THREE.MeshStandardMaterial({ color: '#2f333a', metalness: .4, roughness: .6 });
   for (let k = 1; k < 24; k++) tm(new THREE.BoxGeometry(.46, .05, .46), band, 0, k * TH / 24, 0);
-  tm(new THREE.BoxGeometry(.12, .12, 1.7), steelD, 0, TH - .06, .75);
-  S.boomTip = new THREE.Object3D(); S.boomTip.position.set(0, TH - .12, 1.35); S.tower.add(S.boomTip);
+  S.boom = new THREE.Group(); S.boom.position.y = TH - .06; S.tower.add(S.boom);   // 組裝用的起重吊桿，發射前轉到塔後面收起來
+  tm(new THREE.BoxGeometry(.12, .12, 1.7), steelD, 0, 0, .75, S.boom);
+  S.boomTip = new THREE.Object3D(); S.boomTip.position.set(0, -.06, 1.35); S.boom.add(S.boomTip);
   S.carriage = new THREE.Group(); S.tower.add(S.carriage);
   tm(new THREE.BoxGeometry(1.2, .22, .3), band, 0, 0, .3, S.carriage);
   S.arms = [1, -1].map(s => { const g = new THREE.Group(); g.position.set(s * .5, 0, .3); S.carriage.add(g); tm(new THREE.BoxGeometry(.08, .16, 1.5), band, 0, 0, .75, g); return g; });
@@ -6378,10 +6379,10 @@ function ssSep(S) {
 function ssCamPose(S, t, c) {
   const T = SS_T, sm = x => x * x * (3 - 2 * x), cl = x => clamp(x, 0, 1);
   const orbitC = new THREE.Vector3(S.pad.x, SS_APEX - 5, S.pad.z);
-  let target = new THREE.Vector3(S.pad.x, TOP + 5.6, S.pad.z), dist = 30, polar = 66, az = 0;
+  let target = new THREE.Vector3(S.pad.x, TOP + 6.6, S.pad.z), dist = 36, polar = 68, az = 0;
   if (t >= T.launch0 && t < T.flip0) {
     const pb = S.tCloud != null ? sm(cl((t - S.tCloud) / 6)) : 0, up = cl((c.y - S.padY - 5) / (SS_CLOUD - S.padY - 5));
-    target = c.clone().lerp(orbitC, pb); dist = lerp(lerp(30, 36, up), 72, pb); polar = lerp(66, 60, pb);
+    target = c.clone().lerp(orbitC, pb); dist = lerp(lerp(36, 38, up), 72, pb); polar = lerp(68, 60, pb);
     az = Math.max(0, t - T.apex) * .015;
   } else if (t >= T.flip0) {
     const e = sm(cl((t - T.land0) / (T.land1 - T.land0)));
@@ -6466,6 +6467,7 @@ function updateStarship(dt) {
   else if (t >= T.land0 && t < T.land1) { armY = lerp(holdStack, catchY + SS_HOLD, sm(cl((t - T.land0) / 5))); open = 1 - sm(cl((t - T.land1 + 1.2) / 1.2)); }
   else if (t >= T.land1) { armY = pos.y + SS_HOLD; open = 0; }
   S.carriage.position.y = armY - S.tower.position.y;
+  S.boom.rotation.y = (S.pilot ? 1 : sm(cl((t - T.build1) / 2.5))) * Math.PI;
   S.arms[0].rotation.y = open * .95; S.arms[1].rotation.y = -open * .95;
   // ── 組裝：吊臂把助推器 4 段、星艦 6 段一段段吊上去，接縫處焊接火花 ──
   const D = (T.build1 - T.build0) / S.parts.length, built = !!S.pilot || t >= T.build1;
@@ -6541,6 +6543,7 @@ function updateStarship(dt) {
   const alt = Math.max(0, Math.round((pos.y - S.padY) * 3));
   if (!S.pilot) {
     if (t > 1 && t < T.build0) cText = tr('發射台升起來了！大家來組裝星艦！', 'The launch pad is up! Let’s build Starship!');
+    else if (t >= T.build1 && t < T.build1 + 2.5) cText = tr('起重吊桿收回中…', 'Retracting the crane boom…');
     else if (t >= T.build0 && t < T.build1) { const n = Math.min(S.parts.length, Math.floor((t - T.build0) / D)); cText = n < 4 ? tr(`組裝超重型助推器… ${n}/4`, `Stacking Super Heavy… ${n}/4`) : tr(`組裝星艦中… ${n - 4}/6`, `Stacking Starship… ${n - 4}/6`); }
     else if (t >= T.count0 && t < T.launch0 - 1) cText = tr(`發射倒數 ${Math.ceil(T.launch0 - 1 - t)}…`, `T-minus ${Math.ceil(T.launch0 - 1 - t)}…`);
     else if (t >= T.launch0 - 1 && t < T.launch0 + 3) cText = tr('點火！升空！🚀', 'Ignition! Liftoff! 🚀');
