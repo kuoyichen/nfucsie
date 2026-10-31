@@ -5860,7 +5860,8 @@ function updatePilot(dt) {
   } else if (kind === 'starship') {
     const S = EVFX.ss; if (!S || !S.pilot) return exitWalk();
     const P = S.pilot, fwd = new THREE.Vector3(Math.sin(FP.yaw), 0, Math.cos(FP.yaw)), c = P.pos.clone().setY(P.pos.y + SS_MID);
-    const zk = camera.aspect < 1 ? 1.3 : 1;   // 星艦後上方；拖曳上下可以抬頭找高處的光圈
+    let zk = camera.aspect < 1 ? 1.3 : 1;   // 星艦後上方；拖曳上下可以抬頭找高處的光圈
+    if (S.bst.mode === 'stack') zk *= 1.35;   // 助推器還接在下面，整組比較長
     want = c.clone().addScaledVector(fwd, -10 * zk).setY(c.y + (3.2 - FP.pitch * 3) * zk);
     look = c.clone().addScaledVector(fwd, 8).setY(c.y + FP.pitch * 10);
     pilotBars(P.done / SS_SAT, (P.pos.y - TOP) / 40);
@@ -6177,14 +6178,16 @@ function ufPilotStep(dt) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  活動「星艦發射任務」：電子學島（晶片／半導體）上豎起發射台與發射塔，同學把星艦一段段
-//  吊上去組裝；倒數後慢慢升空，穿過雲層後鏡頭拉遠，看星艦把衛星一顆顆送上軌道；
-//  最後翻身啟動反推，慢慢降回發射台，鏡頭跟著拉近
+//  活動「星艦發射任務」：電子學島（晶片／半導體）上豎起發射台與發射塔，同學把超重型助推器
+//  和星艦一段段吊上去組裝；倒數後整組慢慢升空，熱分離後助推器濺落外海，星艦穿過雲層、
+//  鏡頭拉遠，把衛星一顆顆送上軌道；最後翻身反推飛回來，由發射塔的兩支夾臂夾住回收
 //  按「漫步」可以親自駕駛星艦：飛進各個藍色光圈，按「部署衛星」
 // ═══════════════════════════════════════════════════════════════════════════
-const SS_T = { rise1: 5, build0: 6, build1: 25, count0: 25, launch0: 31, apex: 58, deploy0: 59, flip0: 80, land0: 84, land1: 110, loop: 126 };
+const SS_T = { rise1: 5, build0: 6, build1: 26, count0: 26, launch0: 32, sep: 50, apex: 60, deploy0: 61, flip0: 82, land0: 86, land1: 112, loop: 132 };
 const SS_SAT = 4, SS_APEX = 34, SS_CLOUD = 25, SS_MOUNT = .8, SS_MID = 2.3;
+const SS_BH = 5.2, SS_SEPY = 20, SS_CATCH = 2, SS_TH = 12.4, SS_HOLD = 3.7;   // 助推器高度、分離高度、夾住時離台高度、塔高、夾臂夾在星艦的高度
 const SS_Y0 = [0, .5, 1.3, 2.1, 2.9, 3.6], SS_Y1 = [.5, 1.3, 2.1, 2.9, 3.6, 4.6];
+const SS_BY0 = [0, 1, 3.2, 4.7], SS_BY1 = [1, 3.2, 4.7, 5.2];
 const SS_BUBBLES = {};
 let ssHooked = false;
 function ssBubbles() { for (const k of ['s', 'c']) if (!SS_BUBBLES[k]) SS_BUBBLES[k] = bubbleLabel(k === 's' ? 6 : 5); }
@@ -6227,8 +6230,30 @@ function starshipMesh() {
   S.flames = [fl(.36, 1.8, '#ff8a3a', .75), fl(.2, 1.2, '#fff1b0', .95)];
   return S;
 }
-function ssFlame(S, k, ck) {
-  for (const f of S.S.flames) {
+// 超重型助推器：全不鏽鋼，底部 12 顆引擎，頂端深色熱分離環與 4 片柵格翼；分 4 段組裝
+function boosterMesh() {
+  const B = { g: new THREE.Group(), parts: [] }, r = .42;
+  const steel = new THREE.MeshStandardMaterial({ color: '#e4e7ec', metalness: .15, roughness: .35, emissive: '#8a9099', emissiveIntensity: .35 });
+  const dark = new THREE.MeshStandardMaterial({ color: '#3b4048', metalness: .5, roughness: .45 });
+  const part = () => { const p = new THREE.Group(); B.g.add(p); B.parts.push(p); return p; };
+  const mesh = (p, geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; p.add(m); return m; };
+  const ring = (p, y0, h) => { mesh(p, new THREE.CylinderGeometry(r, r, h, 24), steel, 0, y0 + h / 2, 0); mesh(p, new THREE.CylinderGeometry(r + .02, r + .02, .03, 24), dark, 0, y0 + h, 0); };
+  let p = part(); ring(p, 0, 1);
+  mesh(p, new THREE.CylinderGeometry(r + .03, r + .05, .14, 24), dark, 0, .07, 0);
+  for (let k = 0; k < 12; k++) { const o = k < 9, a = (o ? k / 9 : (k - 9) / 3) * Math.PI * 2, rr = o ? .29 : .1; mesh(p, new THREE.CylinderGeometry(.05, .09, .22, 10), dark, Math.cos(a) * rr, -.11, Math.sin(a) * rr); }
+  ring(part(), 1, 2.2); ring(part(), 3.2, 1.5);
+  p = part();
+  mesh(p, new THREE.CylinderGeometry(r + .01, r + .01, .5, 24), dark, 0, 4.95, 0);
+  for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2 + Math.PI / 4; mesh(p, new THREE.BoxGeometry(.34, .32, .05), dark, Math.cos(a) * (r + .17), 4.8, Math.sin(a) * (r + .17)).rotation.y = -a; }
+  const fl = (rad, len, c, o) => {
+    const m = new THREE.Mesh(new THREE.ConeGeometry(rad, len, 18, 1, true).rotateX(Math.PI).translate(0, -len / 2, 0), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    m.position.y = -.2; m.userData.o = o; B.g.add(m); return m;
+  };
+  B.flames = [fl(.55, 2.8, '#ff8a3a', .75), fl(.3, 1.8, '#fff1b0', .95)];
+  return B;
+}
+function ssFlame(flames, k, ck) {
+  for (const f of flames) {
     const j = .88 + Math.sin(ck * 37 + f.userData.o * 9) * .08 + fxRand() * .08;
     f.material.opacity = f.userData.o * Math.min(1, k) * j; f.scale.set(1 + k * .12, Math.max(.01, k * j), 1 + k * .12); f.visible = k > .01;
   }
@@ -6260,21 +6285,36 @@ function initStarship() {
   mm(new THREE.CylinderGeometry(1.05, 1.15, .08, 6), concrete, 0, .04, 0);
   for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2 + .26; mm(new THREE.BoxGeometry(.14, SS_MOUNT, .14), steelD, Math.cos(a) * .62, SS_MOUNT / 2, Math.sin(a) * .62); }
   mm(new THREE.TorusGeometry(.62, .14, 10, 28).rotateX(Math.PI / 2), steelD, 0, SS_MOUNT - .1, 0);
-  // 發射塔：從島裡升起；頂端吊臂伸到星艦正上方，中段一對機械臂扶著星艦
-  const TH = 6.4, tp = pad.clone().addScaledVector(out, 1.35);
+  // 發射塔：從島裡升起；頂端吊臂伸到發射台正上方，一對可以上下移動的夾臂負責扶住、回收星艦
+  const TH = SS_TH, tp = pad.clone().addScaledVector(out, 1.35);
   S.tower = new THREE.Group(); S.tower.position.set(tp.x, TOP, tp.z); S.tower.rotation.y = Math.atan2(-out.x, -out.z); EVFX.group.add(S.tower);
   const tm = (geo, mat, x, y, z, par = S.tower) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; par.add(m); return m; };
   tm(new THREE.BoxGeometry(.42, TH, .42), steelD, 0, TH / 2, 0);
   const band = new THREE.MeshStandardMaterial({ color: '#2f333a', metalness: .4, roughness: .6 });
-  for (let k = 1; k < 12; k++) tm(new THREE.BoxGeometry(.46, .05, .46), band, 0, k * TH / 12, 0);
+  for (let k = 1; k < 24; k++) tm(new THREE.BoxGeometry(.46, .05, .46), band, 0, k * TH / 24, 0);
   tm(new THREE.BoxGeometry(.12, .12, 1.7), steelD, 0, TH - .06, .75);
   S.boomTip = new THREE.Object3D(); S.boomTip.position.set(0, TH - .12, 1.35); S.tower.add(S.boomTip);
-  S.arms = [1, -1].map(s => { const g = new THREE.Group(); g.position.set(s * .5, 4.4, 0); S.tower.add(g); tm(new THREE.BoxGeometry(.08, .14, 1.3), band, 0, 0, .65, g); return g; });
+  S.carriage = new THREE.Group(); S.tower.add(S.carriage);
+  tm(new THREE.BoxGeometry(1.2, .22, .3), band, 0, 0, .3, S.carriage);
+  S.arms = [1, -1].map(s => { const g = new THREE.Group(); g.position.set(s * .5, 0, .3); S.carriage.add(g); tm(new THREE.BoxGeometry(.08, .16, 1.5), band, 0, 0, .75, g); return g; });
   S.cable = new THREE.Line(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3)), new THREE.LineBasicMaterial({ color: '#2a2a2a' }));
   S.cable.frustumCulled = false; EVFX.group.add(S.cable);
   S.hook = new THREE.Mesh(new THREE.BoxGeometry(.18, .1, .18), new THREE.MeshStandardMaterial({ color: '#f2b233' })); EVFX.group.add(S.hook);
-  // 星艦
+  // 星艦與助推器
   S.S = starshipMesh(); EVFX.group.add(S.S.g);
+  S.Bo = boosterMesh(); EVFX.group.add(S.Bo.g); S.bst = { mode: 'stack' };
+  S.parts = [...S.Bo.parts.map((p, k) => ({ p, grp: S.Bo.g, y0: SS_BY0[k], y1: SS_BY1[k] })), ...S.S.parts.map((p, k) => ({ p, grp: S.S.g, y0: SS_Y0[k], y1: SS_Y1[k] }))];
+  // 助推器濺落點：往外海、離各島最遠的方向
+  let bd = -1;
+  for (let k = 0; k < 25; k++) {
+    const a = S.baseA + Math.PI + (k / 24 - .5) * 2.4, q = new THREE.Vector3(pad.x + Math.cos(a) * 15, WATER_Y, pad.z + Math.sin(a) * 15);
+    let d = 1e9;
+    for (const id in ISL) d = Math.min(d, Math.hypot(ISL[id].x - q.x, ISL[id].z - q.z) - 2.2);
+    for (const id in COMP) d = Math.min(d, Math.hypot(COMP[id].x - q.x, COMP[id].z - q.z) - 1.6);
+    if (d > bd) { bd = d; S.splash = q; }
+  }
+  S.splashes = []; const rg = new THREE.RingGeometry(.6, .9, 32).rotateX(-Math.PI / 2);
+  for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false })); m.position.set(S.splash.x, WATER_Y + .03, S.splash.z); EVFX.group.add(m); S.splashes.push({ m, t: 9 }); }
   // 衛星與軌道
   const circ = []; for (let k = 0; k < 96; k++) { const a = k / 96 * Math.PI * 2; circ.push(Math.cos(a), 0, Math.sin(a)); }
   const ringGeo = new THREE.BufferGeometry(); ringGeo.setAttribute('position', new THREE.Float32BufferAttribute(circ, 3));
@@ -6315,7 +6355,7 @@ function initStarship() {
   updateStarship(0);
 }
 function ssReset(S) {
-  Object.assign(S, { t: 0, logged: {}, tCloud: null, landFrom: null, landPitch: null, landYaw: S.padYaw + (SS_T.flip0 - SS_T.apex) * .25, touched: false });
+  Object.assign(S, { t: 0, logged: {}, tCloud: null, landFrom: null, landPitch: null, landYaw: S.padYaw + (SS_T.flip0 - SS_T.apex) * .25, touched: false, bst: { mode: 'stack' } });
   for (const s of S.sats) { s.on = false; s.m.visible = false; s.ring.material.opacity = 0; }
 }
 function ssLog(key, zh, en, type = 'info') { const S = EVFX.ss; if (S.logged[key]) return; S.logged[key] = true; logEvent('slot', tr(zh, en), type); }
@@ -6324,18 +6364,28 @@ function ssRelease(S, k, p0, a, r, y) {
   Object.assign(S.sats[k], { on: true, c0: S.clock, p0: p0.clone(), a0: a, r, y, w: (k % 2 ? -1 : 1) * 1.6 / r });
   S.sats[k].m.visible = true; S.sats[k].ring.scale.setScalar(r); S.sats[k].ring.position.set(S.pad.x, y, S.pad.z);
 }
+// 降落時轉回「黑色腹面朝發射塔」，挑轉最少的那一圈
+function ssPadYaw(S) { return S.padYaw + Math.PI * 2 * Math.round((S.landYaw - S.padYaw) / (Math.PI * 2)); }
+// 熱分離：助推器脫離，自己翻身、減速，濺落在外海
+function ssSep(S) {
+  if (S.bst.mode !== 'stack') return;
+  const top = S.Bo.g.localToWorld(new THREE.Vector3(0, SS_BH, 0));
+  S.bst = { mode: 'fall', c0: S.clock, p0: S.Bo.g.localToWorld(new THREE.Vector3(0, SS_BH / 2, 0)), q0: S.Bo.g.quaternion.clone(), splashed: false };
+  for (let k = 0; k < 10; k++) { const a = k / 10 * 6.28; ssPuff(top.clone().add(new THREE.Vector3(Math.cos(a) * .5, 0, Math.sin(a) * .5)), new THREE.Vector3(Math.cos(a) * 1.8, -.2, Math.sin(a) * 1.8), 1.6, .6, '#ffd9a0'); }
+  ssLog('sep', '🔥 熱分離！超重型助推器脫離，星艦點燃自己的引擎繼續爬升', '🔥 Hot staging! Super Heavy separates and Starship lights its own engines');
+}
 // 觀賞鏡頭：發射前看全身 → 跟著往上 → 穿過雲層後拉遠看軌道 → 降落時一路拉近
 function ssCamPose(S, t, c) {
   const T = SS_T, sm = x => x * x * (3 - 2 * x), cl = x => clamp(x, 0, 1);
   const orbitC = new THREE.Vector3(S.pad.x, SS_APEX - 5, S.pad.z);
-  let target = new THREE.Vector3(S.pad.x, TOP + 2.8, S.pad.z), dist = 17, polar = 66, az = 0;
+  let target = new THREE.Vector3(S.pad.x, TOP + 5.6, S.pad.z), dist = 30, polar = 66, az = 0;
   if (t >= T.launch0 && t < T.flip0) {
-    const pb = S.tCloud != null ? sm(cl((t - S.tCloud) / 6)) : 0, up = cl((c.y - S.padY - SS_MID) / (SS_CLOUD - S.padY - SS_MID));
-    target = c.clone().lerp(orbitC, pb); dist = lerp(lerp(17, 28, up), 72, pb); polar = lerp(66, 60, pb);
+    const pb = S.tCloud != null ? sm(cl((t - S.tCloud) / 6)) : 0, up = cl((c.y - S.padY - 5) / (SS_CLOUD - S.padY - 5));
+    target = c.clone().lerp(orbitC, pb); dist = lerp(lerp(30, 36, up), 72, pb); polar = lerp(66, 60, pb);
     az = Math.max(0, t - T.apex) * .015;
   } else if (t >= T.flip0) {
     const e = sm(cl((t - T.land0) / (T.land1 - T.land0)));
-    target = orbitC.lerp(c, sm(cl((t - T.flip0) / 4))); dist = lerp(72, 13, e); polar = lerp(60, 67, e);
+    target = orbitC.lerp(c, sm(cl((t - T.flip0) / 4))); dist = lerp(72, 19, e); polar = lerp(60, 67, e);
     az = (T.flip0 - T.apex) * .015;
   }
   if (camera.aspect < 1) dist *= 1.3;
@@ -6343,9 +6393,11 @@ function ssCamPose(S, t, c) {
   const pr = THREE.MathUtils.degToRad(polar), dir = S.camDir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), az);
   return { target, pos: target.clone().addScaledVector(dir, Math.sin(pr) * dist).add(new THREE.Vector3(0, Math.cos(pr) * dist, 0)) };
 }
+// 鏡頭對準的點：還沒分離時看整組火箭的中間，分離後看星艦
+function ssFocus(S) { return S.bst.mode === 'stack' ? S.Bo.g.localToWorld(new THREE.Vector3(0, (SS_BH + 4.6) / 2, 0)) : S.S.g.localToWorld(new THREE.Vector3(0, SS_MID, 0)); }
 function ssCamera() {
   const S = EVFX.ss; if (!S) return;
-  const pose = ssCamPose(S, S.t, S.S.g.localToWorld(new THREE.Vector3(0, SS_MID, 0)));
+  const pose = ssCamPose(S, S.t, ssFocus(S));
   flyTo(pose, 1600); S.flight = state.flight; S.cam = true;
 }
 function updateStarship(dt) {
@@ -6356,19 +6408,18 @@ function updateStarship(dt) {
   const t = S.t, ck = S.clock, B = SS_BUBBLES, sm = x => x * x * (3 - 2 * x), cl = x => clamp(x, 0, 1), V = THREE.Vector3;
   let sText = '', cText = '';
   // ── 發射台與發射塔：開場從島裡升起，最後收回去 ──
-  const rf = Math.min(sm(cl(t / T.rise1)), cl((T.loop - t) / 4)), dy = -(1 - rf) * 6.6;
+  const rf = Math.min(sm(cl(t / T.rise1)), cl((T.loop - t) / 4)), dy = -(1 - rf) * (SS_TH + .2);
   S.mount.scale.y = Math.max(.001, rf); S.mount.visible = rf > .01;
   S.tower.position.y = TOP + dy; S.tower.visible = rf > .01;
-  const arm = S.pilot ? 1 : sm(cl((t - T.count0 - .5) / 2)) * (1 - sm(cl((t - T.land1 - 3) / 2)));
-  S.arms[0].rotation.y = arm * .95; S.arms[1].rotation.y = -arm * .95;
   if (t < T.rise1 && dt) { S.dustAcc += dt * 10; while (S.dustAcc > 1) { S.dustAcc--; const a = fxRand() * 6.28; ssPuff(new V(S.pad.x + Math.cos(a) * 1.1, TOP + .1, S.pad.z + Math.sin(a) * 1.1), new V(Math.cos(a) * .6, .3, Math.sin(a) * .6), 2, .5, '#cbbfa8'); } }
-  // ── 星艦姿態 ──
-  const padP = new V(S.pad.x, S.padY + dy, S.pad.z), apexP = new V(S.pad.x, SS_APEX, S.pad.z);
+  // ── 星艦姿態（pos＝星艦底部；還沒分離時助推器接在下面） ──
+  const stacked = S.bst.mode === 'stack', padP = new V(S.pad.x, S.padY + dy + (stacked ? SS_BH : 0), S.pad.z), apexP = new V(S.pad.x, SS_APEX, S.pad.z), catchY = S.padY + SS_CATCH;
   let pos = padP.clone(), pitch = 0, yaw = S.padYaw, roll = 0, thrust = 0, door = 0;
   const from = S.landFrom || apexP;
-  if (S.pilot) { const P = S.pilot; pos.copy(P.pos); pitch = P.lean; roll = P.roll; yaw = FP.yaw; thrust = P.thrust; door = P.door; }
+  if (S.pilot) { const P = S.pilot; pos.copy(P.pos); pitch = -P.lean; roll = -P.roll; yaw = FP.yaw + Math.PI; thrust = P.thrust; door = P.door; }   // 不鏽鋼那面朝後方的鏡頭
   else if (t >= T.launch0 - 1 && t < T.launch0) thrust = .9 * cl(t - T.launch0 + 1);
-  else if (t >= T.launch0 && t < T.apex) { const u = cl((t - T.launch0) / (T.apex - T.launch0)); pos.y = lerp(S.padY, SS_APEX, sm(u)); thrust = 1.15 - cl((u - .75) / .25) * .7; }
+  else if (t >= T.launch0 && t < T.sep) { const u = cl((t - T.launch0) / (T.sep - T.launch0)); pos.y = lerp(S.padY, SS_SEPY, u * u) + SS_BH; thrust = 1.15; }
+  else if (t >= T.sep && t < T.apex) { const u = cl((t - T.sep) / (T.apex - T.sep)); pos.y = lerp(SS_SEPY + SS_BH, SS_APEX, 1 - (1 - u) * (1 - u)); thrust = cl((t - T.sep) / .6) * (1 - cl((u - .7) / .3) * .6); }
   else if (t >= T.apex && t < T.flip0) {
     pos.copy(apexP); pos.y += Math.sin(ck * .7) * .15;
     pitch = -sm(cl((t - T.apex) / 3)) * Math.PI / 2; yaw = S.padYaw + (t - T.apex) * .25;
@@ -6376,37 +6427,70 @@ function updateStarship(dt) {
   } else if (t >= T.flip0 && t < T.land0) { pos.copy(from); pitch = -Math.PI / 2 * (1 - sm(cl((t - T.flip0) / (T.land0 - T.flip0)))); yaw = S.landYaw; }
   else if (t >= T.land0 && t < T.land1) {
     const u = cl((t - T.land0) / (T.land1 - T.land0)), h = sm(cl(u / .7));
-    pos.set(lerp(from.x, S.pad.x, h), lerp(from.y, S.padY, 1 - Math.pow(1 - u, 2.2)), lerp(from.z, S.pad.z, h));
-    pitch = lerp(S.landPitch || 0, 0, sm(cl((t - T.land0) / 2.5))); yaw = S.landYaw; thrust = .55 + u * .6;
-  } else if (t >= T.land1) yaw = S.landYaw;
+    pos.set(lerp(from.x, S.pad.x, h), lerp(from.y, catchY, 1 - Math.pow(1 - u, 2.2)), lerp(from.z, S.pad.z, h));
+    pitch = lerp(S.landPitch || 0, 0, sm(cl((t - T.land0) / 2.5))); yaw = lerp(S.landYaw, ssPadYaw(S), sm(cl((t - T.land0) / 4))); thrust = .55 + u * .6;
+  } else if (t >= T.land1) { pos.y = lerp(catchY, S.padY, sm(cl((t - T.land1 - 1.5) / 6))) + dy; yaw = ssPadYaw(S); }   // 夾臂夾住後，慢慢把星艦放回發射台
+  if (!S.pilot && stacked && t >= T.sep && t < T.flip0) ssSep(S);
   const shp = S.S.g; shp.rotation.set(pitch, yaw, roll, 'YXZ');
   const C = pos.clone().setY(pos.y + SS_MID);   // 以機身中心為轉軸
   shp.position.copy(C).sub(new V(0, SS_MID, 0).applyEuler(shp.rotation)); shp.updateMatrixWorld(true);
   S.S.door.rotation.x = -1.3 * door;
-  ssFlame(S, thrust, ck);
-  // ── 組裝：發射塔吊臂把 6 段一段段吊上去，接縫處焊接火花 ──
-  const D = (T.build1 - T.build0) / S.S.parts.length, built = !!S.pilot || t >= T.build1;
+  // ── 助推器：接在星艦下面 → 分離後翻身、反推，濺落外海沉下去 ──
+  const bo = S.Bo.g, BS = S.bst; let bThrust = 0;
+  if (BS.mode === 'stack') { bo.visible = true; bo.quaternion.copy(shp.quaternion); bo.position.copy(shp.localToWorld(new V(0, -SS_BH, 0))); bThrust = thrust; thrust = 0; }
+  else if (BS.mode === 'fall') {
+    const a = ck - BS.c0, u = cl(a / 14), dir = new V(S.splash.x - BS.p0.x, 0, S.splash.z - BS.p0.z).normalize(), yEnd = WATER_Y + SS_BH / 2;
+    const c = new V(lerp(BS.p0.x, S.splash.x, sm(u)), lerp(BS.p0.y, yEnd, u * u) + 6 * u * (1 - u), lerp(BS.p0.z, S.splash.z, sm(u)));
+    let tilt = Math.sin(u * Math.PI) * 1.2;
+    if (a >= 14) { c.y = yEnd - 3.2 * sm(cl((a - 14) / 5)); tilt = .35 * sm(cl((a - 14) / 3)); }
+    bo.rotation.set(tilt, Math.atan2(dir.x, dir.z), 0, 'YXZ');
+    bo.position.copy(c).sub(new V(0, SS_BH / 2, 0).applyEuler(bo.rotation)); bo.visible = a < 19;
+    if (a > 1.5 && a < 4.5) bThrust = .8;   // 返航點火
+    if (a > 11.2 && a < 14) bThrust = .9;   // 落海前減速點火
+    if (a >= 14 && !BS.splashed) {
+      BS.splashed = true;
+      for (let k = 0; k < 4; k++) S.splashes[k].t = -k * .25;
+      for (let k = 0; k < 12; k++) { const r = k / 12 * 6.28; ssPuff(new V(S.splash.x + Math.cos(r) * .6, WATER_Y + .3, S.splash.z + Math.sin(r) * .6), new V(Math.cos(r) * 2, 1.2 + fxRand(), Math.sin(r) * 2), 2.6, 1, '#ffffff'); }
+      ssLog('splash', '🌊 超重型助推器完成任務，濺落在外海', '🌊 Super Heavy finishes its job and splashes down at sea');
+    }
+    if (a > 20) S.bst = { mode: 'gone' };
+  } else bo.visible = false;
+  bo.updateMatrixWorld(true);
+  for (const s of S.splashes) { s.t += dt; const u = cl(s.t / 2.2); s.m.scale.setScalar(1 + u * 8); s.m.material.opacity = s.t < 0 ? 0 : (1 - u) * .8; }
+  ssFlame(S.S.flames, thrust, ck); ssFlame(S.Bo.flames, bThrust, ck);
+  // ── 發射塔夾臂：組裝時打開讓零件進來，組好後夾住星艦，發射前鬆開；回收時等在半空，星艦一到就夾住 ──
+  const holdStack = S.padY + SS_BH + SS_HOLD;
+  let armY = holdStack + dy, open = 1;
+  if (S.pilot) open = 1;
+  else if (t < T.launch0) open = t < T.build1 ? 1 : 1 - sm(cl((t - T.build1) / 1.5)) + sm(cl((t - T.launch0 + 2.5) / 1.5));
+  else if (t >= T.land0 && t < T.land1) { armY = lerp(holdStack, catchY + SS_HOLD, sm(cl((t - T.land0) / 5))); open = 1 - sm(cl((t - T.land1 + 1.2) / 1.2)); }
+  else if (t >= T.land1) { armY = pos.y + SS_HOLD; open = 0; }
+  S.carriage.position.y = armY - S.tower.position.y;
+  S.arms[0].rotation.y = open * .95; S.arms[1].rotation.y = -open * .95;
+  // ── 組裝：吊臂把助推器 4 段、星艦 6 段一段段吊上去，接縫處焊接火花 ──
+  const D = (T.build1 - T.build0) / S.parts.length, built = !!S.pilot || t >= T.build1;
   let weld = null, hookP = null;
-  S.S.parts.forEach((p, k) => {
+  S.parts.forEach(({ p, grp, y0, y1 }, k) => {
     const u = built ? 1 : cl((t - T.build0 - k * D) / D);
     p.visible = u > 0;
-    if (u >= .75) { p.position.set(0, 0, 0); if (u < 1) weld = SS_Y0[k]; return; }
+    if (u >= .75) { p.position.set(0, 0, 0); if (u < 1) weld = grp.position.y + y0; return; }
     if (u <= 0) return;
-    const sx = S.stage.x, sz = S.stage.z, y0 = -(SS_MOUNT + .26) - SS_Y0[k];
-    if (u < .45) p.position.set(sx, lerp(y0, .5, sm(u / .45)), sz);
+    const sx = S.stage.x, sz = S.stage.z, ys = TOP - grp.position.y - y0;
+    if (u < .45) p.position.set(sx, lerp(ys, .5, sm(u / .45)), sz);
     else { const b = sm(cl((u - .45) / .3)); p.position.set(sx * (1 - b), .5 * (1 - b), sz * (1 - b)); }
-    hookP = shp.localToWorld(p.position.clone().setY(p.position.y + SS_Y1[k] + .05));
+    hookP = grp.localToWorld(p.position.clone().setY(p.position.y + y1 + .05));
   });
   const ca = S.cable.geometry.attributes.position;
   if (hookP && rf > .99) { const tip = S.boomTip.getWorldPosition(new V()); ca.setXYZ(0, tip.x, tip.y, tip.z); ca.setXYZ(1, hookP.x, hookP.y + .05, hookP.z); ca.needsUpdate = true; S.hook.position.copy(hookP); }
   S.cable.visible = S.hook.visible = !!hookP && rf > .99;
   const sa = S.sparks.geometry.attributes.position;
-  if (weld != null) { for (let i = 0; i < sa.count; i++) { const a = fxRand() * 6.28; sa.setXYZ(i, S.pad.x + Math.cos(a) * (.44 + fxRand() * .25), S.padY + weld + (fxRand() - .3) * .2, S.pad.z + Math.sin(a) * (.44 + fxRand() * .25)); } sa.needsUpdate = true; }
+  if (weld != null) { for (let i = 0; i < sa.count; i++) { const a = fxRand() * 6.28; sa.setXYZ(i, S.pad.x + Math.cos(a) * (.44 + fxRand() * .25), weld + (fxRand() - .3) * .2, S.pad.z + Math.sin(a) * (.44 + fxRand() * .25)); } sa.needsUpdate = true; }
   S.sparks.material.opacity = weld != null ? .9 : 0;
   // ── 煙 ──
-  if (thrust > .05 && dt) {
-    const eng = shp.localToWorld(new V(0, -.7, 0)), low = eng.y < TOP + 2.6 && Math.hypot(eng.x - S.pad.x, eng.z - S.pad.z) < 2;
-    S.puffAcc += dt * thrust * (low ? 16 : 6);
+  for (const [k, grp, ey] of [[thrust, shp, -.7], [bThrust, bo, -.9]]) {
+    if (k <= .05 || !dt) continue;
+    const eng = grp.localToWorld(new V(0, ey, 0)), low = eng.y < TOP + 2.6 && Math.hypot(eng.x - S.pad.x, eng.z - S.pad.z) < 2;
+    S.puffAcc += dt * k * (low ? 16 : 6);
     while (S.puffAcc > 1) {
       S.puffAcc--; const a = fxRand() * 6.28;
       if (low) ssPuff(new V(S.pad.x + Math.cos(a) * .8, TOP + .25, S.pad.z + Math.sin(a) * .8), new V(Math.cos(a) * 2.6, .25 + fxRand() * .4, Math.sin(a) * 2.6), 3.5, 1.3);
@@ -6417,9 +6501,10 @@ function updateStarship(dt) {
     S.rcsAcc += dt * 5;
     while (S.rcsAcc > 1) { S.rcsAcc--; const nose = shp.localToWorld(new V(0, 4.2, 0)), side = new V(0, 0, fxRand() < .5 ? 1 : -1).applyEuler(shp.rotation); ssPuff(nose.addScaledVector(side, .5), side.multiplyScalar(1.5), 1.2, .35, '#ffffff'); }
   }
-  if (t >= T.land1 && !S.touched && !S.pilot) {   // 落地瞬間的蒸氣
+  if (t >= T.land1 && !S.touched && !S.pilot) {   // 夾住的瞬間：引擎熄火的一團蒸氣
     S.touched = true;
-    for (let k = 0; k < 14; k++) { const a = k / 14 * 6.28; ssPuff(new V(S.pad.x + Math.cos(a) * .7, TOP + .3, S.pad.z + Math.sin(a) * .7), new V(Math.cos(a) * 2.2, .3, Math.sin(a) * 2.2), 3, 1.1); }
+    const eng = shp.localToWorld(new V(0, -.4, 0));
+    for (let k = 0; k < 10; k++) { const a = k / 10 * 6.28; ssPuff(eng.clone(), new V(Math.cos(a) * 1.4, -.3, Math.sin(a) * 1.4), 2.2, .8); }
   }
   if (t < T.land1) S.touched = false;
   for (const s of S.smoke) {
@@ -6453,36 +6538,37 @@ function updateStarship(dt) {
     c.m.position.set(c.x, TOP + (hop ? Math.abs(Math.sin(ck * 6 + c.ph)) * .16 : 0), c.z); c.m.visible = t > 2 && t < T.loop - 4;
   }
   // ── 對話泡泡 ──
-  const alt = Math.max(0, Math.round((C.y - S.padY - SS_MID) * 3));
+  const alt = Math.max(0, Math.round((pos.y - S.padY) * 3));
   if (!S.pilot) {
     if (t > 1 && t < T.build0) cText = tr('發射台升起來了！大家來組裝星艦！', 'The launch pad is up! Let’s build Starship!');
-    else if (t >= T.build0 && t < T.build1) { const n = Math.min(S.S.parts.length, Math.floor((t - T.build0) / D)); cText = tr(`組裝星艦中… ${n}/${S.S.parts.length}`, `Assembling Starship… ${n}/${S.S.parts.length}`); }
+    else if (t >= T.build0 && t < T.build1) { const n = Math.min(S.parts.length, Math.floor((t - T.build0) / D)); cText = n < 4 ? tr(`組裝超重型助推器… ${n}/4`, `Stacking Super Heavy… ${n}/4`) : tr(`組裝星艦中… ${n - 4}/6`, `Stacking Starship… ${n - 4}/6`); }
     else if (t >= T.count0 && t < T.launch0 - 1) cText = tr(`發射倒數 ${Math.ceil(T.launch0 - 1 - t)}…`, `T-minus ${Math.ceil(T.launch0 - 1 - t)}…`);
     else if (t >= T.launch0 - 1 && t < T.launch0 + 3) cText = tr('點火！升空！🚀', 'Ignition! Liftoff! 🚀');
+    else if (t >= T.sep && t < T.sep + 3.5) sText = tr('熱分離！助推器脫離，星艦點火', 'Hot staging! Booster away, Starship ignites');
     else if (t >= T.launch0 + 3 && t < T.apex) sText = S.tCloud != null ? tr(`已穿越雲層，準備進入軌道（高度 ${alt} 公里）`, `Above the clouds, entering orbit (${alt} km)`) : tr(`緩緩爬升中… 高度 ${alt} 公里`, `Climbing slowly… ${alt} km`);
     else if (t >= T.apex && t < T.flip0) sText = tr(`打開酬載艙，部署衛星 ${nSat}/${SS_SAT}`, `Payload bay open: satellites ${nSat}/${SS_SAT}`);
     else if (t >= T.flip0 && t < T.land0) sText = tr('任務完成！翻身準備返航', 'Mission done! Flipping for the trip home');
-    else if (t >= T.land0 && t < T.land1) sText = tr(`啟動反推，慢慢降落… 高度 ${alt} 公里`, `Retro burn, descending… ${alt} km`);
-    else if (t >= T.land1 && t < T.loop - 5) cText = tr('🎉 星艦平安降落！任務成功！', '🎉 Starship is home! Mission success!');
+    else if (t >= T.land0 && t < T.land1) sText = t > T.land1 - 4 ? tr('對準發射塔，夾臂準備…', 'Lining up with the tower arms…') : tr(`啟動反推，慢慢飛回發射塔… 高度 ${alt} 公里`, `Retro burn, heading back to the tower… ${alt} km`);
+    else if (t >= T.land1 && t < T.loop - 5) cText = tr('🎉 夾臂成功夾住星艦！任務成功！', '🎉 Caught by the tower arms! Mission success!');
   } else cText = S.pilot.won ? tr('🎉 太厲害了！衛星全部上軌道！', '🎉 Amazing! Every satellite is in orbit!') : tr('星艦加油！', 'Go, Starship!');
   const near = v => camera.position.distanceTo(v) < 95, sTop = C.clone().setY(C.y + 3), cTop = S.pad.clone().addScaledVector(S.camDir, 1.2).setY(TOP + 1.3);
   if (!S.pilot) setBubble(B.s, sText && near(sTop) ? '🚀 ' + sText : '', sTop.x, sTop.y, sTop.z);
   setBubble(B.c, cText && near(cTop) ? cText : '', cTop.x, cTop.y, cTop.z);
   // ── 日誌 ──
   if (t > .5) ssLog('rise', '🚀 電子學島上緩緩豎起星艦發射台與發射塔！', '🚀 A Starship launch pad and tower rise on Electronics Island!');
-  if (t > T.build0) ssLog('build', '🛠 同學們開始組裝星艦：引擎段、燃料槽、酬載艙、鼻錐一段段吊上去', '🛠 Students assemble Starship: engines, tanks, payload bay and nose, one section at a time', 'talk');
-  if (t > T.build1) ssLog('ready', '✅ 星艦組裝完成，機械臂鬆開，開始倒數！', '✅ Starship is assembled; the arms swing open for the countdown!');
-  if (t > T.launch0) ssLog('launch', '🔥 點火！星艦慢慢離開發射台，往天空爬升', '🔥 Ignition! Starship slowly lifts off the pad');
+  if (t > T.build0) ssLog('build', '🛠 同學們開始組裝：先把超重型助推器一段段吊上發射台，再把星艦疊在上面', '🛠 Students stack Super Heavy on the pad section by section, then Starship on top', 'talk');
+  if (t > T.build1) ssLog('ready', '✅ 星艦與助推器組裝完成，夾臂扶穩星艦，開始倒數！', '✅ Fully stacked; the tower arms steady Starship for the countdown!');
+  if (t > T.launch0) ssLog('launch', '🔥 點火！助推器 12 顆引擎全開，整組火箭慢慢離開發射台', '🔥 Ignition! All 12 booster engines light and the stack slowly lifts off');
   if (!S.pilot && t > T.launch0 && t < T.apex && S.tCloud == null && C.y > SS_CLOUD) { S.tCloud = t; ssLog('cloud', '☁ 星艦穿越雲層，準備進入軌道', '☁ Starship climbs above the clouds toward orbit'); }
   if (t < T.launch0) S.tCloud = null;
-  if (!S.pilot && t > T.flip0) ssLog('flip', '🔄 衛星部署完成，星艦翻身、啟動反推引擎準備返航', '🔄 Satellites deployed; Starship flips and fires its retro engines for home');
-  if (t > T.land1) ssLog('land', '🎯 星艦靠反推慢慢降落，穩穩停回發射台！', '🎯 On a gentle retro burn, Starship settles back onto the pad!', 'praise');
+  if (!S.pilot && t > T.flip0) ssLog('flip', '🔄 衛星部署完成，星艦翻身、啟動反推引擎飛回發射塔', '🔄 Satellites deployed; Starship flips and fires its retro engines toward the tower');
+  if (t > T.land1) ssLog('land', '🎯 星艦靠反推飛回發射塔，兩支夾臂穩穩夾住回收！', '🎯 Starship flies back to the tower and the two arms catch it!', 'praise');
   // ── 觀賞鏡頭：升空、穿越雲層、開始降落時自動接手（使用者自己轉鏡頭或開了側欄就不搶） ──
   const key = t < T.launch0 ? 0 : S.tCloud == null && t < T.apex ? 1 : t < T.land0 ? 2 : 3;
   if (key !== S.camKey) { if (S.camKey >= 0 && !ui.side) S.cam = true; S.camKey = key; }
   if (S.cam && !FP.on && dt) {
     if (state.flight && state.flight !== S.flight) S.cam = false;
-    else if (!state.flight) { const P = ssCamPose(S, t, C), a = 1 - Math.exp(-dt * 2.2); camera.position.lerp(P.pos, a); controls.target.lerp(P.target, a); }
+    else if (!state.flight) { const P = ssCamPose(S, t, ssFocus(S)), a = 1 - Math.exp(-dt * 2.2); camera.position.lerp(P.pos, a); controls.target.lerp(P.target, a); }
   }
   if (S.pilot) ssPilotStep(dt, C);
   else { S.wpG.visible = false; S.guide.material.opacity = 0; }
@@ -6497,7 +6583,8 @@ function ssPilotStart(touch) {
   for (const s of S.sats) { s.on = false; s.m.visible = false; s.ring.material.opacity = 0; }
   for (const w of S.wps) w.done = false;
   const c0 = S.S.g.localToWorld(new THREE.Vector3(0, SS_MID, 0));
-  const pos = flying ? c0.setY(c0.y - SS_MID) : new THREE.Vector3(S.pad.x, S.padY, S.pad.z);
+  if (!flying) S.bst = { mode: 'stack' };   // 從發射台起飛：整組火箭一起
+  const pos = flying ? c0.setY(c0.y - SS_MID) : new THREE.Vector3(S.pad.x, S.padY + SS_BH, S.pad.z);
   S.t = T.count0 + 2; S.cam = false;
   S.pilot = { pos, vel: new THREE.Vector3(), lean: 0, roll: 0, thrust: 0, door: 0, doorT: 0, done: 0, inRange: false, won: false, wonT: 0, req: {}, text: flying ? tr('你接手了星艦！飛向藍色光圈', 'You have control! Fly to the blue ring') : tr('按住「上升」點火起飛！', 'Hold Up to ignite and lift off!'), textT: 3 };
   const w = S.wps[0].p; FP.yaw = Math.atan2(w.x - pos.x, w.z - pos.z); FP.pitch = .3;
@@ -6508,18 +6595,19 @@ function ssPilotStart(touch) {
     { id: 'pbDown', label: '⬇ <span>' + tr('下降', 'Down') + '</span>', down: () => { FP.keys.q = true; }, up: () => { FP.keys.q = false; } }
   ]);
   $('#fpHint').textContent = touch
-    ? tr('按住「上升」起飛、左下搖桿前後左右飛、拖曳畫面轉向；飛進藍色光圈後按「🛰 部署衛星」，4 顆都送上軌道就自動返航降落！', 'Hold Up to lift off, joystick to fly, drag to turn. Inside a blue ring, tap Deploy. After all 4 satellites, Starship flies home and lands itself!')
-    : tr('E／Q 上升下降、WASD 飛行、拖曳滑鼠轉向（Shift 加速）；飛進藍色光圈後按空白鍵或「部署衛星」，4 顆都送上軌道就自動返航降落。Esc 離開。', 'E/Q up/down, WASD to fly, drag to turn (Shift = faster). Inside a blue ring, press Space or Deploy. After all 4 satellites, Starship lands itself. Esc exits.');
+    ? tr('按住「上升」起飛（飛高後助推器會自動分離）、左下搖桿前後左右飛、拖曳畫面轉向；飛進藍色光圈後按「🛰 部署衛星」，4 顆都送上軌道就自動飛回發射塔讓夾臂回收！', 'Hold Up to lift off (the booster separates up high), joystick to fly, drag to turn. Inside a blue ring, tap Deploy. After all 4 satellites, Starship flies back to be caught by the tower!')
+    : tr('E／Q 上升下降、WASD 飛行、拖曳滑鼠轉向（Shift 加速）；飛高後助推器會自動分離。飛進藍色光圈後按空白鍵或「部署衛星」，4 顆都送上軌道就自動飛回發射塔讓夾臂回收。Esc 離開。', 'E/Q up/down, WASD to fly, drag to turn (Shift = faster); the booster separates up high. Inside a blue ring, press Space or Deploy. After all 4 satellites, Starship flies back to be caught by the tower. Esc exits.');
   logEvent('slot', tr('🎮 你坐進星艦駕駛艙，準備親手把衛星送上軌道！', '🎮 You take Starship’s controls to put the satellites in orbit yourself!'), 'talk');
 }
 function ssPilotEnd() {
   const S = EVFX.ss, P = S.pilot; if (!P) return;
   S.pilot = null; S.wpG.visible = false; S.guide.material.opacity = 0;
   $('#pbDeploy') && $('#pbDeploy').classList.remove('on');
-  if (P.pos.distanceTo(new THREE.Vector3(S.pad.x, S.padY, S.pad.z)) < .3) { S.t = SS_T.count0 + 2; return; }   // 還沒起飛：接著倒數發射
-  // 已經在天上：自動翻正、反推降回發射台
-  Object.assign(S, { landFrom: P.pos.clone(), landPitch: P.lean, landYaw: FP.yaw, t: SS_T.land0, tCloud: null, cam: true });
-  for (const k of ['launch', 'cloud', 'flip']) S.logged[k] = true;
+  if (S.bst.mode === 'stack' && P.pos.distanceTo(new THREE.Vector3(S.pad.x, S.padY + SS_BH, S.pad.z)) < .3) { S.t = SS_T.count0 + 2; return; }   // 還沒起飛：接著倒數發射
+  // 已經在天上：助推器還在就先分離，星艦自動翻正、反推飛回發射塔讓夾臂回收
+  ssSep(S);
+  Object.assign(S, { landFrom: P.pos.clone(), landPitch: -P.lean, landYaw: FP.yaw + Math.PI, t: SS_T.land0, tCloud: null, cam: true });
+  for (const k of ['launch', 'cloud', 'flip', 'sep']) S.logged[k] = true;
   delete S.logged.land;
 }
 function ssPilotDeploy() {
@@ -6530,7 +6618,7 @@ function ssPilotDeploy() {
   w.done = true; P.done++; P.doorT = 1.6;
   logEvent('slot', tr(`🛰 你親手把第 ${P.done} 顆衛星送上軌道`, `🛰 You put satellite ${P.done} into orbit yourself`), 'talk');
   if (P.done >= SS_SAT) {
-    P.won = true; P.wonT = 0; P.text = tr('4 顆衛星全部上軌道！自動返航降落', 'All 4 satellites in orbit! Heading home to land'); P.textT = 3;
+    P.won = true; P.wonT = 0; P.text = tr('4 顆衛星全部上軌道！自動飛回發射塔', 'All 4 satellites in orbit! Heading back to the tower'); P.textT = 3;
     toast(tr('🏆 任務成功！你把 4 顆衛星都送上軌道了！', '🏆 Mission success! You put all 4 satellites in orbit!'), 4000);
     logEvent('slot', tr('🏆 你親自駕駛星艦完成衛星部署任務！', '🏆 Flying Starship yourself, you completed the satellite mission!'), 'praise');
   } else { P.text = tr(`部署成功 ${P.done}/${SS_SAT}！飛往下一個光圈`, `Deployed ${P.done}/${SS_SAT}! On to the next ring`); P.textT = 2; }
@@ -6544,19 +6632,21 @@ function ssPilotStep(dt, C) {
   f -= FP.stick.y; s += FP.stick.x;
   if (K.arrowleft) FP.yaw += dt * 1.4; if (K.arrowright) FP.yaw -= dt * 1.4;
   const L = Math.hypot(f, s); if (L > 1) { f /= L; s /= L; }
-  const hdP = Math.hypot(P.pos.x - S.pad.x, P.pos.z - S.pad.z), gy = hdP < .9 ? S.padY : TOP + .1, grounded = P.pos.y <= gy + .01;
+  const lift = S.bst.mode === 'stack' ? SS_BH : 0, groundAt = (x, z) => (Math.hypot(x - S.pad.x, z - S.pad.z) < .9 ? S.padY : TOP + .1) + lift;
+  const gy = groundAt(P.pos.x, P.pos.z), grounded = P.pos.y <= gy + .01;
   if (grounded && v <= 0) { f = s = 0; }   // 停在地上時不能平移，要先上升
   const sp = K.shift ? 11 : 7, sy = Math.sin(FP.yaw), cy = Math.cos(FP.yaw);
   P.vel.lerp(new THREE.Vector3((sy * f - cy * s) * sp, v * 5, (cy * f + sy * s) * sp), 1 - Math.exp(-dt * 2.5));
   P.pos.addScaledVector(P.vel, dt);
   const cx = P.pos.x - CENTER.x, cz = P.pos.z - CENTER.z, cd = Math.hypot(cx, cz);
   if (cd > 45) { P.pos.x = CENTER.x + cx / cd * 45; P.pos.z = CENTER.z + cz / cd * 45; }
-  const gy2 = Math.hypot(P.pos.x - S.pad.x, P.pos.z - S.pad.z) < .9 ? S.padY : TOP + .1;
+  const gy2 = groundAt(P.pos.x, P.pos.z);
   if (P.pos.y < gy2) { P.pos.y = gy2; if (P.vel.y < 0) P.vel.y = 0; }
   P.pos.y = Math.min(P.pos.y, 46);
   const air = P.pos.y > gy2 + .05;
   P.lean = lerp(P.lean, air ? f * .35 : 0, 1 - Math.exp(-dt * 4)); P.roll = lerp(P.roll, air ? s * .3 : 0, 1 - Math.exp(-dt * 4));
   P.thrust = air ? .5 + Math.max(0, v) * .45 + L * .25 - Math.max(0, -v) * .15 : v > 0 ? .9 : 0;
+  if (lift && P.pos.y > SS_SEPY + SS_BH) { ssSep(S); P.text = tr('熱分離！助推器脫離，換星艦引擎', 'Hot staging! Booster away, Starship engines on'); P.textT = 2.5; }
   P.doorT -= dt; P.door = lerp(P.door, P.doorT > 0 ? 1 : 0, 1 - Math.exp(-dt * 5));
   // ── 部署點 ──
   const cur = P.won ? null : S.wps[P.done], d = cur ? C.distanceTo(cur.p) : 0;
