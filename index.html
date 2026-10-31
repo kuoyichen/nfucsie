@@ -223,7 +223,7 @@ body.pilot #fpHint{top:96px}
 body.pilot #hud{display:none!important}
 body.pilot-ufo #fpCross{width:36px;height:36px;margin:-18px;background:none;border:2px solid #fff;box-shadow:0 0 0 2px #0005,inset 0 0 0 2px #0003;transition:border-color .1s}
 body.pilot-ufo #fpCross.lock{border-color:#ff4a3a;transform:scale(1.15)}
-body.pilot-kaiju #fpCross{display:none}
+body.pilot-kaiju #fpCross,body.pilot-starship #fpCross{display:none}
 body.walking #brand,body.walking #toolbar,body.walking #side,body.walking #legend,body.walking #journal{display:none!important}
 #banner{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:13;background:#8a2d14;color:#fff;font-weight:900;font-size:clamp(18px,3vw,26px);border-radius:16px;padding:12px 22px;box-shadow:var(--shadow);text-align:center;pointer-events:none;line-height:1.4}
 #banner small{display:block;font-size:13px;font-weight:400;opacity:.9}
@@ -2559,7 +2559,7 @@ function openHelp() {
   openModal(`<div class="eyebrow">${tr('說明', 'HELP')}</div><h2>${tr('歡迎來到虎尾科大資工系特色島', 'Welcome to NFU CSIE Island')}</h2>
   <p style="line-height:1.7">${tr('年級島是各個年級：五專一到五年級、四技一到四年級，以及碩士班；中間的綜三館是 20 位專任教師的大本營，榮譽殿堂收藏近年競賽成果。島民會上課、做專題、休閒，也會把作品帶去比賽。機器人、無人機、資料庫、電子學、演算法與人工智慧六座特色島以橋相連，學生在那裡做會動的專題。大四、專五與研二島上有碼頭，輪船定期載同學到外海的科技公司外島參訪，系友也會搭直升機回來分享。', 'The cohort islands are junior-college years 1–5, undergraduate years 1–4, and the master program. Building 3 is home to 20 faculty, and the Hall of Fame holds recent awards. Six bridged specialty islands (robotics, drones, databases, electronics, algorithms, AI) host moving student projects. Ferries from the Year-4, JC-5 and MS-2 piers take students to tech-company outer islands, and alumni fly back by helicopter to share.')}</p>
   <ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>
-  <p style="line-height:1.7;font-size:14px">${tr('工具列還有：🧭 招生導覽（自動飛行加語音解說）、🗺 我的路（依興趣推薦特色島、老師與課程路線）、🐯 任務（找 10 隻吉祥物、系所問答、徽章）、🚶 漫步（第一人稱走路、過橋、搭船）、🍾 留言瓶。下方 bar 可以切換季節、校園活動與天氣；在「哥吉拉來襲」或「ID4 外星人來襲」活動中按漫步，可以親自駕駛機器人或無人機參戰。', 'Toolbar extras: 🧭 guided tour, 🗺 my path, 🐯 quests & badges, 🚶 first-person walk (bridges and ferries), 🍾 message bottles. The bottom bar switches season, campus events and weather; during the Kaiju or Alien events, Walk lets you pilot the robot or a drone yourself.')}</p>
+  <p style="line-height:1.7;font-size:14px">${tr('工具列還有：🧭 招生導覽（自動飛行加語音解說）、🗺 我的路（依興趣推薦特色島、老師與課程路線）、🐯 任務（找 10 隻吉祥物、系所問答、徽章）、🚶 漫步（第一人稱走路、過橋、搭船）、🍾 留言瓶。下方 bar 可以切換季節、校園活動與天氣；在「哥吉拉來襲」或「ID4 外星人來襲」活動中按漫步，可以親自駕駛機器人或無人機參戰；在「星艦發射任務」中按漫步，可以駕駛星艦部署衛星。', 'Toolbar extras: 🧭 guided tour, 🗺 my path, 🐯 quests & badges, 🚶 first-person walk (bridges and ferries), 🍾 message bottles. The bottom bar switches season, campus events and weather; during the Kaiju or Alien events, Walk lets you pilot the robot or a drone yourself, and during the Starship launch you can fly Starship to deploy satellites.')}</p>
   <p style="font-size:13px;color:var(--muted)">${tr('時鐘每秒走 10 分鐘，一天 144 秒；不同時段會有不同的建物亮起（黃色）。', 'The clock runs 10 minutes per second; different buildings light up (yellow) through the day.')}</p>
   <div class="actions">
     <button class="btn" id="btnStats" style="background:var(--coral);color:#fff">📈 ${tr('參訪紀錄', 'Visit stats')}</button>
@@ -3950,7 +3950,7 @@ const WX = { season: 'autumn', seasonPick: 'auto', event: 'none', eventPick: 'au
 const FP = { on: false };
 const TOUR = { on: false };
 const SEASONS = { spring: ['春 · 櫻花', 'Spring', '🌸'], summer: ['夏 · 螢火蟲', 'Summer', '☀️'], autumn: ['秋 · 落葉', 'Autumn', '🍂'], winter: ['冬 · 寒流', 'Winter', '❄️'] };
-const EVENTS = { none: ['平常日', 'Regular day', '📅'], start: ['開學週', 'First week', '🎒'], midterm: ['期中考週', 'Midterms', '📝'], anniv: ['校慶', 'Anniversary', '🎉'], grad: ['畢業典禮', 'Graduation', '🎓'], kaiju: ['哥吉拉來襲', 'Kaiju attack', '🦖'], ufo: ['ID4 外星人來襲', 'Alien invasion', '🛸'] };
+const EVENTS = { none: ['平常日', 'Regular day', '📅'], start: ['開學週', 'First week', '🎒'], midterm: ['期中考週', 'Midterms', '📝'], anniv: ['校慶', 'Anniversary', '🎉'], grad: ['畢業典禮', 'Graduation', '🎓'], kaiju: ['哥吉拉來襲', 'Kaiju attack', '🦖'], ufo: ['ID4 外星人來襲', 'Alien invasion', '🛸'], starship: ['星艦發射任務', 'Starship launch', '🚀'] };
 const WEATHERS = { clear: ['晴天', 'Clear', '☀️'], rain: ['下雨', 'Rain', '🌧'], typhoon: ['颱風', 'Typhoon', '🌀'], meteor: ['流星雨', 'Meteors', '🌠'] };
 // 行事曆：依虎科大 115 學年度行事曆（https://www.nfu.edu.tw/zh_tw/nfu_calendar），[月, 日] 起訖，每年換新校曆時更新
 //   8/31-9/2 新生週、9/7 開學；11/1-11/7 期中考；11/16-11/20 校慶週、11/21 校慶活動；2/22 開學；4/18-4/24 期中考；6/5 畢業典禮
@@ -3989,7 +3989,7 @@ MODELS.gallery = c => {
 MODEL_TOP.gallery = .6;
 
 const fxRand = mulberry32(4242);
-const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, get RIDER() { return RIDERS[0]; }, get RIDERS() { return RIDERS; }, get CAR() { return CAR; }, get KJ() { return EVFX.kaiju; }, get UF() { return EVFX.ufo; }, carPlan: () => carPlan(), riderMode: (m, i = 0) => riderMode(RIDERS[i], m), groundAt: (x, z) => groundAt(x, z), stepFX: (n, dt = .05) => { for (let i = 0; i < n; i++) { updateEventFX(dt); if (FP.on) updateWalk(dt); } } };
+const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, get RIDER() { return RIDERS[0]; }, get RIDERS() { return RIDERS; }, get CAR() { return CAR; }, get KJ() { return EVFX.kaiju; }, get UF() { return EVFX.ufo; }, get SS() { return EVFX.ss; }, carPlan: () => carPlan(), riderMode: (m, i = 0) => riderMode(RIDERS[i], m), groundAt: (x, z) => groundAt(x, z), stepFX: (n, dt = .05) => { for (let i = 0; i < n; i++) { updateEventFX(dt); if (FP.on) updateWalk(dt); } } };
 function toast(msg, ms = 2600) {
   const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), ms);
@@ -4242,8 +4242,8 @@ function clearEventFX() {
     EVFX.group.traverse(o => { if (o.isMesh || o.isPoints) { o.geometry.dispose(); if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
   }
   EVFX.group = new THREE.Group(); scene.add(EVFX.group);
-  EVFX.caps = []; EVFX.fireworks = []; EVFX.balloons = []; EVFX.kaiju = null; EVFX.ufo = null;
-  kjHideBubbles(); ufHideBubbles();
+  EVFX.caps = []; EVFX.fireworks = []; EVFX.balloons = []; EVFX.kaiju = null; EVFX.ufo = null; EVFX.ss = null;
+  kjHideBubbles(); ufHideBubbles(); ssHideBubbles();
 }
 function applyEvent() {
   const prev = WX.event;
@@ -4287,9 +4287,14 @@ function applyEvent() {
       if (prev !== 'ufo' && WX.eventPick === 'ufo') ufCamera();
       if (prev !== 'ufo') pilotHint(tr('🎮 按「🚶 漫步」可以駕駛一架無人戰鬥機，瞄準飛船弱點開火！', '🎮 Press “🚶 Walk” to fly an attack drone and shoot the saucer’s weak spots!'));
       break;
+    case 'starship':
+      initStarship();
+      if (prev !== 'starship' && WX.eventPick === 'starship') ssCamera();
+      if (prev !== 'starship') pilotHint(tr('🎮 按「🚶 漫步」可以親自駕駛星艦，飛到部署點把衛星送上軌道！', '🎮 Press “🚶 Walk” to fly Starship yourself and put satellites into orbit!'));
+      break;
   }
-  if (prev !== WX.event && WX.event !== 'none' && WX.event !== 'kaiju' && WX.event !== 'ufo') logEvent('slot', tr(`校園活動：${EVENTS[WX.event][0]}，相關的島上搭起了帳篷與舞台`, `Campus event: ${EVENTS[WX.event][1]}. Tents and stages are up.`), 'info');
-  else if (prev !== WX.event && prev !== 'none' && prev !== 'kaiju' && prev !== 'ufo') logEvent('slot', tr(`${EVENTS[prev][0]}結束，帳篷與舞台都收起來了`, `${EVENTS[prev][1]} is over; tents packed away`), 'info');
+  if (prev !== WX.event && WX.event !== 'none' && WX.event !== 'kaiju' && WX.event !== 'ufo' && WX.event !== 'starship') logEvent('slot', tr(`校園活動：${EVENTS[WX.event][0]}，相關的島上搭起了帳篷與舞台`, `Campus event: ${EVENTS[WX.event][1]}. Tents and stages are up.`), 'info');
+  else if (prev !== WX.event && prev !== 'none' && prev !== 'kaiju' && prev !== 'ufo' && prev !== 'starship') logEvent('slot', tr(`${EVENTS[prev][0]}結束，帳篷與舞台都收起來了`, `${EVENTS[prev][1]} is over; tents packed away`), 'info');
   syncPickerIcons(); markDirty();
 }
 function initFireworks() {
@@ -4303,7 +4308,7 @@ function initFireworks() {
   }
 }
 function updateEventFX(dt) {
-  let any = updateKaiju(dt); any = updateUfo(dt) || any; const t = state.time;
+  let any = updateKaiju(dt); any = updateUfo(dt) || any; any = updateStarship(dt) || any; const t = state.time;
   for (const c of EVFX.caps) {
     const T = 2.6, u = ((t + c.ph * T) % T) / T, y = TOP + .3 + Math.sin(u * Math.PI) * c.h;
     c.g.position.set(c.x, y, c.z); c.g.rotation.set(u * 9 + c.ph, u * 5, u * 3); any = true;
@@ -5774,12 +5779,12 @@ function ufCamera() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  親身參戰：哥吉拉／外星人事件進行中按「漫步」，改成坐進資工號或駕駛一架無人戰鬥機
+//  親身參戰：哥吉拉／外星人／星艦事件進行中按「漫步」，改成坐進資工號、駕駛無人戰鬥機或星艦
 //  資工號：前進後退、轉向、出拳、雷射、護盾；怪獸會揮爪與噴光束反擊
 //  無人機：第三人稱（機身後上方）視角，瞄準飛船底部的紅色弱點開雷射，打中 8 次就擊落
 // ═══════════════════════════════════════════════════════════════════════════
 const KJ_HP = 120, UF_NEED = 8;
-function pilotAvailable() { return WX.event === 'kaiju' && EVFX.kaiju ? 'kaiju' : WX.event === 'ufo' && EVFX.ufo ? 'ufo' : null; }
+function pilotAvailable() { return WX.event === 'kaiju' && EVFX.kaiju ? 'kaiju' : WX.event === 'ufo' && EVFX.ufo ? 'ufo' : WX.event === 'starship' && EVFX.ss ? 'starship' : null; }
 function pilotHint(msg) { setTimeout(() => { if (!FP.on && pilotAvailable()) toast(msg, 6000); }, 1800); logEvent('slot', msg, 'info'); }
 function enterPilot(kind) {
   if (TOUR.on) stopTour();
@@ -5796,7 +5801,7 @@ function enterPilot(kind) {
   $('#fpExit').querySelector('span').textContent = tr('離開駕駛', 'Leave cockpit');
   if (!isDesktop()) $('#hud').classList.add('collapsed');
   const touch = !isDesktop() || matchMedia('(pointer:coarse)').matches;
-  if (kind === 'kaiju') kjPilotStart(touch); else ufPilotStart(touch);
+  if (kind === 'kaiju') kjPilotStart(touch); else if (kind === 'ufo') ufPilotStart(touch); else ssPilotStart(touch);
   $('#fpHint').classList.remove('hidden'); clearTimeout(FP.hintT); FP.hintT = setTimeout(() => $('#fpHint').classList.add('hidden'), 10000);
   applyTime(state.minute);
   updatePilot(0);
@@ -5805,12 +5810,13 @@ function exitPilot() {
   const kind = FP.pilot; FP.pilot = null; FP.btnShield = FP.btnFire = false;
   if (kind === 'kaiju' && EVFX.kaiju) kjPilotEnd();
   if (kind === 'ufo' && EVFX.ufo) ufPilotEnd();
-  document.body.classList.remove('pilot', 'pilot-kaiju', 'pilot-ufo');
+  if (kind === 'starship' && EVFX.ss) ssPilotEnd();
+  document.body.classList.remove('pilot', 'pilot-kaiju', 'pilot-ufo', 'pilot-starship');
   $('#pilotHud').classList.add('hidden'); $('#pilotBtns').classList.add('hidden'); $('#fpCross').classList.remove('lock');
   $('#fpExit').querySelector('span').textContent = tr('離開漫步', 'Exit walk');
 }
 // 打完自動回到觀戰視角
-function finishPilot(kind) { exitWalk(); if (kind === 'kaiju') kjCamera(); else ufCamera(); }
+function finishPilot(kind) { exitWalk(); if (kind === 'kaiju') kjCamera(); else if (kind === 'ufo') ufCamera(); else ssCamera(); }
 function pilotButtons(defs) {
   const box = $('#pilotBtns'); box.innerHTML = ''; box.classList.remove('hidden');
   for (const d of defs) {
@@ -5826,6 +5832,7 @@ function pilotHud(title, l1, l2) { $('#pilotTitle').textContent = title; $('#pil
 function pilotBars(a, b) { $('#pilotB1').style.width = (clamp(a, 0, 1) * 100).toFixed(1) + '%'; $('#pilotB2').style.width = (clamp(b, 0, 1) * 100).toFixed(1) + '%'; }
 function pilotKey(k) {
   if (FP.pilot === 'kaiju' && EVFX.kaiju && EVFX.kaiju.pilot) { const q = EVFX.kaiju.pilot.req; if (k === 'j') q.punch = true; if (k === 'k' || k === 'l') q.laser = true; }
+  if (FP.pilot === 'starship' && EVFX.ss && EVFX.ss.pilot && (k === ' ' || k === 'j' || k === 'k')) EVFX.ss.pilot.req.deploy = true;
 }
 function pilotTap(e) {
   if (FP.pilot === 'kaiju' && EVFX.kaiju && EVFX.kaiju.pilot) EVFX.kaiju.pilot.req.punch = true;
@@ -5833,6 +5840,7 @@ function pilotTap(e) {
     const r = renderer.domElement.getBoundingClientRect();
     EVFX.ufo.pilot.req.fire = new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
   }
+  if (FP.pilot === 'starship' && EVFX.ss && EVFX.ss.pilot && EVFX.ss.pilot.inRange) EVFX.ss.pilot.req.deploy = true;
 }
 // 每幀：鏡頭跟在資工號／無人機的後上方
 function updatePilot(dt) {
@@ -5849,6 +5857,14 @@ function updatePilot(dt) {
     $('#pbLaser') && $('#pbLaser').classList.toggle('cool', P.laserCd > 0);
     $('#pbShield') && $('#pbShield').classList.toggle('on', !!(FP.keys[' '] || FP.btnShield));
     if (P.won && KJ.t > KJ_T.home1 + 2.5) return finishPilot('kaiju');
+  } else if (kind === 'starship') {
+    const S = EVFX.ss; if (!S || !S.pilot) return exitWalk();
+    const P = S.pilot, fwd = new THREE.Vector3(Math.sin(FP.yaw), 0, Math.cos(FP.yaw)), c = P.pos.clone().setY(P.pos.y + SS_MID);
+    const zk = camera.aspect < 1 ? 1.3 : 1;   // 星艦後上方；拖曳上下可以抬頭找高處的光圈
+    want = c.clone().addScaledVector(fwd, -10 * zk).setY(c.y + (3.2 - FP.pitch * 3) * zk);
+    look = c.clone().addScaledVector(fwd, 8).setY(c.y + FP.pitch * 10);
+    pilotBars(P.done / SS_SAT, (P.pos.y - TOP) / 40);
+    if (P.won && P.wonT > 2.5) return finishPilot('starship');
   } else {
     const UF = EVFX.ufo; if (!UF || !UF.pilot) return exitWalk();
     const P = UF.pilot, cp = Math.cos(FP.pitch), fwd = new THREE.Vector3(Math.sin(FP.yaw) * cp, Math.sin(FP.pitch), Math.cos(FP.yaw) * cp);
@@ -6158,6 +6174,409 @@ function ufPilotStep(dt) {
   // 對話泡泡跟著玩家的無人機
   P.textT -= dt;
   setBubble(B.d, P.textT > 0 ? '🛩 ' + P.text : '', P.pos.x, P.pos.y - .3, P.pos.z);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  活動「星艦發射任務」：電子學島（晶片／半導體）上豎起發射台與發射塔，同學把星艦一段段
+//  吊上去組裝；倒數後慢慢升空，穿過雲層後鏡頭拉遠，看星艦把衛星一顆顆送上軌道；
+//  最後翻身啟動反推，慢慢降回發射台，鏡頭跟著拉近
+//  按「漫步」可以親自駕駛星艦：飛進各個藍色光圈，按「部署衛星」
+// ═══════════════════════════════════════════════════════════════════════════
+const SS_T = { rise1: 5, build0: 6, build1: 25, count0: 25, launch0: 31, apex: 58, deploy0: 59, flip0: 80, land0: 84, land1: 110, loop: 126 };
+const SS_SAT = 4, SS_APEX = 34, SS_CLOUD = 25, SS_MOUNT = .8, SS_MID = 2.3;
+const SS_Y0 = [0, .5, 1.3, 2.1, 2.9, 3.6], SS_Y1 = [.5, 1.3, 2.1, 2.9, 3.6, 4.6];
+const SS_BUBBLES = {};
+let ssHooked = false;
+function ssBubbles() { for (const k of ['s', 'c']) if (!SS_BUBBLES[k]) SS_BUBBLES[k] = bubbleLabel(k === 's' ? 6 : 5); }
+function ssHideBubbles() { for (const k in SS_BUBBLES) setBubble(SS_BUBBLES[k], '', 0, 0, 0); }
+// 不鏽鋼星艦：原點在引擎段底部，分 6 段組裝；腹面包一半黑色隔熱瓦
+function starshipMesh() {
+  const S = { g: new THREE.Group(), parts: [] }, r = .42;
+  const steel = new THREE.MeshStandardMaterial({ color: '#e4e7ec', metalness: .15, roughness: .35, emissive: '#8a9099', emissiveIntensity: .35 });
+  const tile = new THREE.MeshStandardMaterial({ color: '#25282d', metalness: .1, roughness: .8 });
+  const dark = new THREE.MeshStandardMaterial({ color: '#3b4048', metalness: .5, roughness: .45 });
+  const part = () => { const p = new THREE.Group(); S.g.add(p); S.parts.push(p); return p; };
+  const mesh = (p, geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; p.add(m); return m; };
+  const ring = (p, y0, h) => {
+    mesh(p, new THREE.CylinderGeometry(r, r, h, 24), steel, 0, y0 + h / 2, 0);
+    mesh(p, new THREE.CylinderGeometry(r + .012, r + .012, h, 24, 1, true, Math.PI * .5, Math.PI), tile, 0, y0 + h / 2, 0);
+    mesh(p, new THREE.CylinderGeometry(r + .02, r + .02, .03, 24), dark, 0, y0 + h, 0);
+  };
+  // 1 引擎段：三顆噴嘴＋一對尾翼
+  let p = part(); ring(p, 0, .5);
+  for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI * 2; mesh(p, new THREE.CylinderGeometry(.08, .15, .26, 14), dark, Math.cos(a) * .2, -.13, Math.sin(a) * .2); }
+  for (const s of [1, -1]) mesh(p, new THREE.BoxGeometry(.44, .75, .06), tile, s * .62, .45, -.05);
+  // 2–4 燃料槽
+  ring(part(), .5, .8); ring(part(), 1.3, .8); ring(part(), 2.1, .8);
+  // 5 酬載艙：上方鉸鍊的艙門，衛星從這裡送出去
+  p = part(); ring(p, 2.9, .7);
+  S.door = new THREE.Group(); S.door.position.set(0, 3.5, r + .02); p.add(S.door);
+  mesh(S.door, new THREE.BoxGeometry(.5, .48, .04), dark, 0, -.25, 0);
+  S.bay = new THREE.Object3D(); S.bay.position.set(0, 3.25, r + .35); p.add(S.bay);
+  // 6 鼻錐＋前翼
+  p = part();
+  mesh(p, new THREE.CylinderGeometry(.06, r, 1, 24), steel, 0, 4.1, 0);
+  mesh(p, new THREE.CylinderGeometry(.072, r + .012, 1, 24, 1, true, Math.PI * .5, Math.PI), tile, 0, 4.1, 0);
+  mesh(p, new THREE.SphereGeometry(.06, 12, 8), steel, 0, 4.6, 0);
+  for (const s of [1, -1]) mesh(p, new THREE.BoxGeometry(.3, .4, .05), tile, s * .42, 3.95, -.05).rotation.z = s * .3;
+  // 火焰（往下噴）
+  const fl = (rad, len, c, o) => {
+    const m = new THREE.Mesh(new THREE.ConeGeometry(rad, len, 18, 1, true).rotateX(Math.PI).translate(0, -len / 2, 0), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    m.position.y = -.24; m.userData.o = o; S.g.add(m); return m;
+  };
+  S.flames = [fl(.36, 1.8, '#ff8a3a', .75), fl(.2, 1.2, '#fff1b0', .95)];
+  return S;
+}
+function ssFlame(S, k, ck) {
+  for (const f of S.S.flames) {
+    const j = .88 + Math.sin(ck * 37 + f.userData.o * 9) * .08 + fxRand() * .08;
+    f.material.opacity = f.userData.o * Math.min(1, k) * j; f.scale.set(1 + k * .12, Math.max(.01, k * j), 1 + k * .12); f.visible = k > .01;
+  }
+}
+// 小衛星：金色本體＋兩片會展開的太陽能板
+function satMesh() {
+  const g = new THREE.Group(), sat = { m: g, panels: [] };
+  const box = (geo, c, x, y, z, em) => { const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: c, metalness: .4, roughness: .45, emissive: em || '#000000', emissiveIntensity: em ? .5 : 0 })); m.position.set(x, y, z); g.add(m); return m; };
+  box(new THREE.BoxGeometry(.32, .32, .4), '#e2b84a', 0, 0, 0);
+  box(new THREE.CylinderGeometry(.12, .02, .1, 14), '#e9eef2', 0, .22, 0);
+  for (const s of [1, -1]) sat.panels.push(box(new THREE.BoxGeometry(.9, .02, .3).translate(s * .45, 0, 0), '#2c4f9e', s * .16, 0, 0, '#16306e'));
+  sat.light = new THREE.Mesh(new THREE.SphereGeometry(.06, 8, 6), new THREE.MeshBasicMaterial({ color: '#ff5a4a', transparent: true, opacity: 1 }));
+  sat.light.position.set(0, .3, 0); g.add(sat.light);
+  g.scale.setScalar(1.3); g.visible = false;
+  return sat;
+}
+function initStarship() {
+  ssBubbles();
+  const I = ISL.fe, pad = new THREE.Vector3(I.x, TOP, I.z);
+  const out = new THREE.Vector3(I.x - CENTER.x, 0, I.z - CENTER.z); if (out.lengthSq() < 1) out.set(0, 0, -1); out.normalize();
+  const perp = new THREE.Vector3(-out.z, 0, out.x), Y = new THREE.Vector3(0, 1, 0);
+  const S = EVFX.ss = { t: 0, clock: 0, logged: {}, pad, padY: TOP + SS_MOUNT + .26, out, stage: perp.clone().multiplyScalar(1.25), smoke: [], smokeI: 0, puffAcc: 0, rcsAcc: 0, dustAcc: 0,
+    baseA: Math.atan2(-out.z, -out.x), camDir: out.clone().negate().applyAxisAngle(Y, .6), cam: false, camKey: -1, tCloud: null, landFrom: null, landPitch: null, landYaw: 0, touched: false };
+  S.padYaw = Math.atan2(-out.x, -out.z); S.landYaw = S.padYaw + (SS_T.flip0 - SS_T.apex) * .25;   // 黑色腹面朝發射塔，鏡頭這側看到不鏽鋼
+  // 發射台：六角底座、六根支腳、中空環形頂座
+  const concrete = new THREE.MeshStandardMaterial({ color: '#a19e96', roughness: .9 }), steelD = new THREE.MeshStandardMaterial({ color: '#8a9099', metalness: .2, roughness: .6, emissive: '#5a6068', emissiveIntensity: .35 });
+  S.mount = new THREE.Group(); S.mount.position.copy(pad); EVFX.group.add(S.mount);
+  const mm = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; S.mount.add(m); return m; };
+  mm(new THREE.CylinderGeometry(1.05, 1.15, .08, 6), concrete, 0, .04, 0);
+  for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2 + .26; mm(new THREE.BoxGeometry(.14, SS_MOUNT, .14), steelD, Math.cos(a) * .62, SS_MOUNT / 2, Math.sin(a) * .62); }
+  mm(new THREE.TorusGeometry(.62, .14, 10, 28).rotateX(Math.PI / 2), steelD, 0, SS_MOUNT - .1, 0);
+  // 發射塔：從島裡升起；頂端吊臂伸到星艦正上方，中段一對機械臂扶著星艦
+  const TH = 6.4, tp = pad.clone().addScaledVector(out, 1.35);
+  S.tower = new THREE.Group(); S.tower.position.set(tp.x, TOP, tp.z); S.tower.rotation.y = Math.atan2(-out.x, -out.z); EVFX.group.add(S.tower);
+  const tm = (geo, mat, x, y, z, par = S.tower) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; par.add(m); return m; };
+  tm(new THREE.BoxGeometry(.42, TH, .42), steelD, 0, TH / 2, 0);
+  const band = new THREE.MeshStandardMaterial({ color: '#2f333a', metalness: .4, roughness: .6 });
+  for (let k = 1; k < 12; k++) tm(new THREE.BoxGeometry(.46, .05, .46), band, 0, k * TH / 12, 0);
+  tm(new THREE.BoxGeometry(.12, .12, 1.7), steelD, 0, TH - .06, .75);
+  S.boomTip = new THREE.Object3D(); S.boomTip.position.set(0, TH - .12, 1.35); S.tower.add(S.boomTip);
+  S.arms = [1, -1].map(s => { const g = new THREE.Group(); g.position.set(s * .5, 4.4, 0); S.tower.add(g); tm(new THREE.BoxGeometry(.08, .14, 1.3), band, 0, 0, .65, g); return g; });
+  S.cable = new THREE.Line(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3)), new THREE.LineBasicMaterial({ color: '#2a2a2a' }));
+  S.cable.frustumCulled = false; EVFX.group.add(S.cable);
+  S.hook = new THREE.Mesh(new THREE.BoxGeometry(.18, .1, .18), new THREE.MeshStandardMaterial({ color: '#f2b233' })); EVFX.group.add(S.hook);
+  // 星艦
+  S.S = starshipMesh(); EVFX.group.add(S.S.g);
+  // 衛星與軌道
+  const circ = []; for (let k = 0; k < 96; k++) { const a = k / 96 * Math.PI * 2; circ.push(Math.cos(a), 0, Math.sin(a)); }
+  const ringGeo = new THREE.BufferGeometry(); ringGeo.setAttribute('position', new THREE.Float32BufferAttribute(circ, 3));
+  S.sats = [];
+  for (let k = 0; k < SS_SAT; k++) {
+    const sat = satMesh(); EVFX.group.add(sat.m);
+    sat.ring = new THREE.LineLoop(ringGeo, new THREE.LineBasicMaterial({ color: '#9fe7ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    EVFX.group.add(sat.ring); sat.on = false; S.sats.push(sat);
+  }
+  // 駕駛模式的部署點：發射島往城市方向展開的 4 個光圈，都在雲層上方
+  S.wpG = new THREE.Group(); S.wpG.visible = false; EVFX.group.add(S.wpG);
+  const add = (geo, c) => new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: .3, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  S.wps = [-1.1, -.37, .37, 1.1].map((da, k) => {
+    const a = S.baseA + da, p = new THREE.Vector3(pad.x + Math.cos(a) * 15, [27, 31, 29, 33][k], pad.z + Math.sin(a) * 15);
+    const g = new THREE.Group(); g.position.copy(p); S.wpG.add(g);
+    const ring = add(new THREE.TorusGeometry(2, .1, 8, 48), '#5fe1ff'), orb = add(new THREE.SphereGeometry(.3, 12, 8), '#5fe1ff');
+    const beam = add(new THREE.CylinderGeometry(.06, .06, p.y - WATER_Y, 8, 1, true), '#5fe1ff'); beam.position.y = -(p.y - WATER_Y) / 2;
+    g.add(ring, orb, beam);
+    return { p, g, ring, orb, beam, done: false };
+  });
+  S.guide = new THREE.Line(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3)), new THREE.LineBasicMaterial({ color: '#5fe1ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+  S.guide.frustumCulled = false; EVFX.group.add(S.guide);
+  // 煙：升空時地面的蒸氣雲、飛行時的尾跡、翻身時的姿態控制噴氣
+  const puffGeo = new THREE.SphereGeometry(.5, 10, 8);
+  for (let k = 0; k < 64; k++) { const m = new THREE.Mesh(puffGeo, new THREE.MeshStandardMaterial({ color: '#f2f0ea', roughness: 1, transparent: true, opacity: 0, depthWrite: false })); m.visible = false; EVFX.group.add(m); S.smoke.push({ m, t: 9, life: 1, size: 1, v: new THREE.Vector3() }); }
+  const n = 40, sp = new THREE.BufferGeometry(); sp.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  S.sparks = new THREE.Points(sp, new THREE.PointsMaterial({ size: .09, color: '#ffe08a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); S.sparks.frustumCulled = false; EVFX.group.add(S.sparks);
+  // 電子學島上的同學（避開發射塔那一側）
+  S.crowd = [];
+  for (let k = 0; k < 12; k++) {
+    const a = S.baseA + (k / 11 - .5) * Math.PI * 1.55, out2 = [];
+    figureGeos(0, 0, 0, 1.7, ['#db6a41', '#3e7c8c', '#6f7fb5', '#9cc27a', '#fcea8b', '#f2b5c6'][k % 6], out2);
+    const m = mergedMesh(out2); EVFX.group.add(m);
+    const x = pad.x + Math.cos(a) * 1.62, z = pad.z + Math.sin(a) * 1.62;
+    m.rotation.y = Math.atan2(pad.x - x, pad.z - z); S.crowd.push({ m, x, z, ph: k * .8 });
+  }
+  if (!ssHooked) { ssHooked = true; controls.addEventListener('start', () => { if (EVFX.ss) EVFX.ss.cam = false; }); }   // 使用者自己轉鏡頭就不搶
+  updateStarship(0);
+}
+function ssReset(S) {
+  Object.assign(S, { t: 0, logged: {}, tCloud: null, landFrom: null, landPitch: null, landYaw: S.padYaw + (SS_T.flip0 - SS_T.apex) * .25, touched: false });
+  for (const s of S.sats) { s.on = false; s.m.visible = false; s.ring.material.opacity = 0; }
+}
+function ssLog(key, zh, en, type = 'info') { const S = EVFX.ss; if (S.logged[key]) return; S.logged[key] = true; logEvent('slot', tr(zh, en), type); }
+function ssPuff(p, v, life = 3, size = 1, c = '#f2f0ea') { const S = EVFX.ss, s = S.smoke[S.smokeI++ % S.smoke.length]; s.t = 0; s.life = life; s.size = size; s.m.position.copy(p); s.v.copy(v); s.m.material.color.set(c); s.m.visible = true; }
+function ssRelease(S, k, p0, a, r, y) {
+  Object.assign(S.sats[k], { on: true, c0: S.clock, p0: p0.clone(), a0: a, r, y, w: (k % 2 ? -1 : 1) * 1.6 / r });
+  S.sats[k].m.visible = true; S.sats[k].ring.scale.setScalar(r); S.sats[k].ring.position.set(S.pad.x, y, S.pad.z);
+}
+// 觀賞鏡頭：發射前看全身 → 跟著往上 → 穿過雲層後拉遠看軌道 → 降落時一路拉近
+function ssCamPose(S, t, c) {
+  const T = SS_T, sm = x => x * x * (3 - 2 * x), cl = x => clamp(x, 0, 1);
+  const orbitC = new THREE.Vector3(S.pad.x, SS_APEX - 5, S.pad.z);
+  let target = new THREE.Vector3(S.pad.x, TOP + 2.8, S.pad.z), dist = 17, polar = 66, az = 0;
+  if (t >= T.launch0 && t < T.flip0) {
+    const pb = S.tCloud != null ? sm(cl((t - S.tCloud) / 6)) : 0, up = cl((c.y - S.padY - SS_MID) / (SS_CLOUD - S.padY - SS_MID));
+    target = c.clone().lerp(orbitC, pb); dist = lerp(lerp(17, 28, up), 72, pb); polar = lerp(66, 60, pb);
+    az = Math.max(0, t - T.apex) * .015;
+  } else if (t >= T.flip0) {
+    const e = sm(cl((t - T.land0) / (T.land1 - T.land0)));
+    target = orbitC.lerp(c, sm(cl((t - T.flip0) / 4))); dist = lerp(72, 13, e); polar = lerp(60, 67, e);
+    az = (T.flip0 - T.apex) * .015;
+  }
+  if (camera.aspect < 1) dist *= 1.3;
+  dist = Math.min(dist, 84);
+  const pr = THREE.MathUtils.degToRad(polar), dir = S.camDir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), az);
+  return { target, pos: target.clone().addScaledVector(dir, Math.sin(pr) * dist).add(new THREE.Vector3(0, Math.cos(pr) * dist, 0)) };
+}
+function ssCamera() {
+  const S = EVFX.ss; if (!S) return;
+  const pose = ssCamPose(S, S.t, S.S.g.localToWorld(new THREE.Vector3(0, SS_MID, 0)));
+  flyTo(pose, 1600); S.flight = state.flight; S.cam = true;
+}
+function updateStarship(dt) {
+  const S = EVFX.ss, T = SS_T; if (!S) return false;
+  S.t += dt; if (S.t > T.loop) ssReset(S);
+  if (S.pilot) S.t = T.count0 + 2;   // 玩家駕駛時，劇情停在「組裝完成、機械臂打開」
+  S.clock += dt;
+  const t = S.t, ck = S.clock, B = SS_BUBBLES, sm = x => x * x * (3 - 2 * x), cl = x => clamp(x, 0, 1), V = THREE.Vector3;
+  let sText = '', cText = '';
+  // ── 發射台與發射塔：開場從島裡升起，最後收回去 ──
+  const rf = Math.min(sm(cl(t / T.rise1)), cl((T.loop - t) / 4)), dy = -(1 - rf) * 6.6;
+  S.mount.scale.y = Math.max(.001, rf); S.mount.visible = rf > .01;
+  S.tower.position.y = TOP + dy; S.tower.visible = rf > .01;
+  const arm = S.pilot ? 1 : sm(cl((t - T.count0 - .5) / 2)) * (1 - sm(cl((t - T.land1 - 3) / 2)));
+  S.arms[0].rotation.y = arm * .95; S.arms[1].rotation.y = -arm * .95;
+  if (t < T.rise1 && dt) { S.dustAcc += dt * 10; while (S.dustAcc > 1) { S.dustAcc--; const a = fxRand() * 6.28; ssPuff(new V(S.pad.x + Math.cos(a) * 1.1, TOP + .1, S.pad.z + Math.sin(a) * 1.1), new V(Math.cos(a) * .6, .3, Math.sin(a) * .6), 2, .5, '#cbbfa8'); } }
+  // ── 星艦姿態 ──
+  const padP = new V(S.pad.x, S.padY + dy, S.pad.z), apexP = new V(S.pad.x, SS_APEX, S.pad.z);
+  let pos = padP.clone(), pitch = 0, yaw = S.padYaw, roll = 0, thrust = 0, door = 0;
+  const from = S.landFrom || apexP;
+  if (S.pilot) { const P = S.pilot; pos.copy(P.pos); pitch = P.lean; roll = P.roll; yaw = FP.yaw; thrust = P.thrust; door = P.door; }
+  else if (t >= T.launch0 - 1 && t < T.launch0) thrust = .9 * cl(t - T.launch0 + 1);
+  else if (t >= T.launch0 && t < T.apex) { const u = cl((t - T.launch0) / (T.apex - T.launch0)); pos.y = lerp(S.padY, SS_APEX, sm(u)); thrust = 1.15 - cl((u - .75) / .25) * .7; }
+  else if (t >= T.apex && t < T.flip0) {
+    pos.copy(apexP); pos.y += Math.sin(ck * .7) * .15;
+    pitch = -sm(cl((t - T.apex) / 3)) * Math.PI / 2; yaw = S.padYaw + (t - T.apex) * .25;
+    door = sm(cl((t - T.deploy0 - .5) / 1.5)) * (1 - sm(cl((t - T.flip0 + 1.5) / 1.5)));
+  } else if (t >= T.flip0 && t < T.land0) { pos.copy(from); pitch = -Math.PI / 2 * (1 - sm(cl((t - T.flip0) / (T.land0 - T.flip0)))); yaw = S.landYaw; }
+  else if (t >= T.land0 && t < T.land1) {
+    const u = cl((t - T.land0) / (T.land1 - T.land0)), h = sm(cl(u / .7));
+    pos.set(lerp(from.x, S.pad.x, h), lerp(from.y, S.padY, 1 - Math.pow(1 - u, 2.2)), lerp(from.z, S.pad.z, h));
+    pitch = lerp(S.landPitch || 0, 0, sm(cl((t - T.land0) / 2.5))); yaw = S.landYaw; thrust = .55 + u * .6;
+  } else if (t >= T.land1) yaw = S.landYaw;
+  const shp = S.S.g; shp.rotation.set(pitch, yaw, roll, 'YXZ');
+  const C = pos.clone().setY(pos.y + SS_MID);   // 以機身中心為轉軸
+  shp.position.copy(C).sub(new V(0, SS_MID, 0).applyEuler(shp.rotation)); shp.updateMatrixWorld(true);
+  S.S.door.rotation.x = -1.3 * door;
+  ssFlame(S, thrust, ck);
+  // ── 組裝：發射塔吊臂把 6 段一段段吊上去，接縫處焊接火花 ──
+  const D = (T.build1 - T.build0) / S.S.parts.length, built = !!S.pilot || t >= T.build1;
+  let weld = null, hookP = null;
+  S.S.parts.forEach((p, k) => {
+    const u = built ? 1 : cl((t - T.build0 - k * D) / D);
+    p.visible = u > 0;
+    if (u >= .75) { p.position.set(0, 0, 0); if (u < 1) weld = SS_Y0[k]; return; }
+    if (u <= 0) return;
+    const sx = S.stage.x, sz = S.stage.z, y0 = -(SS_MOUNT + .26) - SS_Y0[k];
+    if (u < .45) p.position.set(sx, lerp(y0, .5, sm(u / .45)), sz);
+    else { const b = sm(cl((u - .45) / .3)); p.position.set(sx * (1 - b), .5 * (1 - b), sz * (1 - b)); }
+    hookP = shp.localToWorld(p.position.clone().setY(p.position.y + SS_Y1[k] + .05));
+  });
+  const ca = S.cable.geometry.attributes.position;
+  if (hookP && rf > .99) { const tip = S.boomTip.getWorldPosition(new V()); ca.setXYZ(0, tip.x, tip.y, tip.z); ca.setXYZ(1, hookP.x, hookP.y + .05, hookP.z); ca.needsUpdate = true; S.hook.position.copy(hookP); }
+  S.cable.visible = S.hook.visible = !!hookP && rf > .99;
+  const sa = S.sparks.geometry.attributes.position;
+  if (weld != null) { for (let i = 0; i < sa.count; i++) { const a = fxRand() * 6.28; sa.setXYZ(i, S.pad.x + Math.cos(a) * (.44 + fxRand() * .25), S.padY + weld + (fxRand() - .3) * .2, S.pad.z + Math.sin(a) * (.44 + fxRand() * .25)); } sa.needsUpdate = true; }
+  S.sparks.material.opacity = weld != null ? .9 : 0;
+  // ── 煙 ──
+  if (thrust > .05 && dt) {
+    const eng = shp.localToWorld(new V(0, -.7, 0)), low = eng.y < TOP + 2.6 && Math.hypot(eng.x - S.pad.x, eng.z - S.pad.z) < 2;
+    S.puffAcc += dt * thrust * (low ? 16 : 6);
+    while (S.puffAcc > 1) {
+      S.puffAcc--; const a = fxRand() * 6.28;
+      if (low) ssPuff(new V(S.pad.x + Math.cos(a) * .8, TOP + .25, S.pad.z + Math.sin(a) * .8), new V(Math.cos(a) * 2.6, .25 + fxRand() * .4, Math.sin(a) * 2.6), 3.5, 1.3);
+      else ssPuff(eng.clone().add(new V((fxRand() - .5) * .3, 0, (fxRand() - .5) * .3)), new V((fxRand() - .5) * .3, -.4, (fxRand() - .5) * .3), 3, .75, '#dedbd5');
+    }
+  }
+  if (!S.pilot && t >= T.flip0 && t < T.land0 && dt) {   // 翻身時鼻錐側邊噴氣
+    S.rcsAcc += dt * 5;
+    while (S.rcsAcc > 1) { S.rcsAcc--; const nose = shp.localToWorld(new V(0, 4.2, 0)), side = new V(0, 0, fxRand() < .5 ? 1 : -1).applyEuler(shp.rotation); ssPuff(nose.addScaledVector(side, .5), side.multiplyScalar(1.5), 1.2, .35, '#ffffff'); }
+  }
+  if (t >= T.land1 && !S.touched && !S.pilot) {   // 落地瞬間的蒸氣
+    S.touched = true;
+    for (let k = 0; k < 14; k++) { const a = k / 14 * 6.28; ssPuff(new V(S.pad.x + Math.cos(a) * .7, TOP + .3, S.pad.z + Math.sin(a) * .7), new V(Math.cos(a) * 2.2, .3, Math.sin(a) * 2.2), 3, 1.1); }
+  }
+  if (t < T.land1) S.touched = false;
+  for (const s of S.smoke) {
+    if (!s.m.visible) continue;
+    s.t += dt; const u = s.t / s.life;
+    if (u >= 1) { s.m.visible = false; continue; }
+    s.m.position.addScaledVector(s.v, dt); s.v.multiplyScalar(Math.exp(-dt * .8)); s.v.y += dt * .15;
+    s.m.scale.setScalar(s.size * (.4 + u * 2.2)); s.m.material.opacity = (1 - u) * .6;
+  }
+  // ── 衛星：從酬載艙送出 → 飄到軌道上 → 繞著發射島轉 ──
+  if (!S.pilot && t >= T.deploy0 && t < T.flip0) for (let k = 0; k < SS_SAT; k++) {
+    if (t < T.deploy0 + 2.5 + k * 4.3 || S.sats[k].on) continue;
+    ssRelease(S, k, S.S.bay.getWorldPosition(new V()), S.baseA + .4 + k * Math.PI / 2, 9 + k * 3.5, SS_APEX + 2.6 - k * .7);
+    ssLog('sat' + k, `🛰 第 ${k + 1} 顆衛星從酬載艙送出，進入軌道！`, `🛰 Satellite ${k + 1} leaves the payload bay and enters orbit!`);
+  }
+  let nSat = 0;
+  for (const s of S.sats) {
+    if (!s.on) continue; nSat++;
+    const age = ck - s.c0; let a = s.a0;
+    if (age < 3) s.m.position.lerpVectors(s.p0, new V(S.pad.x + Math.cos(a) * s.r, s.y, S.pad.z + Math.sin(a) * s.r), sm(cl(age / 3)));
+    else { a = s.a0 + s.w * (age - 3); s.m.position.set(S.pad.x + Math.cos(a) * s.r, s.y, S.pad.z + Math.sin(a) * s.r); }
+    s.m.rotation.set(0, -a, 0);
+    const unf = .08 + .92 * sm(cl((age - .6) / 1.6)); for (const p of s.panels) p.scale.x = unf;
+    s.light.material.opacity = Math.sin(ck * 5 + s.r) > .4 ? 1 : .15;
+    s.ring.material.opacity = .32 * cl((age - 2.5) / 2);
+  }
+  // ── 同學：組裝時忙著跳上跳下，降落後歡呼 ──
+  const working = !S.pilot && t >= T.build0 && t < T.build1, cheer = (!S.pilot && t >= T.land1 && t < T.loop - 5) || (S.pilot && S.pilot.won);
+  for (const c of S.crowd) {
+    const hop = cheer || (working && Math.sin(ck * 2 + c.ph * 2) > .3);
+    c.m.position.set(c.x, TOP + (hop ? Math.abs(Math.sin(ck * 6 + c.ph)) * .16 : 0), c.z); c.m.visible = t > 2 && t < T.loop - 4;
+  }
+  // ── 對話泡泡 ──
+  const alt = Math.max(0, Math.round((C.y - S.padY - SS_MID) * 3));
+  if (!S.pilot) {
+    if (t > 1 && t < T.build0) cText = tr('發射台升起來了！大家來組裝星艦！', 'The launch pad is up! Let’s build Starship!');
+    else if (t >= T.build0 && t < T.build1) { const n = Math.min(S.S.parts.length, Math.floor((t - T.build0) / D)); cText = tr(`組裝星艦中… ${n}/${S.S.parts.length}`, `Assembling Starship… ${n}/${S.S.parts.length}`); }
+    else if (t >= T.count0 && t < T.launch0 - 1) cText = tr(`發射倒數 ${Math.ceil(T.launch0 - 1 - t)}…`, `T-minus ${Math.ceil(T.launch0 - 1 - t)}…`);
+    else if (t >= T.launch0 - 1 && t < T.launch0 + 3) cText = tr('點火！升空！🚀', 'Ignition! Liftoff! 🚀');
+    else if (t >= T.launch0 + 3 && t < T.apex) sText = S.tCloud != null ? tr(`已穿越雲層，準備進入軌道（高度 ${alt} 公里）`, `Above the clouds, entering orbit (${alt} km)`) : tr(`緩緩爬升中… 高度 ${alt} 公里`, `Climbing slowly… ${alt} km`);
+    else if (t >= T.apex && t < T.flip0) sText = tr(`打開酬載艙，部署衛星 ${nSat}/${SS_SAT}`, `Payload bay open: satellites ${nSat}/${SS_SAT}`);
+    else if (t >= T.flip0 && t < T.land0) sText = tr('任務完成！翻身準備返航', 'Mission done! Flipping for the trip home');
+    else if (t >= T.land0 && t < T.land1) sText = tr(`啟動反推，慢慢降落… 高度 ${alt} 公里`, `Retro burn, descending… ${alt} km`);
+    else if (t >= T.land1 && t < T.loop - 5) cText = tr('🎉 星艦平安降落！任務成功！', '🎉 Starship is home! Mission success!');
+  } else cText = S.pilot.won ? tr('🎉 太厲害了！衛星全部上軌道！', '🎉 Amazing! Every satellite is in orbit!') : tr('星艦加油！', 'Go, Starship!');
+  const near = v => camera.position.distanceTo(v) < 95, sTop = C.clone().setY(C.y + 3), cTop = S.pad.clone().addScaledVector(S.camDir, 1.2).setY(TOP + 1.3);
+  if (!S.pilot) setBubble(B.s, sText && near(sTop) ? '🚀 ' + sText : '', sTop.x, sTop.y, sTop.z);
+  setBubble(B.c, cText && near(cTop) ? cText : '', cTop.x, cTop.y, cTop.z);
+  // ── 日誌 ──
+  if (t > .5) ssLog('rise', '🚀 電子學島上緩緩豎起星艦發射台與發射塔！', '🚀 A Starship launch pad and tower rise on Electronics Island!');
+  if (t > T.build0) ssLog('build', '🛠 同學們開始組裝星艦：引擎段、燃料槽、酬載艙、鼻錐一段段吊上去', '🛠 Students assemble Starship: engines, tanks, payload bay and nose, one section at a time', 'talk');
+  if (t > T.build1) ssLog('ready', '✅ 星艦組裝完成，機械臂鬆開，開始倒數！', '✅ Starship is assembled; the arms swing open for the countdown!');
+  if (t > T.launch0) ssLog('launch', '🔥 點火！星艦慢慢離開發射台，往天空爬升', '🔥 Ignition! Starship slowly lifts off the pad');
+  if (!S.pilot && t > T.launch0 && t < T.apex && S.tCloud == null && C.y > SS_CLOUD) { S.tCloud = t; ssLog('cloud', '☁ 星艦穿越雲層，準備進入軌道', '☁ Starship climbs above the clouds toward orbit'); }
+  if (t < T.launch0) S.tCloud = null;
+  if (!S.pilot && t > T.flip0) ssLog('flip', '🔄 衛星部署完成，星艦翻身、啟動反推引擎準備返航', '🔄 Satellites deployed; Starship flips and fires its retro engines for home');
+  if (t > T.land1) ssLog('land', '🎯 星艦靠反推慢慢降落，穩穩停回發射台！', '🎯 On a gentle retro burn, Starship settles back onto the pad!', 'praise');
+  // ── 觀賞鏡頭：升空、穿越雲層、開始降落時自動接手（使用者自己轉鏡頭或開了側欄就不搶） ──
+  const key = t < T.launch0 ? 0 : S.tCloud == null && t < T.apex ? 1 : t < T.land0 ? 2 : 3;
+  if (key !== S.camKey) { if (S.camKey >= 0 && !ui.side) S.cam = true; S.camKey = key; }
+  if (S.cam && !FP.on && dt) {
+    if (state.flight && state.flight !== S.flight) S.cam = false;
+    else if (!state.flight) { const P = ssCamPose(S, t, C), a = 1 - Math.exp(-dt * 2.2); camera.position.lerp(P.pos, a); controls.target.lerp(P.target, a); }
+  }
+  if (S.pilot) ssPilotStep(dt, C);
+  else { S.wpG.visible = false; S.guide.material.opacity = 0; }
+  return true;
+}
+
+// ── 駕駛星艦：飛進藍色光圈，按「部署衛星」 ──────────────────────────────────
+function ssPilotStart(touch) {
+  const S = EVFX.ss, T = SS_T;
+  const flying = S.t >= T.launch0 && S.t < T.land1;
+  for (const k of ['rise', 'build', 'ready']) S.logged[k] = true;
+  for (const s of S.sats) { s.on = false; s.m.visible = false; s.ring.material.opacity = 0; }
+  for (const w of S.wps) w.done = false;
+  const c0 = S.S.g.localToWorld(new THREE.Vector3(0, SS_MID, 0));
+  const pos = flying ? c0.setY(c0.y - SS_MID) : new THREE.Vector3(S.pad.x, S.padY, S.pad.z);
+  S.t = T.count0 + 2; S.cam = false;
+  S.pilot = { pos, vel: new THREE.Vector3(), lean: 0, roll: 0, thrust: 0, door: 0, doorT: 0, done: 0, inRange: false, won: false, wonT: 0, req: {}, text: flying ? tr('你接手了星艦！飛向藍色光圈', 'You have control! Fly to the blue ring') : tr('按住「上升」點火起飛！', 'Hold Up to ignite and lift off!'), textT: 3 };
+  const w = S.wps[0].p; FP.yaw = Math.atan2(w.x - pos.x, w.z - pos.z); FP.pitch = .3;
+  pilotHud(tr('🚀 你正在駕駛星艦', '🚀 You are flying Starship'), tr('🛰 衛星部署', '🛰 Satellites'), tr('🚀 高度', '🚀 Altitude'));
+  pilotButtons([
+    { id: 'pbDeploy', label: '🛰 <span>' + tr('部署衛星', 'Deploy') + '</span>', down: () => { const P = EVFX.ss && EVFX.ss.pilot; if (P) P.req.deploy = true; } },
+    { id: 'pbUp', label: '⬆ <span>' + tr('上升', 'Up') + '</span>', down: () => { FP.keys.e = true; }, up: () => { FP.keys.e = false; } },
+    { id: 'pbDown', label: '⬇ <span>' + tr('下降', 'Down') + '</span>', down: () => { FP.keys.q = true; }, up: () => { FP.keys.q = false; } }
+  ]);
+  $('#fpHint').textContent = touch
+    ? tr('按住「上升」起飛、左下搖桿前後左右飛、拖曳畫面轉向；飛進藍色光圈後按「🛰 部署衛星」，4 顆都送上軌道就自動返航降落！', 'Hold Up to lift off, joystick to fly, drag to turn. Inside a blue ring, tap Deploy. After all 4 satellites, Starship flies home and lands itself!')
+    : tr('E／Q 上升下降、WASD 飛行、拖曳滑鼠轉向（Shift 加速）；飛進藍色光圈後按空白鍵或「部署衛星」，4 顆都送上軌道就自動返航降落。Esc 離開。', 'E/Q up/down, WASD to fly, drag to turn (Shift = faster). Inside a blue ring, press Space or Deploy. After all 4 satellites, Starship lands itself. Esc exits.');
+  logEvent('slot', tr('🎮 你坐進星艦駕駛艙，準備親手把衛星送上軌道！', '🎮 You take Starship’s controls to put the satellites in orbit yourself!'), 'talk');
+}
+function ssPilotEnd() {
+  const S = EVFX.ss, P = S.pilot; if (!P) return;
+  S.pilot = null; S.wpG.visible = false; S.guide.material.opacity = 0;
+  $('#pbDeploy') && $('#pbDeploy').classList.remove('on');
+  if (P.pos.distanceTo(new THREE.Vector3(S.pad.x, S.padY, S.pad.z)) < .3) { S.t = SS_T.count0 + 2; return; }   // 還沒起飛：接著倒數發射
+  // 已經在天上：自動翻正、反推降回發射台
+  Object.assign(S, { landFrom: P.pos.clone(), landPitch: P.lean, landYaw: FP.yaw, t: SS_T.land0, tCloud: null, cam: true });
+  for (const k of ['launch', 'cloud', 'flip']) S.logged[k] = true;
+  delete S.logged.land;
+}
+function ssPilotDeploy() {
+  const S = EVFX.ss, P = S.pilot; if (P.won) return;
+  if (!P.inRange) { P.text = tr('還沒到部署點！跟著藍色光圈飛', 'Not there yet! Fly into the blue ring'); P.textT = 1.4; return; }
+  const w = S.wps[P.done], k = S.sats.findIndex(s => !s.on); if (k < 0) return;
+  ssRelease(S, k, S.S.bay.getWorldPosition(new THREE.Vector3()), Math.atan2(w.p.z - S.pad.z, w.p.x - S.pad.x), Math.hypot(w.p.x - S.pad.x, w.p.z - S.pad.z), w.p.y);
+  w.done = true; P.done++; P.doorT = 1.6;
+  logEvent('slot', tr(`🛰 你親手把第 ${P.done} 顆衛星送上軌道`, `🛰 You put satellite ${P.done} into orbit yourself`), 'talk');
+  if (P.done >= SS_SAT) {
+    P.won = true; P.wonT = 0; P.text = tr('4 顆衛星全部上軌道！自動返航降落', 'All 4 satellites in orbit! Heading home to land'); P.textT = 3;
+    toast(tr('🏆 任務成功！你把 4 顆衛星都送上軌道了！', '🏆 Mission success! You put all 4 satellites in orbit!'), 4000);
+    logEvent('slot', tr('🏆 你親自駕駛星艦完成衛星部署任務！', '🏆 Flying Starship yourself, you completed the satellite mission!'), 'praise');
+  } else { P.text = tr(`部署成功 ${P.done}/${SS_SAT}！飛往下一個光圈`, `Deployed ${P.done}/${SS_SAT}! On to the next ring`); P.textT = 2; }
+}
+function ssPilotStep(dt, C) {
+  const S = EVFX.ss, P = S.pilot, K = FP.keys, B = SS_BUBBLES, ck = S.clock;
+  // ── 飛行：比無人機重一點，有慣性 ──
+  let f = 0, s = 0, v = 0;
+  if (K.w || K.arrowup) f += 1; if (K.s || K.arrowdown) f -= 1; if (K.a) s -= 1; if (K.d) s += 1;
+  if (K.e || K.r) v += 1; if (K.q || K.f || K.c) v -= 1;
+  f -= FP.stick.y; s += FP.stick.x;
+  if (K.arrowleft) FP.yaw += dt * 1.4; if (K.arrowright) FP.yaw -= dt * 1.4;
+  const L = Math.hypot(f, s); if (L > 1) { f /= L; s /= L; }
+  const hdP = Math.hypot(P.pos.x - S.pad.x, P.pos.z - S.pad.z), gy = hdP < .9 ? S.padY : TOP + .1, grounded = P.pos.y <= gy + .01;
+  if (grounded && v <= 0) { f = s = 0; }   // 停在地上時不能平移，要先上升
+  const sp = K.shift ? 11 : 7, sy = Math.sin(FP.yaw), cy = Math.cos(FP.yaw);
+  P.vel.lerp(new THREE.Vector3((sy * f - cy * s) * sp, v * 5, (cy * f + sy * s) * sp), 1 - Math.exp(-dt * 2.5));
+  P.pos.addScaledVector(P.vel, dt);
+  const cx = P.pos.x - CENTER.x, cz = P.pos.z - CENTER.z, cd = Math.hypot(cx, cz);
+  if (cd > 45) { P.pos.x = CENTER.x + cx / cd * 45; P.pos.z = CENTER.z + cz / cd * 45; }
+  const gy2 = Math.hypot(P.pos.x - S.pad.x, P.pos.z - S.pad.z) < .9 ? S.padY : TOP + .1;
+  if (P.pos.y < gy2) { P.pos.y = gy2; if (P.vel.y < 0) P.vel.y = 0; }
+  P.pos.y = Math.min(P.pos.y, 46);
+  const air = P.pos.y > gy2 + .05;
+  P.lean = lerp(P.lean, air ? f * .35 : 0, 1 - Math.exp(-dt * 4)); P.roll = lerp(P.roll, air ? s * .3 : 0, 1 - Math.exp(-dt * 4));
+  P.thrust = air ? .5 + Math.max(0, v) * .45 + L * .25 - Math.max(0, -v) * .15 : v > 0 ? .9 : 0;
+  P.doorT -= dt; P.door = lerp(P.door, P.doorT > 0 ? 1 : 0, 1 - Math.exp(-dt * 5));
+  // ── 部署點 ──
+  const cur = P.won ? null : S.wps[P.done], d = cur ? C.distanceTo(cur.p) : 0;
+  P.inRange = !!cur && d < 4.2;
+  if (P.req.deploy) { P.req.deploy = false; ssPilotDeploy(); }
+  S.wpG.visible = true;
+  S.wps.forEach(w => {
+    const on = w === cur, o = w.done ? .16 : on ? .6 + Math.sin(ck * 5) * .25 : .18, c = w.done ? '#7dff9a' : '#5fe1ff';
+    for (const m of [w.ring, w.orb, w.beam]) { m.material.color.set(c); m.material.opacity = m === w.beam ? o * .4 : o; }
+    w.ring.rotation.y = ck * .6; w.g.scale.setScalar(on ? 1 + Math.sin(ck * 3) * .06 : 1);
+  });
+  const ga = S.guide.geometry.attributes.position;
+  if (cur) { ga.setXYZ(0, C.x, C.y, C.z); ga.setXYZ(1, cur.p.x, cur.p.y, cur.p.z); ga.needsUpdate = true; }
+  S.guide.material.opacity = cur && !P.inRange ? .45 : 0;
+  $('#pbDeploy') && $('#pbDeploy').classList.toggle('on', P.inRange);
+  if (P.won) P.wonT += dt;
+  // ── 對話泡泡跟著星艦 ──
+  P.textT -= dt;
+  const txt = P.textT > 0 ? P.text : P.inRange ? tr('到達部署點！按「🛰 部署衛星」', 'In position! Press 🛰 Deploy') : cur ? tr(`飛往部署點 ${P.done + 1}/${SS_SAT}（距離 ${d.toFixed(0)}）`, `Fly to drop point ${P.done + 1}/${SS_SAT} (${d.toFixed(0)} away)`) : '';
+  setBubble(B.s, txt ? '🚀 ' + txt : '', C.x, C.y + 3, C.z);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
