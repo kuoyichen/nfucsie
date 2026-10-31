@@ -5253,33 +5253,50 @@ function carPad(id) {
   const s = ISL[id], n = NET.nodes[s.nodes[(s.d.no.charCodeAt(1) % 6) * 2]];
   return new THREE.Vector3(n.x + (s.x - n.x) * .12, TOP, n.z + (s.z - n.z) * .12);
 }
+const CAR_WHEELS = [[.135, .088], [.135, -.088], [-.14, .088], [-.14, -.088]], CAR_WR = .046;
+function carSide(pts, depth, bevel) {
+  // 側面輪廓（x 前後、y 高低）沿 z 擠出，置中
+  const sh = new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
+  const g = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, steps: 1 });
+  return g.translate(0, 0, -depth / 2);
+}
 function carGeos() {
-  const o = [], white = '#f2f4f7', dark = '#1f2329', teal = '#2bb3b1';
-  o.push(paintGeo(new THREE.CapsuleGeometry(.075, .26, 6, 16).rotateZ(Math.PI / 2).scale(1, .55, 1).translate(0, .07, 0), white)); // 流線車身（車頭朝 +x）
-  o.push(paintGeo(new THREE.SphereGeometry(.07, 16, 10, 0, Math.PI * 2, 0, Math.PI * .5).scale(1.5, .75, .95).translate(.02, .1, 0), '#8fd3f4')); // 玻璃座艙
-  o.push(paintGeo(new THREE.BoxGeometry(.4, .012, .012).translate(0, .06, .078), teal));
-  o.push(paintGeo(new THREE.BoxGeometry(.4, .012, .012).translate(0, .06, -.078), teal));
-  o.push(paintGeo(new THREE.BoxGeometry(.02, .02, .1).translate(.205, .07, 0), '#fff3c4'));      // 頭燈條
-  o.push(paintGeo(new THREE.BoxGeometry(.015, .02, .12).translate(-.205, .075, 0), '#e8443a'));  // 尾燈條
-  for (const x of [-.13, .13]) for (const z of [-.13, .13]) {                                    // 四個涵道風扇
-    o.push(paintGeo(new THREE.TorusGeometry(.055, .012, 6, 18).rotateX(Math.PI / 2).translate(x, .07, z), dark));
-    o.push(paintGeo(new THREE.BoxGeometry(Math.abs(x) * .55, .012, .016).translate(x * .62, .07, z * .78), dark));
-  }
-  // 乘客頭（座艙裡）
-  o.push(paintGeo(new THREE.SphereGeometry(.03, 10, 8).translate(.02, .125, 0), SKIN[1]));
-  o.push(paintGeo(new THREE.SphereGeometry(.032, 10, 6, 0, Math.PI * 2, 0, Math.PI * .5).translate(.017, .13, 0), HAIR[0]));
-  return o;
+  // 楔形白色超跑（車頭朝 +x）：低趴車身、斜切座艙、黑色側裙、尾翼
+  const o = [], white = '#eef0f2', dark = '#1c1f24', glass = '#4a3e36';
+  o.push(paintGeo(carSide([[-.215, .03], [.215, .03], [.245, .048], [.235, .06], [.06, .1], [-.13, .108], [-.215, .104]], .15, .012), white));
+  o.push(paintGeo(carSide([[-.105, .104], [.075, .099], [.005, .152], [-.07, .15]], .118, .006), glass));             // 斜切座艙玻璃
+  o.push(paintGeo(carSide([[.12, .068], [.2, .056], [.2, .06], [.12, .074]], .1, 0), glass));                            // 引擎蓋進氣口
+  o.push(paintGeo(new THREE.BoxGeometry(.4, .022, .172).translate(0, .028, 0), dark));                                  // 黑色側裙／底盤
+  o.push(paintGeo(new THREE.BoxGeometry(.2, .012, .176).translate(-.005, .046, 0), dark));                              // 車門下緣黑色飾條
+  o.push(paintGeo(new THREE.BoxGeometry(.05, .01, .17).translate(.225, .022, 0), dark));                                // 前下擾流
+  o.push(paintGeo(new THREE.BoxGeometry(.006, .006, .15).translate(.243, .05, 0), '#e8fbff'));                         // 細長頭燈條
+  o.push(paintGeo(new THREE.BoxGeometry(.008, .012, .16).translate(-.226, .088, 0), '#e8443a'));                       // 尾燈條
+  for (const z of [-.06, .06]) o.push(paintGeo(new THREE.BoxGeometry(.016, .06, .008).translate(-.185, .135, z), dark)); // 尾翼支架
+  o.push(paintGeo(new THREE.BoxGeometry(.075, .008, .2).rotateZ(.14).translate(-.2, .168, 0), white));                 // 尾翼
+  for (const z of [-.1, .1]) o.push(paintGeo(new THREE.BoxGeometry(.08, .03, .006).translate(-.2, .162, z), white));    // 尾翼端板
+  return o.map(g => g.index ? g.toNonIndexed() : g);
+}
+function carWheelGeos(side) {
+  // Roadster 風格直立輪：黑色輪胎＋亮銀輪框＋六根黑色輻條（輪軸沿 z）
+  const o = [], R = CAR_WR, w = .03, f = side * w / 2;
+  o.push(paintGeo(new THREE.CylinderGeometry(R, R, w, 24).rotateX(Math.PI / 2), '#16181b'));
+  o.push(paintGeo(new THREE.CylinderGeometry(R * .74, R * .74, .004, 24).rotateX(Math.PI / 2).translate(0, 0, f), '#d9dde2'));
+  for (let i = 0; i < 6; i++) o.push(paintGeo(new THREE.BoxGeometry(R * 1.3, .008, .004).translate(R * .3, 0, 0).rotateZ(i * Math.PI / 3 + .25).translate(0, 0, f + side * .002), '#202328'));
+  o.push(paintGeo(new THREE.CylinderGeometry(.008, .008, .006, 10).rotateX(Math.PI / 2).translate(0, 0, f + side * .003), '#2bb3b1'));
+  return o.map(g => g.index ? g.toNonIndexed() : g);
 }
 function initCar() {
   CAR.pos = carPad(CAR.at); CAR.g = new THREE.Group(); scene.add(CAR.g);
   CAR.body = mergedMesh(carGeos()); CAR.g.add(CAR.body);
-  const fanMat = new THREE.MeshBasicMaterial({ color: '#7ff7ef', transparent: true, opacity: .55, depthWrite: false });
+  CAR.wheels = CAR_WHEELS.map(([x, z]) => { const w = mergedMesh(carWheelGeos(Math.sign(z))); w.position.set(x, CAR_WR, z); CAR.g.add(w); return w; });
+  // 車底四個反重力推進器：起飛時發出青色光
+  const fanMat = new THREE.MeshBasicMaterial({ color: '#7ff7ef', transparent: true, opacity: .55, depthWrite: false, side: THREE.DoubleSide });
   CAR.fans = [];
-  for (const x of [-.13, .13]) for (const z of [-.13, .13]) {
-    const f = new THREE.Mesh(new THREE.CircleGeometry(.046, 16).rotateX(-Math.PI / 2), fanMat); f.position.set(x, .068, z); CAR.g.add(f); CAR.fans.push(f);
+  for (const x of [-.07, .07]) for (const z of [-.045, .045]) {
+    const f = new THREE.Mesh(new THREE.CircleGeometry(.036, 16).rotateX(Math.PI / 2), fanMat); f.position.set(x, .016, z); CAR.g.add(f); CAR.fans.push(f);
   }
   CAR.fanMat = fanMat;
-  const hit = new THREE.Mesh(new THREE.BoxGeometry(.5, .25, .4).translate(0, .08, 0), new THREE.MeshBasicMaterial({ visible: false })); CAR.g.add(hit);
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(.5, .25, .3).translate(0, .08, 0), new THREE.MeshBasicMaterial({ visible: false })); CAR.g.add(hit);
   hit.userData.pick = () => { selectCar(); return true; }; PICKABLE.push(hit);
   CAR.bubble = bubbleLabel(4);
   placeCar(0);
@@ -5331,11 +5348,12 @@ function updateCar(dt) {
 }
 function placeCar(dt) {
   const C = CAR, t = state.time, flying = C.leg && C.leg.t > CAR_SPIN;
-  C.g.position.set(C.pos.x, C.pos.y + (flying ? .05 + Math.sin(t * 2.6) * .02 : .02), C.pos.z);
+  C.g.position.set(C.pos.x, C.pos.y + (flying ? .05 + Math.sin(t * 2.6) * .02 : 0), C.pos.z);
   const L = C.leg, cruising = L && L.t > CAR_SPIN + CAR_UP && L.t < CAR_SPIN + CAR_UP + L.cruise;
   C.g.rotation.set(C.roll, C.heading, cruising ? -.1 : 0, 'YXZ');
   C.g.scale.setScalar(1.4);
-  C.fanMat.opacity = .25 + C.spin * .5;
+  C.fanMat.opacity = C.spin * .75;
+  for (const w of C.wheels) w.rotation.z -= dt * C.spin * 14;
   for (const f of C.fans) f.scale.setScalar(.7 + C.spin * .3 + Math.sin(t * 40) * .05 * C.spin);
   C.g.visible = !WX.indoor;
   C.textT -= dt;
@@ -5348,7 +5366,7 @@ function selectCar() {
   flyTo(poseFor(C.pos.clone(), new THREE.Vector3(2.2, 3.6, 4.6)));
   const at = ISL[C.at].d, to = C.leg ? ISL[C.leg.toId].d : null;
   let h = `<div class="icon">🚗</div><h2>${tr('資工飛天車', 'CSIE flying car')}</h2>`;
-  h += `<p>${tr('資工系的未來感飛天車，有四個涵道風扇，可以垂直起降。老師和同學會不定期搭乘，從一座島起飛、飛到另一座島降落，飛到一半還會滾轉耍帥。', 'The department’s futuristic flying car, with four ducted fans for vertical take-off and landing. Teachers and students hop in now and then, fly from one island to another, and pull a barrel roll on the way.')}</p>`;
+  h += `<p>${tr('資工系的未來感飛天車，外型是低趴的白色楔形超跑，有尾翼和多輻條跑車輪，車底四個反重力推進器讓它可以垂直起降。老師和同學會不定期搭乘，從一座島起飛、飛到另一座島降落，飛到一半還會滾轉耍帥。', 'The department’s futuristic flying car: a low white wedge-shaped supercar with a rear wing and multi-spoke wheels, lifted by four anti-gravity thrusters underneath for vertical take-off and landing. Teachers and students hop in now and then, fly from one island to another, and pull a barrel roll on the way.')}</p>`;
   h += `<p style="font-size:13px;color:var(--muted)">${tr('現在：', 'Now: ')}${esc(to ? tr(`${C.rider.zh}正從${at.name}飛往${to.name}`, `${C.rider.en} is flying from ${at.en} to ${to.en}`) : tr(`停在${at.name}，等下一位乘客`, `Parked on ${at.en}, waiting for the next rider`))}</p>`;
   h += `<div class="chips"><button class="chip cream" data-isl="${at.id}">${at.icon} ${esc(tr(at.name, at.en))}</button>${to ? `<button class="chip cream" data-isl="${to.id}">${to.icon} ${esc(tr(to.name, to.en))}</button>` : ''}<span class="chip">${tr(`已飛 ${C.trips} 趟`, `${C.trips} trips so far`)}</span></div>`;
   h += `<div class="src">${tr('飛天車為示意的未來交通工具，非任何廠牌產品。', 'An illustrative concept vehicle, not any real brand’s product.')}</div>`;
