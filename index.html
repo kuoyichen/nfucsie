@@ -5248,9 +5248,61 @@ function selectRider(R) {
 // ═══════════════════════════════════════════════════════════════════════════
 const CAR = { g: null, at: 'b1', wait: 9, leg: null, pos: null, heading: 0, roll: 0, spin: 0, rider: null, text: '', textT: 0, trips: 0 };
 const CAR_UP = 1.7, CAR_DOWN = 1.9, CAR_SPIN = 1;
+let CAR_HMAP = null;
+function islandHeights(s, N, W) {
+  // 從島正上方用正交相機拍一張「高度圖」：每個像素記錄最上層表面的世界 y
+  if (!CAR_HMAP) {
+    const mat = new THREE.ShaderMaterial({
+      side: THREE.DoubleSide,
+      vertexShader: `varying float vY;
+#include <common>
+void main() {
+  #include <begin_vertex>
+  vec4 wp = vec4(transformed, 1.0);
+  #ifdef USE_INSTANCING
+    wp = instanceMatrix * wp;
+  #endif
+  wp = modelMatrix * wp; vY = wp.y;
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}`,
+      fragmentShader: `varying float vY;
+void main() { float v = clamp((vY - ${(TOP - 1).toFixed(3)}) / 4.0, 0.0, 1.0) * 255.0; gl_FragColor = vec4(floor(v) / 255.0, fract(v), 0.0, 1.0); }`
+    });
+    CAR_HMAP = { mat, rt: new THREE.WebGLRenderTarget(N, N), cam: new THREE.OrthographicCamera(-W / 2, W / 2, W / 2, -W / 2, .01, 4), buf: new Uint8Array(N * N * 4) };
+  }
+  const M = CAR_HMAP, hidden = [];
+  M.cam.position.set(s.x, TOP + 2.6, s.z); M.cam.up.set(0, 0, -1); M.cam.lookAt(s.x, TOP, s.z); M.cam.updateMatrixWorld();
+  // 不畫：飛天車本身、隱形點擊盒、全透明的光暈
+  scene.traverse(o => { if (o.visible && (o === CAR.g || (o.material && (o.material.visible === false || (o.material.transparent && o.material.opacity < .05))))) { o.visible = false; hidden.push(o); } });
+  const bg = scene.background, fog = scene.fog, prevRT = renderer.getRenderTarget(), prevClear = renderer.getClearColor(new THREE.Color()), prevA = renderer.getClearAlpha();
+  scene.background = null; scene.fog = null; scene.overrideMaterial = M.mat;
+  renderer.setRenderTarget(M.rt); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(scene, M.cam);
+  renderer.readRenderTargetPixels(M.rt, 0, 0, N, N, M.buf);
+  renderer.setRenderTarget(prevRT); renderer.setClearColor(prevClear, prevA);
+  scene.overrideMaterial = null; scene.background = bg; scene.fog = fog;
+  for (const o of hidden) o.visible = true;
+  return i => M.buf[i * 4 + 3] ? TOP - 1 + (M.buf[i * 4] + M.buf[i * 4 + 1] / 255) / 255 * 4 : -99;
+}
 function carPad(id) {
-  // 每座島挑一個步道轉角當停機點（偶數節點是六角形轉角，不接橋）
-  const s = ISL[id], n = NET.nodes[s.nodes[(s.d.no.charCodeAt(1) % 6) * 2]];
+  // 找島上離樹、建築、展品、路燈最遠的一塊平地當停機點
+  const s = ISL[id], N = 128, W = 4.4, px = W / N, h = islandHeights(s, N, W);
+  const free = new Uint8Array(N * N), blocked = [];
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const k = j * N + i, ok = Math.abs(h(k) - TOP) < .035;
+    free[k] = ok; if (!ok && (i + j) % 2 === 0) blocked.push(i, j);
+  }
+  // readPixels 的第 0 列在最下面；相機 up = -z，所以畫面上方是 -z、下方是 +z
+  let best = null, bd = -1;
+  for (let j = 4; j < N - 4; j += 3) for (let i = 4; i < N - 4; i += 3) {
+    if (!free[j * N + i]) continue;
+    let d = 1e9; const bq = bd > 0 ? bd * bd : -1;
+    for (let b = 0; b < blocked.length && d > bq; b += 2) { const dx = blocked[b] - i, dz = blocked[b + 1] - j, q = dx * dx + dz * dz; if (q < d) d = q; }
+    // 同樣空曠時偏好靠近島中心一點，比較好看
+    const x = s.x + (i + .5 - N / 2) * px, z = s.z + (N / 2 - j - .5) * px, score = Math.sqrt(d) - Math.hypot(x - s.x, z - s.z) / px * .05;
+    if (score > bd) { bd = score; best = new THREE.Vector3(x, TOP, z); }
+  }
+  if (best) return best;
+  const n = NET.nodes[s.nodes[(s.d.no.charCodeAt(1) % 6) * 2]];
   return new THREE.Vector3(n.x + (s.x - n.x) * .12, TOP, n.z + (s.z - n.z) * .12);
 }
 const CAR_WHEELS = [[.135, .088], [.135, -.088], [-.14, .088], [-.14, -.088]], CAR_WR = .046;
@@ -5303,7 +5355,7 @@ function initCar() {
 }
 function carPlan() {
   const ids = Object.keys(ISL).filter(id => id !== CAR.at);
-  const to = ids[Math.floor(fxRand() * ids.length)], from = carPad(CAR.at), dest = carPad(to);
+  const to = ids[Math.floor(fxRand() * ids.length)], from = CAR.pos.clone(), dest = carPad(to);
   const teacher = fxRand() < .4 ? DATA.teachers[Math.floor(fxRand() * DATA.teachers.length)] : null;
   const s = ISL[CAR.at].d, d = ISL[to].d;
   CAR.rider = teacher ? { zh: teacher.name + '老師', en: teacher.en } : { zh: s.name + '同學', en: 'a ' + s.en + ' student' };
