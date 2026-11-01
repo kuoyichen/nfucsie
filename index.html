@@ -2559,7 +2559,7 @@ function openHelp() {
   openModal(`<div class="eyebrow">${tr('說明', 'HELP')}</div><h2>${tr('歡迎來到虎尾科大資工系特色島', 'Welcome to NFU CSIE Island')}</h2>
   <p style="line-height:1.7">${tr('年級島是各個年級：五專一到五年級、四技一到四年級，以及碩士班；中間的綜三館是 20 位專任教師的大本營，榮譽殿堂收藏近年競賽成果。島民會上課、做專題、休閒，也會把作品帶去比賽。機器人、無人機、資料庫、電子學、演算法與人工智慧六座特色島以橋相連，學生在那裡做會動的專題。大四、專五與研二島上有碼頭，輪船定期載同學到外海的科技公司外島參訪，系友也會搭直升機回來分享。', 'The cohort islands are junior-college years 1–5, undergraduate years 1–4, and the master program. Building 3 is home to 20 faculty, and the Hall of Fame holds recent awards. Six bridged specialty islands (robotics, drones, databases, electronics, algorithms, AI) host moving student projects. Ferries from the Year-4, JC-5 and MS-2 piers take students to tech-company outer islands, and alumni fly back by helicopter to share.')}</p>
   <ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>
-  <p style="line-height:1.7;font-size:14px">${tr('工具列還有：🧭 招生導覽（自動飛行加語音解說）、🗺 我的路（依興趣推薦特色島、老師與課程路線）、🐯 任務（找 10 隻吉祥物、系所問答、徽章）、🚶 漫步（第一人稱走路、過橋、搭船）、🍾 留言瓶。下方 bar 可以切換季節、校園活動與天氣；在「哥吉拉來襲」或「ID4 外星人來襲」活動中按漫步，可以親自駕駛機器人或無人機參戰；在「星艦發射任務」中按漫步，可以駕駛星艦部署衛星。', 'Toolbar extras: 🧭 guided tour, 🗺 my path, 🐯 quests & badges, 🚶 first-person walk (bridges and ferries), 🍾 message bottles. The bottom bar switches season, campus events and weather; during the Kaiju or Alien events, Walk lets you pilot the robot or a drone yourself, and during the Starship launch you can fly Starship to deploy satellites.')}</p>
+  <p style="line-height:1.7;font-size:14px">${tr('工具列還有：🧭 招生導覽（自動飛行加語音解說）、🗺 我的路（依興趣推薦特色島、老師與課程路線）、🐯 任務（找 10 隻吉祥物、系所問答、徽章）、🚶 漫步（第一人稱走路、過橋、搭船）、🍾 留言瓶。下方 bar 可以切換季節、校園活動與天氣；在「哥吉拉來襲」或「ID4 外星人來襲」活動中按漫步，可以親自駕駛機器人或無人機參戰；在「星艦發射任務」中按漫步，可以駕駛星艦部署衛星。活動選單維持「自動」時，閱覽 30 秒後會隨機上演其中一場，演完再換下一場；自己選了活動就不會被打斷。', 'Toolbar extras: 🧭 guided tour, 🗺 my path, 🐯 quests & badges, 🚶 first-person walk (bridges and ferries), 🍾 message bottles. The bottom bar switches season, campus events and weather; during the Kaiju or Alien events, Walk lets you pilot the robot or a drone yourself, and during the Starship launch you can fly Starship to deploy satellites. With the event picker on Auto, one of these plays at random after 30 seconds, then another when it ends; picking an event yourself turns this off.')}</p>
   <p style="font-size:13px;color:var(--muted)">${tr('時鐘每秒走 10 分鐘，一天 144 秒；不同時段會有不同的建物亮起（黃色）。', 'The clock runs 10 minutes per second; different buildings light up (yellow) through the day.')}</p>
   <div class="actions">
     <button class="btn" id="btnStats" style="background:var(--coral);color:#fff">📈 ${tr('參訪紀錄', 'Visit stats')}</button>
@@ -3989,7 +3989,7 @@ MODELS.gallery = c => {
 MODEL_TOP.gallery = .6;
 
 const fxRand = mulberry32(4242);
-const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, get RIDER() { return RIDERS[0]; }, get RIDERS() { return RIDERS; }, get CAR() { return CAR; }, get KJ() { return EVFX.kaiju; }, get UF() { return EVFX.ufo; }, get SS() { return EVFX.ss; }, carPlan: () => carPlan(), riderMode: (m, i = 0) => riderMode(RIDERS[i], m), groundAt: (x, z) => groundAt(x, z), stepFX: (n, dt = .05) => { for (let i = 0; i < n; i++) { updateEventFX(dt); if (FP.on) updateWalk(dt); } } };
+const FXDBG = { WX, FP, TOUR, set(k, v) { const el = $('#sel' + k); el.value = v; el.onchange(); }, enterWalk: () => enterWalk(), exitWalk: () => exitWalk(), startTour: () => startTour(), planPath: (r, i) => planPath(r, i), openQuests: () => openQuests(), openBottleHome: () => openBottleHome(), startQuiz: () => startQuiz(), get TIGERS() { return TIGERS; }, get EVFX() { return EVFX; }, get METEORS() { return METEORS; }, get BOTTLES() { return BOTTLES; }, get RIDER() { return RIDERS[0]; }, get RIDERS() { return RIDERS; }, get CAR() { return CAR; }, get KJ() { return EVFX.kaiju; }, get UF() { return EVFX.ufo; }, get SS() { return EVFX.ss; }, get AUTO() { return AUTOSHOW; }, autoStep: dt => updateAutoShow(dt), carPlan: () => carPlan(), riderMode: (m, i = 0) => riderMode(RIDERS[i], m), groundAt: (x, z) => groundAt(x, z), stepFX: (n, dt = .05) => { for (let i = 0; i < n; i++) { updateEventFX(dt); if (FP.on) updateWalk(dt); } } };
 function toast(msg, ms = 2600) {
   const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), ms);
@@ -4046,10 +4046,40 @@ function initFeatures() {
   nightHooks.push(applyWeatherLight);
   applySeason(); applyEvent(); applyWeather(true);
 }
+// ── 自動活動秀：活動選單維持「自動」時，閱覽 30 秒後，隨機上演哥吉拉／外星人／星艦；一場演完再換下一場（不重疊、不連續重複）
+const AUTOSHOW = { on: false, kind: null, last: null, idle: 0, lastInput: 0, WAIT: 30 };
+const AUTOSHOW_KINDS = ['kaiju', 'ufo', 'starship'];
+for (const ev of ['pointerdown', 'wheel', 'keydown', 'touchstart']) addEventListener(ev, () => { AUTOSHOW.lastInput = performance.now(); }, { passive: true, capture: true });
+function autoShowFx(kind) { return kind === 'kaiju' ? [EVFX.kaiju, KJ_T] : kind === 'ufo' ? [EVFX.ufo, UF_T] : [EVFX.ss, SS_T]; }
+function autoShowStart(kind) {
+  if (!kind) { const pool = AUTOSHOW_KINDS.filter(k => k !== AUTOSHOW.last); kind = pool[Math.floor(Math.random() * pool.length)]; }
+  AUTOSHOW.on = true; AUTOSHOW.kind = AUTOSHOW.last = kind;
+  WX.eventPick = kind; $('#selEvent').value = kind; applyEvent();
+  toast(tr(`🎲 自動活動：${EVENTS[kind][0]}`, `🎲 Auto event: ${EVENTS[kind][1]}`), 3500);
+}
+function autoShowStop() {
+  AUTOSHOW.on = false; AUTOSHOW.kind = null; AUTOSHOW.idle = 0;
+  WX.eventPick = 'auto'; $('#selEvent').value = 'auto'; applyEvent();
+}
+function updateAutoShow(dt) {
+  const busy = FP.on || TOUR.on || document.hidden || !$('#modal').classList.contains('hidden');
+  if (AUTOSHOW.on) {
+    if (WX.eventPick !== AUTOSHOW.kind) { AUTOSHOW.on = false; AUTOSHOW.idle = 0; return; }   // 使用者自己換了活動，就不再接手
+    const [fx, T] = autoShowFx(AUTOSHOW.kind);
+    if (!fx || fx.t < T.loop - .5 || FP.on) return;   // 還沒演完，或使用者正在駕駛：讓它繼續
+    if (TOUR.on) return autoShowStop();               // 導覽中就回到平常日，不搶鏡頭
+    return autoShowStart();                           // 演完了，換下一場（不會跟剛剛同一場）
+  }
+  if (WX.eventPick !== 'auto' || busy) { AUTOSHOW.idle = 0; return; }   // 只在「自動（依行事曆）」時接手，使用者手動選的活動不動
+  AUTOSHOW.idle += dt;
+  // 時間到了，但使用者正在操作（拖曳、縮放、打字）就等他停手 3 秒再開始
+  if (AUTOSHOW.idle >= AUTOSHOW.WAIT && performance.now() - AUTOSHOW.lastInput > 3000) autoShowStart();
+}
 function updateFeatures(dt, animating) {
   let moved = false;
   if (animating) { moved = updateSeasonFX(dt) || moved; moved = updateWeatherFX(dt) || moved; moved = updateEventFX(dt) || moved; moved = updateMascots(dt) || moved; moved = updateBottles(dt) || moved; moved = updateRiders(dt) || moved; moved = updateCar(dt) || moved; }
   else if (FP.pilot) moved = updateEventFX(dt) || moved;   // 駕駛中即使暫停時間也照樣能打
+  if (animating) updateAutoShow(dt);
   if (PATHFX.mat) PATHFX.mat.uniforms.uTime.value += animating ? dt : 0;
   if (FP.on) { updateWalk(dt); if (!FP.pilot) hideNearWalkers(); moved = true; }
   if (moved) markDirty();
@@ -4063,7 +4093,7 @@ function initPickers() {
   se.innerHTML = opt('auto', tr('依行事曆', 'By calendar'), true) + Object.entries(EVENTS).map(([k, v]) => opt(k, tr(v[0], v[1]))).join('');
   sw.innerHTML = Object.entries(WEATHERS).map(([k, v]) => opt(k, tr(v[0], v[1]), k === 'clear')).join('');
   ss.onchange = () => { WX.seasonPick = ss.value; applySeason(); };
-  se.onchange = () => { WX.eventPick = se.value; applyEvent(); };
+  se.onchange = () => { AUTOSHOW.on = false; AUTOSHOW.idle = 0; WX.eventPick = se.value; applyEvent(); };
   sw.onchange = () => { WX.weather = sw.value; applyWeather(); };
 }
 function syncPickerIcons() {
