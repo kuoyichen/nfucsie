@@ -1,4 +1,4 @@
-// Cloudflare Pages Functions 轉接層：把 Vercel 風格的 handler(req, res) 包成 onRequest(context)。
+// Cloudflare Workers 轉接層：把 Vercel 風格的 handler(req, res) 包成 ({ request, env }) => Response。
 // 檔名以底線開頭，Vercel 不會把它當成 API 路由。
 import { setEnv } from './_redis.js';
 
