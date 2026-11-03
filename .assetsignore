@@ -1,0 +1,13 @@
+.git
+.github
+.wrangler
+.vercel
+node_modules
+api
+cf
+wrangler.jsonc
+package.json
+README.md
+.env*
+.gitignore
+.vercelignore

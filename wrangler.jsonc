@@ -1,0 +1,15 @@
+// Cloudflare Workers 設定（Vercel 不會用到）。
+// name 必須和 Cloudflare 後台的 Worker 名稱一致。
+{
+  "name": "nfucsie",
+  "main": "cf/worker.js",
+  "compatibility_date": "2025-10-01",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "observability": { "enabled": true },
+  // 分支預覽（npx wrangler preview）需要這個區塊，可以留空
+  "previews": {}
+}
