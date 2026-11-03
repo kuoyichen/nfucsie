@@ -2,17 +2,20 @@
 // 環境變數：UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
 // （若是透過 Vercel Marketplace 安裝 Upstash，會自動提供 KV_REST_API_URL / KV_REST_API_TOKEN，也能用）
 // Marketplace 安裝時若自訂了前綴（例如 STORAGE_KV_REST_API_URL），也一併找得到
-const envEnding = suffix => { const k = Object.keys(process.env).find(k => k.endsWith(suffix) && process.env[k]); return k ? process.env[k] : ''; };
-const URL_ = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || envEnding('_KV_REST_API_URL') || envEnding('_REDIS_REST_URL') || '';
-const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || envEnding('_KV_REST_API_TOKEN') || envEnding('_REDIS_REST_TOKEN') || '';
+// Vercel 透過 process.env 提供；Cloudflare Pages Functions 則由 api/_cf.js 呼叫 setEnv(context.env) 注入
+let ENV = (typeof process !== 'undefined' && process.env) || {};
+export const setEnv = e => { if (e) ENV = e; };
+const envEnding = suffix => { const k = Object.keys(ENV).find(k => k.endsWith(suffix) && ENV[k]); return k ? ENV[k] : ''; };
+const URL_ = () => ENV.UPSTASH_REDIS_REST_URL || ENV.KV_REST_API_URL || envEnding('_KV_REST_API_URL') || envEnding('_REDIS_REST_URL') || '';
+const TOKEN = () => ENV.UPSTASH_REDIS_REST_TOKEN || ENV.KV_REST_API_TOKEN || envEnding('_KV_REST_API_TOKEN') || envEnding('_REDIS_REST_TOKEN') || '';
 
 export const PREFIX = 'nfucsie:';
-export const configured = () => Boolean(URL_ && TOKEN);
+export const configured = () => Boolean(URL_() && TOKEN());
 
 export async function pipeline(commands) {
-  const res = await fetch(URL_.replace(/\/+$/, '') + '/pipeline', {
+  const res = await fetch(URL_().replace(/\/+$/, '') + '/pipeline', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${TOKEN()}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(commands)
   });
   if (!res.ok) throw new Error(`upstash ${res.status}`);

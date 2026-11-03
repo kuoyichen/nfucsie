@@ -38,6 +38,23 @@
 若是從 Vercel Marketplace 安裝 Upstash 整合，會自動注入 `KV_REST_API_URL` / `KV_REST_API_TOKEN`，程式也能直接使用。設定後重新部署即可。
 資料鍵值都以 `nfucsie:` 開頭。
 
+## Cloudflare Pages（另一個部署點）
+
+`functions/api/*.js` 是 Cloudflare Pages Functions，透過 `api/_cf.js` 轉接，直接重用 `api/` 底下同一份程式，所以 Vercel 與 Cloudflare 行為一致。
+（`.vercelignore` 讓 Vercel 忽略 `functions/`。）
+
+Cloudflare Dashboard → Workers & Pages → 建立 → Pages → 連接 Git → 選 `kuoyichen/nfucsie`：
+
+| 設定 | 值 |
+| --- | --- |
+| Production branch | `main` |
+| Framework preset | None |
+| Build command | （留空） |
+| Build output directory | `/` |
+
+Settings → Variables and Secrets 加上 `UPSTASH_REDIS_REST_URL`、`UPSTASH_REDIS_REST_TOKEN`（Production 與 Preview 都要），再重新部署。
+用同一個 Upstash 資料庫的話，參訪紀錄與留言瓶會和 Vercel 共用。
+
 ## 本機預覽
 
 任何靜態伺服器都可以（例如 `npx serve .`）；API 需要 `vercel dev` 與上述環境變數，未設定時參訪紀錄會顯示「尚未設定」。
